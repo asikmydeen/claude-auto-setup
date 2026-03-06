@@ -1,0 +1,84 @@
+{
+  "_comment": "Provider registry — maps task types to preferred AI agents with fallback chains",
+  "_usage": "The orchestrator reads this to decide which agent handles each task",
+
+  "providers": {
+    "claude": {
+      "cli": "claude",
+      "non_interactive": "claude -p \"{prompt}\" --output-format text --allowedTools \"{tools}\"",
+      "strengths": ["complex-reasoning", "planning", "architecture", "multi-file-refactor", "debugging", "code-review"],
+      "context_window": "200k",
+      "cost": "high",
+      "speed": "medium"
+    },
+    "codex": {
+      "cli": "codex",
+      "non_interactive": "codex -q \"{prompt}\" --full-auto",
+      "strengths": ["fast-code-generation", "test-writing", "simple-implementations", "boilerplate"],
+      "context_window": "192k",
+      "cost": "medium",
+      "speed": "fast"
+    },
+    "gemini": {
+      "cli": "gemini",
+      "non_interactive": "gemini -p \"{prompt}\"",
+      "strengths": ["documentation", "frontend-generation", "large-context-analysis", "search-grounded"],
+      "context_window": "1000k",
+      "cost": "low",
+      "speed": "fast"
+    },
+    "amp": {
+      "cli": "amp",
+      "non_interactive": "amp \"{prompt}\"",
+      "strengths": ["code-review", "oracle-guidance", "multi-model-routing"],
+      "context_window": "200k",
+      "cost": "medium",
+      "speed": "medium"
+    },
+    "kiro": {
+      "cli": "kiro",
+      "non_interactive": null,
+      "strengths": ["aws-integration", "spec-driven-development"],
+      "context_window": "200k",
+      "cost": "medium",
+      "speed": "medium"
+    }
+  },
+
+  "task_routing": {
+    "_comment": "Maps task types to ordered provider preferences. First available provider is used.",
+
+    "planning": ["claude", "gemini", "amp"],
+    "architecture-design": ["claude", "amp", "gemini"],
+    "complex-reasoning": ["claude", "amp"],
+    "debugging": ["claude", "codex", "amp"],
+    "code-review-quality": ["amp", "claude"],
+    "code-review-security": ["claude", "amp"],
+    "code-review-performance": ["claude", "amp", "gemini"],
+
+    "backend-implementation": ["claude", "codex", "amp"],
+    "frontend-implementation": ["codex", "claude", "gemini"],
+    "api-implementation": ["claude", "codex"],
+    "test-writing": ["codex", "claude", "gemini"],
+    "boilerplate-generation": ["codex", "gemini", "claude"],
+
+    "documentation": ["gemini", "claude", "amp"],
+    "large-file-analysis": ["gemini", "claude"],
+    "dependency-analysis": ["gemini", "claude", "codex"],
+
+    "infrastructure-aws": ["claude", "kiro"],
+    "cdk-cloudformation": ["claude", "kiro"],
+
+    "simple-edit": ["codex", "claude", "gemini"],
+    "refactoring": ["claude", "codex", "amp"],
+    "migration": ["claude", "amp", "codex"]
+  },
+
+  "cost_optimization": {
+    "_comment": "When multiple providers can do the job, prefer cheaper/faster ones for simple tasks",
+    "simple_threshold": 3,
+    "simple_providers": ["codex", "gemini"],
+    "complex_providers": ["claude", "amp"],
+    "review_providers": ["amp", "claude"]
+  }
+}
