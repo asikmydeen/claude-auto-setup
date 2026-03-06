@@ -7,10 +7,19 @@ $ARGUMENTS
 
 If no target specified, review all uncommitted changes (`git diff` + `git diff --staged`).
 
+## Provider Detection (silent, automatic)
+Before launching review agents, detect installed providers: `which amp codex gemini 2>/dev/null`
+- **If Amp is installed**: Delegate Agent 1 (Code Quality) to Amp for oracle-level review. Run in parallel with Claude's security/perf/arch agents.
+  ```bash
+  echo "Review this diff for code quality, patterns, and maintainability: $(git diff)" | amp > /tmp/amp-review.txt &
+  ```
+- **If not**: All agents run as Claude subagents (no degradation).
+- Always read and integrate external provider output into the final review summary.
+
 ## Review Agents (launch in parallel)
 
 ### Agent 1: Code Quality
-Act as the `code-reviewer` agent:
+If Amp is installed, this runs via Amp (see above). Otherwise, act as the `code-reviewer` agent:
 - Logic correctness and edge cases
 - Error handling completeness
 - Code organization and readability

@@ -26,18 +26,33 @@ Synthesize exploration into a spec:
 - Identify which tasks can run in parallel vs sequential
 - **STOP and present the plan. Wait for user approval.**
 
-### 3. Implement Phase
-After approval, execute tasks using parallel agents where possible:
-- Launch implementation agents in parallel for independent tasks
-- Each agent gets a focused scope: only the files and context it needs
+### 2.5. Detect Providers (silent, automatic)
+Run `which claude codex gemini amp 2>/dev/null` to detect installed providers. Use this to decide dispatch targets in phases 3 and 4. Never mention this step to the user — just use the information.
+
+### 3. Implement Phase (auto-dispatch to best provider)
+After approval, execute tasks using parallel agents AND external providers where possible:
+
+**Provider auto-routing** (apply silently based on what's installed):
+- **Test writing tasks** → Codex if installed (invoke: `codex -q "Write tests for [context]..." --full-auto`), else Claude subagent
+- **Boilerplate / CRUD tasks** → Codex if installed, else Claude subagent
+- **Documentation tasks** → Gemini if installed (invoke: `echo "Generate docs for [context]..." | gemini`), else Claude subagent
+- **Complex logic, architecture, business rules** → Always Claude subagent (you)
+- **All other tasks** → Claude subagent
+
+**Execution**:
+- Launch external providers and Claude subagents in parallel for independent tasks
+- When dispatching to external providers, include relevant file contents and patterns in the prompt
+- Each agent/provider gets a focused scope: only the files and context it needs
 - Use context7 for any API lookups during implementation
 - LSP will automatically catch type errors after edits
+- **Always validate external provider output** before integrating — read it, check quality, fix if needed
+- If an external provider fails or returns poor quality, fall back to Claude subagent silently
 
-### 4. Review Phase
+### 4. Review Phase (auto-dispatch to best provider)
 After implementation, launch review agents in parallel:
-- Code quality review (code-reviewer patterns)
-- Security check (security-auditor patterns)
-- Code simplification pass (code-simplifier patterns)
+- **If Amp is installed**: Delegate primary code review to Amp (invoke: `echo "Review: $(git diff --staged)" | amp`)
+- **Always**: Run security check with Claude subagent (security-auditor patterns) — never delegate security to external-only
+- Code simplification pass (code-simplifier patterns) → Claude subagent
 - Fix any issues found before proceeding
 
 ### 5. Verify Phase

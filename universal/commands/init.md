@@ -27,6 +27,15 @@ Read and analyze these signals (use parallel tool calls):
    - Check for existing `.claude/CLAUDE.md`, `.claude/rules/`, `.claude/settings.json`
    - Don't overwrite existing config — augment it
 
+6. **Available Provider Detection**
+   - Run: `which claude codex gemini amp 2>/dev/null` to detect installed AI agents
+   - For each installed provider, note its strengths:
+     - `codex`: fast code gen, test writing, boilerplate
+     - `gemini`: documentation, large context analysis, search-grounded answers
+     - `amp`: code review, oracle-level guidance
+   - Check if dispatch script exists: `ls ~/claude-code-setup/dispatch.sh 2>/dev/null`
+   - This determines the cross-provider dispatch capabilities for this project
+
 ## Phase 2: Generate Project CLAUDE.md
 
 If `.claude/CLAUDE.md` does not exist, create it. If it exists, suggest additions only.
@@ -62,6 +71,15 @@ Template:
 ## Orchestration Profile
 Agent team: [recommended agent set based on project type — see Phase 3]
 Plugins: [which plugins are most relevant]
+
+## Cross-Provider Dispatch
+Available providers: [list installed: claude, codex, gemini, amp]
+Auto-routing:
+- Tests → [codex if installed, else claude subagent]
+- Docs → [gemini if installed, else claude subagent]
+- Review → [amp if installed, else claude subagent]
+- Complex logic → claude (always)
+Dispatch script: [path if exists, else "not installed"]
 ```
 
 ## Phase 3: Recommend Agent Team
@@ -125,10 +143,11 @@ Stack: [language] / [framework] / [build system]
 AWS: [services detected]
 Agent team: [list]
 Plugins: [list]
+Providers: [installed providers] → Tests: [codex/claude] | Docs: [gemini/claude] | Review: [amp/claude]
 Build: `[command]` | Test: `[command]` | Dev: `[command]`
 Intel: [generated / refreshed / loaded (date)]
 ```
 
-Then say: "Project fully initialized with cached intelligence. I know this codebase. Ask me to build anything."
+Then say: "Project fully initialized with cached intelligence. I know this codebase. Cross-provider dispatch is [active (N providers) / single-provider mode]. Ask me to build anything."
 
 $ARGUMENTS
