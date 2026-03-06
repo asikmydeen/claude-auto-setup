@@ -11,6 +11,7 @@ One-command setup for **all** your AI coding agents. Shared rules, shared codeba
 | **Kiro CLI** (AWS) | Full support | Steering files | `~/.kiro/` |
 | **Codex CLI** (OpenAI) | Full support | `AGENTS.md` | `~/.codex/` |
 | **Cursor** (Anysphere) | Rules only | `.cursorrules` | `~/.cursor/` |
+| **Amp Code** (Sourcegraph) | Full support | `AGENTS.md` + `.agents/` | `~/.config/agents/` |
 
 ## Quick Install
 
@@ -66,6 +67,7 @@ claude-auto-setup/
     kiro-cli/                  # Translates universal → Kiro format
     codex-cli/                 # Translates universal → Codex format
     cursor/                    # Translates universal → Cursor format
+    ampcode/                   # Translates universal → Amp format (skills + checks)
   install.sh                   # Global installer (auto-detects agents)
   project-init.sh              # Per-project initializer
   ANALYSIS.md                  # Full analysis and roadmap

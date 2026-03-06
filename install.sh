@@ -16,6 +16,7 @@ set -euo pipefail
 #   - Kiro CLI (AWS/Amazon)
 #   - Codex CLI (OpenAI)
 #   - Cursor (Anysphere)
+#   - Amp Code (Sourcegraph)
 #
 # Usage:
 #   ./install.sh                    # Auto-detect and install all
@@ -85,9 +86,10 @@ detect_agents() {
   AGENTS[kiro]=false
   AGENTS[codex]=false
   AGENTS[cursor]=false
+  AGENTS[ampcode]=false
 
   if [ "$AGENTS_FILTER" = "all" ]; then
-    for key in claude gemini kiro codex cursor; do
+    for key in claude gemini kiro codex cursor ampcode; do
       AGENTS[$key]=true
     done
     ok "Forced: all agents selected"
@@ -139,6 +141,13 @@ detect_agents() {
     info "Cursor: not found"
   fi
 
+  if command -v amp &>/dev/null; then
+    AGENTS[ampcode]=true
+    ok "Amp Code: found"
+  else
+    info "Amp Code: not found"
+  fi
+
   # Count detected
   local count=0
   for key in "${!AGENTS[@]}"; do
@@ -183,16 +192,17 @@ backup() {
 
 # Install per agent
 install_agents() {
-  for agent in claude gemini kiro codex cursor; do
+  for agent in claude gemini kiro codex cursor ampcode; do
     if ${AGENTS[$agent]}; then
       local adapter="$SCRIPT_DIR/agents"
 
       case $agent in
-        claude) adapter="$adapter/claude-code/adapter.sh" ;;
-        gemini) adapter="$adapter/gemini-cli/adapter.sh" ;;
-        kiro)   adapter="$adapter/kiro-cli/adapter.sh" ;;
-        codex)  adapter="$adapter/codex-cli/adapter.sh" ;;
-        cursor) adapter="$adapter/cursor/adapter.sh" ;;
+        claude)  adapter="$adapter/claude-code/adapter.sh" ;;
+        gemini)  adapter="$adapter/gemini-cli/adapter.sh" ;;
+        kiro)    adapter="$adapter/kiro-cli/adapter.sh" ;;
+        codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
+        cursor)  adapter="$adapter/cursor/adapter.sh" ;;
+        ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
       esac
 
       if [ -f "$adapter" ]; then

@@ -163,6 +163,45 @@ if command -v cursor &>/dev/null || [ -d "$HOME/.cursor" ]; then
   ok "Cursor rules: $(ls "$PROJECT_DIR/.cursor/rules/"*.mdc 2>/dev/null | wc -l) files"
 fi
 
+# Amp Code
+if command -v amp &>/dev/null; then
+  step "Configuring Amp Code"
+  mkdir -p "$PROJECT_DIR/.agents/skills" "$PROJECT_DIR/.agents/checks"
+  # Link shared rules as checks
+  for f in "$PROJECT_DIR/.ai/rules/"*.md; do
+    local_name=$(basename "$f" .md)
+    local desc
+    desc=$(head -1 "$f" | sed 's/^#\s*//')
+    {
+      echo "---"
+      echo "name: $local_name"
+      echo "description: $desc"
+      echo "---"
+      echo ""
+      tail -n +2 "$f"
+    } > "$PROJECT_DIR/.agents/checks/$local_name.md"
+  done
+  # Create project AGENTS.md if Codex didn't already
+  if [ ! -f "$PROJECT_DIR/AGENTS.md" ]; then
+    cat > "$PROJECT_DIR/AGENTS.md" << EOF
+# Project: $PROJECT_NAME
+
+Read .ai/project-intel.md first — it contains a cached codebase map.
+
+## Rules
+Follow the rules in .ai/rules/ for code quality, security, testing, and git workflow.
+
+## Workflow
+1. Read .ai/project-intel.md for context
+2. Explore only areas not covered by the intel
+3. Plan changes and confirm before implementing
+4. Run build + tests + lint to verify
+EOF
+    ok "AGENTS.md: created"
+  fi
+  ok "Amp checks: $(ls "$PROJECT_DIR/.agents/checks/"*.md 2>/dev/null | wc -l) files"
+fi
+
 # --- Update .gitignore ---
 step "Updating .gitignore"
 if [ -f "$PROJECT_DIR/.gitignore" ]; then
@@ -195,5 +234,6 @@ command -v gemini &>/dev/null && echo "    GEMINI.md            — Gemini CLI"
 command -v kiro &>/dev/null   && echo "    .kiro/steering/      — Kiro CLI"
 command -v codex &>/dev/null  && echo "    AGENTS.md            — Codex CLI"
 (command -v cursor &>/dev/null || [ -d "$HOME/.cursor" ]) && echo "    .cursor/rules/       — Cursor"
+command -v amp &>/dev/null    && echo "    .agents/checks/      — Amp Code"
 echo ""
 echo "  ${BOLD}Next:${RESET} Run /init in Claude Code (or equivalent) to generate codebase intelligence."
