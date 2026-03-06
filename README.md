@@ -1,119 +1,129 @@
-# Claude Code Smart Setup
+# Universal AI Agent Setup
 
-A complete, portable Claude Code configuration for optimized multi-agent software development.
+One-command setup for **all** your AI coding agents. Shared rules, shared codebase intelligence, agent-specific adapters.
 
-## What's Included
+## Supported Agents
 
-| Component | Count | Description |
-|---|---|---|
-| Commands | 49 | 7 roles + 37 subagents + 5 orchestration workflows |
-| Rules | 6 | Code quality, AWS dev, testing, security, git, orchestration |
-| Plugins | 14 | LSP, context7, serena, code-review, security, git workflow |
-| Settings | 1 | Permissions, hooks, deny rules, model config |
-| CLAUDE.md | 1 | Auto-orchestration protocol, role system |
+| Agent | Status | Instructions File | Config Location |
+|---|---|---|---|
+| **Claude Code** (Anthropic) | Full support | `CLAUDE.md` | `~/.claude/` |
+| **Gemini CLI** (Google) | Full support | `GEMINI.md` | `~/.gemini/` |
+| **Kiro CLI** (AWS) | Full support | Steering files | `~/.kiro/` |
+| **Codex CLI** (OpenAI) | Full support | `AGENTS.md` | `~/.codex/` |
+| **Cursor** (Anysphere) | Rules only | `.cursorrules` | `~/.cursor/` |
 
 ## Quick Install
 
 ```bash
-git clone <this-repo> claude-code-setup
-cd claude-code-setup
-chmod +x install.sh
+git clone git@github.com:asikmydeen/claude-auto-setup.git
+cd claude-auto-setup
 ./install.sh
+```
+
+The installer auto-detects which agents you have installed and configures all of them.
+
+## What It Does
+
+### Global Setup (`install.sh`)
+Configures each detected agent with:
+- **50 commands** — 7 roles + 37 specialist subagents + 6 orchestration workflows
+- **6 global rules** — code quality, AWS dev, testing, security, git workflow, orchestration
+- **14 plugins** — LSP, context7, serena, code-review, security (Claude Code)
+- **Optimized settings** — permissions, hooks, deny rules, model config
+
+### Per-Project Setup (`project-init.sh`)
+Run in any project to create shared AI config:
+```bash
+cd /path/to/your/project
+/path/to/claude-auto-setup/project-init.sh
+```
+
+Creates:
+```
+.ai/                          # Shared across ALL agents
+  rules/                      # Code quality, security, testing, git
+  project-intel.md            # Codebase intelligence (after /init)
+  .intel-changelog            # Change tracking
+
+.claude/CLAUDE.md             # Claude-specific (references .ai/)
+GEMINI.md                     # Gemini-specific (references .ai/)
+AGENTS.md                     # Codex-specific (references .ai/)
+.kiro/steering/               # Kiro-specific (symlinks to .ai/rules/)
+.cursor/rules/                # Cursor-specific (copies from .ai/rules/)
+```
+
+## Architecture
+
+```
+claude-auto-setup/
+  universal/                   # Agent-agnostic (single source of truth)
+    rules/                     # Shared rules
+    commands/                  # Shared command definitions
+    intel-template.md          # Template for project intelligence
+  agents/                      # Agent-specific adapters
+    claude-code/               # Translates universal → Claude format
+    gemini-cli/                # Translates universal → Gemini format
+    kiro-cli/                  # Translates universal → Kiro format
+    codex-cli/                 # Translates universal → Codex format
+    cursor/                    # Translates universal → Cursor format
+  install.sh                   # Global installer (auto-detects agents)
+  project-init.sh              # Per-project initializer
+  ANALYSIS.md                  # Full analysis and roadmap
+```
+
+## Key Workflows (Claude Code)
+
+| Command | Description |
+|---|---|
+| `/init` | Scan project + auto-generate codebase intelligence |
+| `/deep-research` | 6-agent deep codebase analysis |
+| `/build <feature>` | Multi-agent end-to-end implementation |
+| `/review` | Multi-agent code review (quality + security + perf + architecture) |
+| `/debug <problem>` | Multi-agent investigation and fix |
+| `/intel-refresh` | Targeted refresh of stale intel sections |
+
+## Codebase Intelligence System
+
+The killer feature: **cached codebase knowledge that auto-updates**.
+
+```
+/init (first time)
+  → 6 parallel agents deep-scan your codebase
+  → Generates .ai/project-intel.md (< 300 lines, dense reference)
+  → Loads automatically every session
+
+/build "add pagination"
+  → Reads cached intel (knows architecture already)
+  → Implements with parallel agents
+  → After completion: auto-patches intel with changes
+  → Next session has fresh knowledge
+
+/intel-refresh (manual)
+  → Detects which sections are stale
+  → Refreshes only affected sections
 ```
 
 ## Options
 
 ```bash
-./install.sh              # Interactive install (preserves existing config)
-./install.sh --force      # Overwrite existing config (backs up first)
-./install.sh --dry-run    # Preview what would be done
-./install.sh --uninstall  # Remove and restore from backup
-```
-
-## Prerequisites
-
-- **Claude Code CLI** — `npm install -g @anthropic-ai/claude-code`
-- **Node.js 18+** — For LSP plugins
-- **python3** — For settings merge (optional, only if merging with existing config)
-
-## What It Does
-
-### After Installation
-
-```
-~/.claude/
-  CLAUDE.md              # Global instructions with auto-orchestration
-  settings.json          # Permissions, hooks, plugins, model config
-  commands/              # 49 slash commands
-    init.md              # /init — project scanner + auto intel generation
-    deep-research.md     # /deep-research — 6-agent codebase analysis
-    build.md             # /build — end-to-end multi-agent implementation
-    review.md            # /review — multi-agent code review
-    debug.md             # /debug — multi-agent debugging
-    coordinator.md       # /coordinator — role activation
-    developer.md         # /developer — role activation
-    typescript-pro.md    # subagent command
-    react-specialist.md  # subagent command
-    ...                  # (37 more subagents)
-  rules/
-    orchestration.md     # Auto-orchestration protocol
-    code-quality.md      # Coding standards
-    aws-development.md   # AWS patterns
-    testing.md           # Test-first approach
-    security.md          # OWASP, secrets, IAM
-    git-workflow.md      # Commit style, PR conventions
-```
-
-### Workflow
-
-```
-/init                          # Run once per project
-                               # Auto-scans stack, generates codebase intel
-                               # Creates .claude/rules/project-intel.md
-
-/build add user preferences    # Multi-agent implementation
-                               # Reads cached intel, selects agents,
-                               # implements, reviews, verifies
-
-/review                        # Multi-agent code review
-                               # Quality + security + performance + architecture
-
-/debug API returns 500         # Multi-agent debugging
-                               # 3 parallel investigation agents
-```
-
-### Smart Decisions (Automatic)
-
-- Codebase intel auto-generated on first `/init`, auto-refreshed when stale
-- Agent team auto-selected based on task type
-- Plugins auto-invoked (context7 for docs, LSP for type checking, security-guidance for safety)
-- Build + tests + lint auto-verified before delivery
-
-## Customization
-
-### Add Your Own Commands
-
-Drop `.md` files in `config/commands/` before running `install.sh`, or directly in `~/.claude/commands/` after installation.
-
-### Add Platform-Specific Permissions
-
-Edit `config/settings.json` to add platform-specific allow/deny rules before installing.
-
-### Add Project-Specific Rules
-
-After installation, add project rules to `<project>/.claude/rules/` — they auto-load alongside global rules.
-
-## Rollback
-
-Every install creates a timestamped backup in `~/.claude/backups/`. To restore:
-
-```bash
-./install.sh --uninstall    # Restores from most recent backup
+./install.sh                         # Auto-detect and install all agents
+./install.sh --agents=claude,gemini  # Only specific agents
+./install.sh --agents=all            # All agents regardless of detection
+./install.sh --force                 # Overwrite existing config
+./install.sh --dry-run               # Preview changes
+./install.sh --uninstall             # Remove and restore from backup
 ```
 
 ## Platform Support
 
-Tested on:
-- Linux (Amazon Linux, Ubuntu, Debian)
+- Linux (Amazon Linux, Ubuntu, Debian, Fedora)
 - macOS (Intel, Apple Silicon)
-- Windows (WSL2, Git Bash, MSYS2)
+- Windows (WSL2, Git Bash)
+
+## Roadmap
+
+See [ANALYSIS.md](ANALYSIS.md) for the full analysis including:
+- Cross-agent orchestration (use multiple AI agents on one task)
+- Additional workflows (/migrate, /onboard, /audit, /estimate)
+- CI/CD integration
+- Team collaboration features
