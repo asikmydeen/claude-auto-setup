@@ -7,11 +7,21 @@ The user's request: $ARGUMENTS
 
 ## Execution Protocol
 
-### 0. Load Cached Intel (FIRST — auto-generate if missing)
+### 0. Load Hierarchical Intel (FIRST — auto-generate if missing)
+
+**Package-level intel:**
 Check if `.claude/rules/project-intel.md` exists:
-- **YES and fresh (< 30 days)**: Read it. Use as primary context — skip redundant exploration. Only explore task-specific areas not covered in the intel.
+- **YES and fresh (< 30 days)**: Read it. Use as primary context — skip redundant exploration.
 - **YES but stale (> 30 days)**: Print "Intel is stale. Auto-refreshing in background..." Launch a background agent to re-run deep-research while you proceed with available intel.
-- **NO**: Print "No cached intel. Generating now (6 parallel agents)..." Auto-run the deep-research workflow FIRST before proceeding. This is a one-time cost that makes everything faster. Do NOT ask — just do it.
+- **NO**: Print "No cached intel. Generating now (6 parallel agents)..." Auto-run deep-research FIRST. Do NOT ask.
+
+**Workspace-level intel (auto-discover):**
+Walk up from the current directory to find a parent workspace:
+- Look for `workspace-intel.md` in parent `.claude/rules/` directories
+- If found, read it — it tells you about sibling packages, shared contracts, cross-package dependencies
+- If the task touches cross-package boundaries (shared types, API calls, imports from siblings), also read the relevant sibling's `project-intel.md`
+- If a workspace exists but `workspace-intel.md` doesn't, auto-generate it (see `/init` Phase 4b)
+- If standalone (no workspace), skip this — proceed with package intel only
 
 ### 1. Explore Phase
 Launch parallel exploration agents (scope down based on cached intel):
@@ -100,6 +110,19 @@ This phase keeps the project intelligence file in sync with your changes. It run
    ```
 
 6. **If no intel file exists** (edge case — someone deleted it): Print "Intel file missing. Regenerating..." and run the full deep-research workflow.
+
+7. **Update workspace intel if needed**: If a `workspace-intel.md` exists in a parent directory AND any of these conditions are true, patch it too:
+   - New exports were added/changed that sibling packages might consume (shared types, API endpoints, event schemas)
+   - `package.json` dependencies changed (affects the cross-package dependency graph)
+   - New files were added to directories that represent package boundaries
+   - The package's role or architecture fundamentally changed
+
+   When patching workspace-intel.md, only update:
+   - The **Package Intel Registry** table (update "Last Updated" date for this package)
+   - The **Cross-Package Dependencies** section (if imports changed)
+   - The **Shared Contracts** section (if exported types/APIs changed)
+
+   If none of the above conditions apply, skip workspace intel update — most changes are internal to the package.
 
 **IMPORTANT**: This phase is lightweight — it reads a diff and patches a few sections. It should take seconds, not minutes. Do NOT re-scan the entire codebase.
 

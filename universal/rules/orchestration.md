@@ -5,8 +5,15 @@ When the user asks for any implementation work (feature, bugfix, refactor, migra
 ## Step 0: Context Gathering (ALWAYS)
 
 Before planning, gather context using the right tools:
-- **Check for cached intel FIRST**: Read `.claude/rules/project-intel.md` if it exists — this is a pre-computed codebase map with architecture, API surface, data models, patterns, and critical paths. Use it instead of re-exploring.
-- If no cached intel exists, AUTO-GENERATE it by running the deep-research workflow (6 parallel agents). Do not ask — just do it. Print "No cached intel. Generating codebase intelligence..." and proceed.
+
+### 0a: Load Hierarchical Intel
+- **Check for package-level intel FIRST**: Read `.claude/rules/project-intel.md` if it exists — this is a pre-computed codebase map.
+- **Check for workspace-level intel**: Walk up from the current directory looking for `workspace-intel.md` in parent `.claude/rules/` directories. If found, read it — it contains cross-package dependencies, shared contracts, and sibling package context.
+- **Check for relevant sibling intel**: If workspace-intel.md lists sibling packages, and the current task touches cross-package boundaries (imports, shared types, API calls between packages), read the relevant sibling's `project-intel.md` too. Do NOT load all siblings — only those relevant to the task.
+- If no package-level intel exists, AUTO-GENERATE it by running the deep-research workflow (6 parallel agents). Do not ask — just do it. Print "No cached intel. Generating codebase intelligence..." and proceed.
+- If no workspace-level intel exists but sibling packages are detected, auto-generate workspace-intel.md too.
+
+### 0b: Standard Context
 - Use `context7` MCP to fetch up-to-date docs for any library/framework you're unsure about
 - Use `serena` for semantic code navigation when exploring unfamiliar code
 - Use LSP diagnostics (automatic) to catch type errors after every edit

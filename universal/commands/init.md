@@ -2,6 +2,33 @@
 
 You are initializing a project for optimal Claude Code orchestration. Scan the project thoroughly and generate a complete project profile.
 
+## Phase 0: Workspace Hierarchy Detection (ALWAYS FIRST)
+
+Before scanning this package, detect the workspace structure:
+
+1. **Walk up** from the current directory to find parent workspaces:
+   - Check each parent directory for workspace markers: `package.json` with `workspaces`, `pnpm-workspace.yaml`, `lerna.json`, `brazil-build/workspace`, `Cargo.toml` with `[workspace]`, monorepo root markers (`.git` at root level with multiple packages below)
+   - Stop at the filesystem root or the first `.git` directory (repo boundary)
+
+2. **Walk down** to discover sibling packages:
+   - If a parent workspace is found, list its child packages/projects
+   - Check each sibling for existing `.claude/rules/project-intel.md`
+
+3. **Classify the workspace topology**:
+   - **Standalone**: No parent workspace, no sibling packages. Standard single-package mode.
+   - **Child package**: Has a parent workspace with sibling packages. Needs cross-package awareness.
+   - **Workspace root**: This IS the top-level workspace containing child packages. Needs aggregated intel.
+   - **Nested**: Multi-level nesting (workspace → package group → package). Map all levels.
+
+4. **Record the hierarchy** (used in Phase 2 and Phase 4):
+   ```
+   Workspace root: /path/to/root (or "none — standalone")
+   Current package: /path/to/current
+   Sibling packages: [list with paths and whether each has intel]
+   Parent intel: [exists at /path or "none"]
+   Depth: [1 = standalone, 2 = workspace/package, 3+ = deeply nested]
+   ```
+
 ## Phase 1: Project Scan
 
 Read and analyze these signals (use parallel tool calls):
@@ -112,7 +139,9 @@ Based on project type, output the recommended orchestration profile:
 - Quality: `code-reviewer`, `test-automator`, `security-auditor`
 - Plugins: `typescript-lsp`, `context7`, `serena`
 
-## Phase 4: Deep Research (AUTO-TRIGGER)
+## Phase 4: Deep Research + Workspace Intel (AUTO-TRIGGER)
+
+### 4a: Package-Level Intel
 
 Check if `.claude/rules/project-intel.md` exists:
 
@@ -132,6 +161,67 @@ Check if `.claude/rules/project-intel.md` exists:
   - **Older than 30 days**: Auto-refresh it. Print: "Intel is stale ([date]). Auto-refreshing..."  Then re-run the full deep-research.
   - **Fresh (under 30 days)**: Keep it. Print: "Cached intel loaded ([date]). Codebase knowledge is current."
 
+### 4b: Workspace-Level Intel (only if workspace detected in Phase 0)
+
+If the workspace topology is NOT "standalone":
+
+1. **Check for workspace-level intel** at `{workspace_root}/.claude/rules/workspace-intel.md`
+
+2. **If it does NOT exist**: Auto-generate it:
+   - Print: "Workspace detected with [N] packages. Generating cross-package intelligence..."
+   - Create `{workspace_root}/.claude/rules/workspace-intel.md` with this structure:
+     ```markdown
+     # Workspace Intelligence: [name]
+     > Auto-generated. Last updated: [date]
+
+     ## Workspace Topology
+     - Root: [path]
+     - Package manager: [npm workspaces / pnpm / lerna / brazil / cargo workspace]
+     - Packages: [list with paths and one-line descriptions]
+
+     ## Cross-Package Dependencies
+     [Which packages import from which — internal dependency graph]
+     - frontend → shared (imports types, utils)
+     - backend → shared (imports types, validators)
+     - infra → backend (references Lambda handler paths)
+
+     ## Shared Contracts
+     [Types, interfaces, APIs that span package boundaries]
+     - Shared types: [path] — used by [packages]
+     - API contracts: [frontend calls backend endpoints X, Y, Z]
+     - Event schemas: [package A publishes, package B consumes]
+
+     ## Package Intel Registry
+     | Package | Path | Has Intel | Last Updated | Role |
+     |---|---|---|---|---|
+     | frontend | packages/frontend | yes | 2024-01-15 | React UI |
+     | backend | packages/backend | yes | 2024-01-15 | API + Lambda |
+     | shared | packages/shared | no | — | Shared types |
+
+     ## Cross-Cutting Patterns
+     [Patterns that are consistent across all packages]
+     - Error handling: [approach]
+     - Logging: [approach]
+     - Auth: [how auth flows between packages]
+
+     ## Workspace Commands
+     - Build all: [command]
+     - Test all: [command]
+     - Build specific: [command pattern]
+     ```
+   - To populate the cross-package dependency graph, scan import statements across packages looking for cross-boundary imports.
+
+3. **If it DOES exist**: Check freshness. Refresh if stale (>30 days) or if new packages have been added.
+
+4. **Link from package intel**: Add a `## Workspace Context` section to the current package's intel referencing the workspace intel:
+   ```markdown
+   ## Workspace Context
+   Part of: [workspace name] (see {workspace_root}/.claude/rules/workspace-intel.md)
+   Sibling packages: [list]
+   This package provides: [what it exports to siblings]
+   This package consumes: [what it imports from siblings]
+   ```
+
 **IMPORTANT**: Never ask the user whether to run deep-research. The system makes smart decisions — if intel is missing or stale, generate it. The user should never need to think about this.
 
 ## Phase 5: Output Summary
@@ -141,13 +231,16 @@ Print a clean summary:
 ## Project Initialized: [name]
 Stack: [language] / [framework] / [build system]
 AWS: [services detected]
+Workspace: [standalone / child of X with N siblings / workspace root with N packages]
 Agent team: [list]
 Plugins: [list]
 Providers: [installed providers] → Tests: [codex/claude] | Docs: [gemini/claude] | Review: [amp/claude]
 Build: `[command]` | Test: `[command]` | Dev: `[command]`
 Intel: [generated / refreshed / loaded (date)]
+Workspace Intel: [generated / refreshed / loaded (date) / N/A (standalone)]
+Sibling Intel: [N of M siblings have intel]
 ```
 
-Then say: "Project fully initialized with cached intelligence. I know this codebase. Cross-provider dispatch is [active (N providers) / single-provider mode]. Ask me to build anything."
+Then say: "Project fully initialized with cached intelligence. I know this codebase [and its workspace context]. Cross-provider dispatch is [active (N providers) / single-provider mode]. Ask me to build anything."
 
 $ARGUMENTS

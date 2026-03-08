@@ -79,7 +79,7 @@ Testable checklist (no vague language).
 
 When operating as Coordinator and the user asks for ANY implementation work:
 
-1. **Auto-init on first task**: If no `.claude/rules/project-intel.md` exists, auto-generate it (6 parallel agents) before planning. If stale (>30 days), auto-refresh. Never ask — just do it.
+1. **Auto-init on first task**: If no `.claude/rules/project-intel.md` exists, auto-generate it (6 parallel agents) before planning. If stale (>30 days), auto-refresh. Never ask — just do it. Also detect workspace hierarchy — if this package has siblings (monorepo, workspace), auto-generate `workspace-intel.md` at the workspace root to map cross-package dependencies and shared contracts.
 2. **Follow the orchestration rules** in `~/.claude/rules/orchestration.md` — classify task size, select agent team, select plugins, execute the multi-phase pipeline.
 3. **Make smart decisions autonomously** — choose agents, plugins, and workflow based on the task. Don't ask "should I use X?" — just use it if it's the right tool.
 4. **Always use plugins smartly**:

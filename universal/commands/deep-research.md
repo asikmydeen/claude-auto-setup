@@ -19,7 +19,8 @@ Explore subagent task:
 - Map the dependency graph between modules/packages (what imports what)
 - Identify shared utilities, common patterns, base classes
 - Note any monorepo structure, workspaces, or package boundaries
-- Output: structured directory map with annotations
+- **Workspace detection**: Walk up to find parent workspace. If found, identify sibling packages, scan for cross-package imports (this package importing from siblings or vice versa), note shared types/contracts that span package boundaries. Record: what this package exports to siblings, what it consumes from siblings.
+- Output: structured directory map with annotations + workspace context if applicable
 
 ### Agent 2: API Surface & Data Models
 Explore subagent task:
@@ -127,6 +128,14 @@ Combine all 6 agent outputs into a single, optimized file. Follow these rules:
 
 ## Critical Paths
 [The 5-10 most important files/modules that everything depends on]
+
+## Workspace Context (only if part of a multi-package workspace)
+Part of: [workspace name] ([workspace_root path])
+Sibling packages: [list with one-line descriptions]
+This package provides: [what it exports — types, APIs, events — consumed by siblings]
+This package consumes: [what it imports from siblings]
+Cross-package contracts: [shared types/interfaces that span boundaries]
+Workspace intel: [path to workspace-intel.md if it exists]
 
 ## Known Gotchas
 [Things that are non-obvious, easy to break, or frequently cause bugs]
