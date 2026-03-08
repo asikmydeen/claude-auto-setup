@@ -19,21 +19,25 @@ set -euo pipefail
 #   - Amp Code (Sourcegraph)
 #
 # Usage:
-#   ./install.sh                    # Auto-detect and install all
-#   ./install.sh --agents claude    # Install only Claude Code
-#   ./install.sh --agents all       # Install all adapters regardless of detection
-#   ./install.sh --force            # Overwrite existing config
+#   ./install.sh                    # Fresh install (auto-detect agents)
+#   ./install.sh --update           # Update commands/rules only (preserves settings)
+#   ./install.sh --self-update      # Git pull latest + update
+#   ./install.sh --agents=claude    # Install only Claude Code
+#   ./install.sh --agents=all       # Install all adapters regardless of detection
+#   ./install.sh --force            # Overwrite ALL config including settings
 #   ./install.sh --dry-run          # Preview changes
 #   ./install.sh --uninstall        # Remove all config
 #
 # Compatible with Bash 3.2+ (macOS default) and all modern shells.
 # ============================================================================
 
-VERSION="2.1.0"
+VERSION="3.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=false
 FORCE=false
 UNINSTALL=false
+UPDATE=false
+SELF_UPDATE=false
 AGENTS_FILTER=""
 
 # Colors
@@ -53,32 +57,41 @@ step()  { echo ""; echo "${BOLD}${CYAN}==> $*${RESET}"; }
 # Parse arguments
 for arg in "$@"; do
   case "$arg" in
-    --force)     FORCE=true ;;
-    --dry-run)   DRY_RUN=true ;;
-    --uninstall) UNINSTALL=true ;;
-    --agents=*)  AGENTS_FILTER="${arg#--agents=}" ;;
+    --force)       FORCE=true ;;
+    --dry-run)     DRY_RUN=true ;;
+    --uninstall)   UNINSTALL=true ;;
+    --update)      UPDATE=true ;;
+    --self-update) SELF_UPDATE=true; UPDATE=true ;;
+    --agents=*)    AGENTS_FILTER="${arg#--agents=}" ;;
     --help|-h)
       echo "Usage: $0 [OPTIONS]"
       echo ""
-      echo "Options:"
-      echo "  --force            Overwrite existing config (backs up first)"
-      echo "  --dry-run          Preview changes without making them"
+      echo "Modes:"
+      echo "  (no flag)          Fresh install — full setup with backup"
+      echo "  --update           Update commands, rules, and adapters only"
+      echo "                     Preserves: settings.json, CLAUDE.md, project intel"
+      echo "  --self-update      Git pull latest version, then --update"
+      echo "  --force            Full install, overwrite everything (backs up first)"
       echo "  --uninstall        Remove all installed config"
+      echo ""
+      echo "Options:"
+      echo "  --dry-run          Preview changes without making them"
       echo "  --agents=NAMES     Comma-separated: claude,gemini,kiro,codex,cursor,ampcode,all"
       echo "  --help             Show this help"
       echo ""
       echo "Examples:"
-      echo "  ./install.sh                        # Auto-detect and install"
-      echo "  ./install.sh --agents=claude,gemini  # Only these agents"
-      echo "  ./install.sh --agents=all            # All agents regardless"
-      echo "  ./install.sh --force                 # Overwrite existing"
+      echo "  ./install.sh                         # First time setup"
+      echo "  ./install.sh --update                # Pull new commands/rules"
+      echo "  ./install.sh --self-update            # Git pull + update"
+      echo "  ./install.sh --agents=claude,gemini   # Only these agents"
+      echo "  ./install.sh --force                  # Full reinstall"
       exit 0
       ;;
     *) error "Unknown argument: $arg. Use --help for usage."; exit 1 ;;
   esac
 done
 
-# Agent detection using simple variables (Bash 3.2 compatible — no associative arrays)
+# Agent detection using simple variables (Bash 3.2 compatible)
 AGENT_claude=false
 AGENT_gemini=false
 AGENT_kiro=false
@@ -183,6 +196,49 @@ detect_agents() {
   ok "Detected: $count agent(s)"
 }
 
+# Self-update: git pull latest
+self_update() {
+  step "Self-updating from git"
+
+  if [ ! -d "$SCRIPT_DIR/.git" ]; then
+    warn "Not a git repository. Cannot self-update."
+    warn "Re-clone from: git@github.com:asikmydeen/claude-auto-setup.git"
+    return 1
+  fi
+
+  if $DRY_RUN; then
+    info "[DRY RUN] Would run: git -C $SCRIPT_DIR pull origin main"
+    return
+  fi
+
+  local before_hash
+  before_hash=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+
+  git -C "$SCRIPT_DIR" pull origin main --ff-only 2>&1 || {
+    warn "Fast-forward pull failed. Trying rebase..."
+    git -C "$SCRIPT_DIR" pull origin main --rebase 2>&1 || {
+      error "Git pull failed. Manual intervention needed."
+      error "Try: cd $SCRIPT_DIR && git stash && git pull origin main"
+      return 1
+    }
+  }
+
+  local after_hash
+  after_hash=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+
+  if [ "$before_hash" = "$after_hash" ]; then
+    ok "Already up to date ($before_hash)"
+  else
+    ok "Updated: ${before_hash:0:7} -> ${after_hash:0:7}"
+    # Show what changed
+    echo ""
+    info "Changes pulled:"
+    git -C "$SCRIPT_DIR" log --oneline "${before_hash}..${after_hash}" 2>/dev/null | head -20 | while read -r line; do
+      echo "    $line"
+    done
+  fi
+}
+
 # Backup
 backup() {
   step "Backing up existing config"
@@ -205,7 +261,139 @@ backup() {
   ok "Backup: $backup_dir"
 }
 
-# Install per agent
+# Update mode: only update commands, rules, and adapters — preserve user config
+update_agents() {
+  step "Updating shared commands and rules"
+
+  local commands_src="$SCRIPT_DIR/universal/commands"
+  local rules_src="$SCRIPT_DIR/universal/rules"
+  local updated=0
+  local skipped=0
+
+  # --- Claude Code ---
+  if [ "$(agent_is_enabled claude)" = "true" ]; then
+    step "Updating Claude Code"
+
+    # Always update commands (these are ours, not user-modified)
+    local cmd_dest="$HOME/.claude/commands"
+    if [ -d "$commands_src" ]; then
+      mkdir -p "$cmd_dest"
+      for f in "$commands_src"/*.md; do
+        local fname
+        fname=$(basename "$f")
+        if $DRY_RUN; then
+          if [ -f "$cmd_dest/$fname" ]; then
+            if ! diff -q "$f" "$cmd_dest/$fname" &>/dev/null; then
+              info "[DRY RUN] Would update: commands/$fname"
+              updated=$((updated + 1))
+            fi
+          else
+            info "[DRY RUN] Would add: commands/$fname"
+            updated=$((updated + 1))
+          fi
+        else
+          cp "$f" "$cmd_dest/$fname"
+          updated=$((updated + 1))
+        fi
+      done
+      ok "Commands: $updated files synced"
+    fi
+
+    # Always update rules (these are ours, not user-modified)
+    local rules_dest="$HOME/.claude/rules"
+    if [ -d "$rules_src" ]; then
+      mkdir -p "$rules_dest"
+      local rules_updated=0
+      for f in "$rules_src"/*.md; do
+        local fname
+        fname=$(basename "$f")
+        # Skip project-intel.md and workspace-intel.md — those are generated per-project
+        if [ "$fname" = "project-intel.md" ] || [ "$fname" = "workspace-intel.md" ]; then
+          continue
+        fi
+        if $DRY_RUN; then
+          info "[DRY RUN] Would update: rules/$fname"
+        else
+          cp "$f" "$rules_dest/$fname"
+        fi
+        rules_updated=$((rules_updated + 1))
+      done
+      ok "Rules: $rules_updated files synced"
+    fi
+
+    # PRESERVE these user-modified files (never overwrite in update mode):
+    local preserved_files="settings.json CLAUDE.md"
+    for pf in $preserved_files; do
+      if [ -f "$HOME/.claude/$pf" ]; then
+        info "Preserved (not touched): ~/.claude/$pf"
+        skipped=$((skipped + 1))
+      fi
+    done
+
+    # CLAUDE.md and settings.json: only install if missing
+    local claude_agent_dir="$SCRIPT_DIR/agents/claude-code"
+    if [ ! -f "$HOME/.claude/CLAUDE.md" ] && [ -f "$claude_agent_dir/CLAUDE.md" ]; then
+      if $DRY_RUN; then
+        info "[DRY RUN] Would create: ~/.claude/CLAUDE.md (missing)"
+      else
+        cp "$claude_agent_dir/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+        ok "Created missing: ~/.claude/CLAUDE.md"
+      fi
+    fi
+    if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$claude_agent_dir/settings.json" ]; then
+      if $DRY_RUN; then
+        info "[DRY RUN] Would create: ~/.claude/settings.json (missing)"
+      else
+        cp "$claude_agent_dir/settings.json" "$HOME/.claude/settings.json"
+        ok "Created missing: ~/.claude/settings.json"
+      fi
+    fi
+  fi
+
+  # --- Other agents: run adapters in update mode ---
+  for agent in gemini kiro codex cursor ampcode; do
+    if [ "$(agent_is_enabled "$agent")" = "true" ]; then
+      local adapter="$SCRIPT_DIR/agents"
+      case $agent in
+        gemini)  adapter="$adapter/gemini-cli/adapter.sh" ;;
+        kiro)    adapter="$adapter/kiro-cli/adapter.sh" ;;
+        codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
+        cursor)  adapter="$adapter/cursor/adapter.sh" ;;
+        ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
+      esac
+
+      if [ -f "$adapter" ]; then
+        step "Updating: $(echo "$agent" | sed 's/^./\U&/')"
+        if $DRY_RUN; then
+          info "[DRY RUN] Would run $adapter install"
+        else
+          chmod +x "$adapter"
+          bash "$adapter" install
+        fi
+      fi
+    fi
+  done
+
+  # --- Update dispatch script ---
+  if [ -f "$SCRIPT_DIR/dispatch.sh" ]; then
+    local dispatch_dest="$HOME/claude-code-setup"
+    if [ -d "$dispatch_dest" ] || [ "$SCRIPT_DIR" = "$dispatch_dest" ]; then
+      # dispatch.sh is already in place (we're running from the install dir)
+      ok "dispatch.sh: up to date (in-place)"
+    else
+      mkdir -p "$dispatch_dest"
+      if $DRY_RUN; then
+        info "[DRY RUN] Would copy dispatch.sh to $dispatch_dest/"
+      else
+        cp "$SCRIPT_DIR/dispatch.sh" "$dispatch_dest/dispatch.sh"
+        chmod +x "$dispatch_dest/dispatch.sh"
+        ok "dispatch.sh: updated"
+      fi
+    fi
+  fi
+}
+
+# Full install per agent (used for fresh install and --force)
 install_agents() {
   for agent in $ALL_AGENTS; do
     if [ "$(agent_is_enabled "$agent")" = "true" ]; then
@@ -259,7 +447,14 @@ uninstall_agents() {
 
 # Summary
 summary() {
-  step "Installation Complete!"
+  local mode="$1"
+
+  if [ "$mode" = "update" ]; then
+    step "Update Complete!"
+  else
+    step "Installation Complete!"
+  fi
+
   echo ""
   echo "  ${BOLD}Agents configured:${RESET}"
   for agent in $ALL_AGENTS; do
@@ -269,13 +464,24 @@ summary() {
   done
   echo ""
   echo "  ${BOLD}Shared components:${RESET}"
-  echo "    Rules:    $(ls "$SCRIPT_DIR/universal/rules/"*.md 2>/dev/null | wc -l) files (code quality, security, testing, git, AWS, orchestration)"
-  echo "    Commands: $(ls "$SCRIPT_DIR/universal/commands/"*.md 2>/dev/null | wc -l) files (roles, subagents, workflows)"
+  echo "    Rules:    $(ls "$SCRIPT_DIR/universal/rules/"*.md 2>/dev/null | wc -l) files"
+  echo "    Commands: $(ls "$SCRIPT_DIR/universal/commands/"*.md 2>/dev/null | wc -l) files"
   echo ""
-  echo "  ${BOLD}Per-project setup:${RESET}"
-  echo "    Run ${CYAN}./project-init.sh${RESET} in any project directory to create"
-  echo "    shared .ai/ config for all agents."
-  echo ""
+
+  if [ "$mode" = "update" ]; then
+    echo "  ${BOLD}What was updated:${RESET}"
+    echo "    ${GREEN}*${RESET} Commands (roles, subagents, workflows)"
+    echo "    ${GREEN}*${RESET} Rules (orchestration, code quality, security, testing, git, AWS)"
+    echo "    ${GREEN}*${RESET} Agent adapters"
+    echo ""
+    echo "  ${BOLD}What was preserved:${RESET}"
+    echo "    ${CYAN}*${RESET} ~/.claude/settings.json (your permissions, hooks, plugins)"
+    echo "    ${CYAN}*${RESET} ~/.claude/CLAUDE.md (your global instructions)"
+    echo "    ${CYAN}*${RESET} Project-level intel files (project-intel.md, workspace-intel.md)"
+    echo "    ${CYAN}*${RESET} Memory files"
+    echo ""
+  fi
+
   echo "  ${BOLD}Key commands (Claude Code):${RESET}"
   echo "    /init              Scan project + auto-generate intel"
   echo "    /build <feature>   Multi-agent implementation"
@@ -283,13 +489,19 @@ summary() {
   echo "    /debug <problem>   Multi-agent debugging"
   echo "    /deep-research     Full codebase analysis"
   echo ""
-  echo "  ${BOLD}Next steps:${RESET}"
-  echo "    1. Restart your AI agent(s)"
-  echo "    2. cd into a project"
-  echo "    3. Run ./project-init.sh (or /init in Claude Code)"
+
+  if [ "$mode" = "update" ]; then
+    echo "  ${BOLD}Tip:${RESET} Restart your AI agent(s) to pick up the changes."
+  else
+    echo "  ${BOLD}Next steps:${RESET}"
+    echo "    1. Restart your AI agent(s)"
+    echo "    2. cd into a project"
+    echo "    3. Run ./project-init.sh (or /init in Claude Code)"
+  fi
   echo ""
   echo "  ${BOLD}Backup:${RESET} ~/.ai-setup-backups/"
   echo "  ${BOLD}Rollback:${RESET} ./install.sh --uninstall"
+  echo "  ${BOLD}Update:${RESET}  ./install.sh --update  (or --self-update to pull latest first)"
 }
 
 # ============================================================================
@@ -299,9 +511,26 @@ echo ""
 echo "${BOLD}Universal AI Agent Setup v${VERSION}${RESET}"
 echo "===================================="
 $DRY_RUN && echo "${YELLOW}[DRY RUN MODE]${RESET}"
+$UPDATE && ! $SELF_UPDATE && echo "${CYAN}[UPDATE MODE]${RESET} — commands/rules only, preserving your config"
+$SELF_UPDATE && echo "${CYAN}[SELF-UPDATE MODE]${RESET} — pulling latest from git, then updating"
+
+# Handle uninstall
 $UNINSTALL && { backup; uninstall_agents; }
 
+# Handle self-update (git pull first)
+$SELF_UPDATE && self_update
+
+# Detect agents
 detect_agents
+
+# Backup before any changes
 backup
-install_agents
-summary
+
+# Choose mode
+if $UPDATE; then
+  update_agents
+  summary "update"
+else
+  install_agents
+  summary "install"
+fi
