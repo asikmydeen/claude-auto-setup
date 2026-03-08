@@ -1,3 +1,16 @@
+---
+paths:
+  - "**/cdk/**"
+  - "**/infra/**"
+  - "**/lambda/**"
+  - "**/handlers/**"
+  - "**/template.yaml"
+  - "**/serverless.yml"
+  - "**/*stack*"
+  - "**/packageInfo"
+  - "**/*.sam.*"
+---
+
 # AWS Development Patterns
 
 ## Brazil Build System

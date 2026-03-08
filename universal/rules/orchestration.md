@@ -64,8 +64,14 @@ echo "Review this diff for security, performance, code quality: $(git diff --sta
 
 Determine task complexity:
 - **Small** (single file, < 50 lines changed): Do it directly. No subagents needed.
-- **Medium** (2-5 files, single concern): Use 1-2 focused subagents in parallel.
-- **Large** (6+ files, multiple concerns, cross-cutting): Full multi-agent orchestration.
+- **Medium** (2-5 files, single concern): Use 1-2 focused native agents in parallel.
+- **Large** (6+ files, multiple concerns, cross-cutting): Full multi-agent orchestration. Consider agent teams for truly independent parallel work.
+
+### Agent Selection Priority
+1. **Native agents** (`~/.claude/agents/`) — use these first. They have model selection, tool restrictions, persistent memory, and background execution.
+   - Key native agents: `code-reviewer`, `debugger`, `test-writer`, `explorer`, `security-auditor`
+2. **Command-based agents** (`~/.claude/commands/`) — use these for role-specific workflows and orchestration commands.
+3. **Agent teams** (experimental) — use for large tasks where multiple agents need to communicate and coordinate in parallel.
 
 ## Step 2: Select Agent Team + Provider
 
