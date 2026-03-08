@@ -209,6 +209,45 @@ After ANY task that changes code (build, debug, review with fixes), update the c
 - If a write fails (file locked, permission error), log the failure and continue — don't block the user.
 - The next task will pick up the missed update.
 
+## Step 7: Error Recovery (when things go wrong)
+
+When a build, test, or lint fails during any phase, follow this structured recovery:
+
+### Build Failure
+1. Read the FULL error output — don't guess from the first line
+2. Check if it's a dependency issue (`npm install` / `brazil-build install` first)
+3. Check if it's a type error (read the file + line referenced in the error)
+4. Fix the root cause, not the symptom. Don't add `// @ts-ignore` or `any` types.
+5. Re-run build. If it fails again with a DIFFERENT error, you made progress — continue.
+6. If it fails with the SAME error, re-read your change and the error carefully.
+7. After 2 failed attempts at the same error, step back: read surrounding code, check intel for patterns, use `context7` to verify API usage.
+
+### Test Failure
+1. Read the test output to understand WHAT failed, not just THAT it failed
+2. Distinguish: did the test break because of your change (expected) or was it pre-existing?
+3. If your change broke it: fix your implementation, not the test (unless the test was wrong)
+4. If the test expectation changed (new behavior): update the test assertion
+5. Never delete or skip failing tests without understanding why they fail
+
+### Lint Failure
+1. Auto-fix what you can: `npx eslint --fix <file>` or `npx prettier --write <file>`
+2. For remaining issues: fix manually (don't disable rules)
+3. If a rule conflicts with the codebase pattern, check if there's an existing eslint-disable comment pattern
+
+### Cascading Failures
+If fixing one error creates new errors (> 3 cascading failures):
+1. STOP. Don't keep patching.
+2. `git diff` to review all your changes
+3. Consider whether the approach is wrong (not just the implementation)
+4. If the approach is wrong: `git stash`, rethink, start the implementation phase over
+5. Surface the blocker to the user with: what you tried, why it failed, what you'd do differently
+
+### Learning from Failures
+After recovering from any failure, check if it reveals a pattern worth remembering:
+- If you hit an API gotcha → add to intel's "Known Gotchas" section
+- If a test pattern was unexpected → note in intel's "Test Infrastructure"
+- If a build config was non-obvious → note in intel's "Quick Reference"
+
 ## Anti-Patterns (NEVER do these)
 
 - Don't use ALL agents on a small task — overkill wastes context
@@ -218,3 +257,5 @@ After ANY task that changes code (build, debug, review with fixes), update the c
 - Don't run agents sequentially when they can run in parallel
 - Don't skip intel updates — stale cache is worse than no cache
 - Don't do full re-scans when incremental updates suffice
+- Don't brute-force past errors — 3 attempts at the same fix means rethink the approach
+- Don't suppress errors (ts-ignore, eslint-disable, test.skip) — fix the root cause

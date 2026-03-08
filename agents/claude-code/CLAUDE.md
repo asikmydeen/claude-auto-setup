@@ -4,19 +4,19 @@
 
 When a session starts, BEFORE doing anything else:
 
-1. **Identify the role.** Check if the user has activated a role via slash command. If not, ask:
-   > "Which role should I operate in?"
-   > - **Developer** (`/user:developer`) — I plan and implement myself
-   > - **Coordinator** (`/user:coordinator`) — I plan and delegate to agents
-   > - **PR Reviewer** (`/user:reviewer`) — I review a pull request
-   > - **PR Shepherd** (`/user:shepherd`) — I shepherd a PR to merge-ready
-   > - **UI Designer** (`/user:ui-designer`) — I create accessible UI
-   > - **Implementor** (`/user:implementor`) — I execute a specific task
-   > - **Verifier** (`/user:verifier`) — I verify against acceptance criteria
+1. **Auto-detect the role from context.** If the user activated a role via slash command, use that. Otherwise, infer the role from the user's first message:
+   - Mentions building, implementing, adding features, creating → **Coordinator** (if complex/multi-file) or **Developer** (if simple)
+   - Mentions reviewing, PR, code review → **PR Reviewer**
+   - Mentions bug, fix, debug, error, broken → **Developer** (with debug focus)
+   - Mentions UI, design, accessibility, layout → **UI Designer**
+   - Mentions verify, check, test, acceptance criteria → **Verifier**
+   - If unclear, default to **Developer** and proceed. Do NOT block on role selection.
 
-2. **Do NOT proceed until a role is selected.** No code, no plans, no analysis.
+2. **State the role briefly and proceed.** Say "Operating as [role]." and start working. Do NOT present a menu unless the user explicitly asks "which roles are available?" or similar.
 
-3. **Once a role is active, follow its rules with zero exceptions.**
+3. **The user can switch roles at any time** with `/user:coordinator`, `/user:developer`, etc.
+
+4. **Once a role is active, follow its rules with zero exceptions.**
 
 ## Universal Hard Rules (Apply to ALL roles)
 
@@ -91,12 +91,25 @@ When operating as Coordinator and the user asks for ANY implementation work:
 4. **Parallelize aggressively** — launch independent agents simultaneously, never sequentially when they don't depend on each other.
 5. **Every delivery must include**: build passing, tests passing, lint clean, verification report.
 
+## Auto-Learning Protocol
+
+When you encounter any of these situations, update memory (`~/.claude/projects/*/memory/`) so future sessions don't repeat the mistake:
+
+- **User corrects you** → Write the correction to memory immediately. This is the highest-priority memory write.
+- **Build/test fails due to a project-specific gotcha** → Add to project-intel.md's "Known Gotchas" section AND memory.
+- **You discover a non-obvious pattern** (e.g., "this project uses X instead of Y") → Add to memory if it'll apply across sessions.
+- **An approach fails and you have to backtrack** → Record what didn't work and why, so you don't try it again.
+- **User says "always do X" or "never do Y"** → Memory immediately. These are standing instructions.
+
+Keep memory entries concise (1-2 lines each). Organize by project, not by date.
+
 ## Key Commands
-- `/user:init` — Scan project, detect stack, configure orchestration profile. Recommends deep-research.
-- `/user:deep-research` — 6 parallel agents deep-scan the entire codebase. Produces `.claude/rules/project-intel.md` — a cached knowledge map loaded every session. Run once per project, refresh after major changes.
+- `/user:init` — Scan project, detect stack, configure orchestration profile. Auto-triggers deep-research.
+- `/user:deep-research` — 6 parallel agents deep-scan the entire codebase. Produces `.claude/rules/project-intel.md` — a cached knowledge map loaded every session.
 - `/user:build <feature>` — End-to-end multi-agent feature implementation (uses cached intel if available)
 - `/user:review [target]` — Multi-agent code review (quality + security + perf + architecture)
 - `/user:debug <problem>` — Multi-agent investigation and fix
+- `/user:quick <task>` — Fast, no-spec execution for small single-file changes
 
 ## Agent Teams Available
 - **Development**: `api-designer`, `backend-developer`, `frontend-developer`, `fullstack-developer`, `typescript-pro`, `react-specialist`, `python-pro`

@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Bash(brazil-build *)",
+      "Bash(bb *)",
       "Bash(npm run *)",
       "Bash(npm test *)",
       "Bash(npm install *)",
@@ -8,6 +10,10 @@
       "Bash(node *)",
       "Bash(bun *)",
       "Bash(git *)",
+      "Bash(aws *)",
+      "Bash(ada *)",
+      "Bash(cdk *)",
+      "Bash(sam *)",
       "Bash(docker *)",
       "Bash(podman *)",
       "Bash(cargo *)",
@@ -30,8 +36,15 @@
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(touch *)",
+      "Bash(note *)",
+      "Bash(clips *)",
+      "Bash(micro *)",
+      "Bash(codex *)",
+      "Bash(gemini *)",
+      "Bash(amp *)",
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:docs.aws.amazon.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:stackoverflow.com)",
       "WebFetch(domain:developer.mozilla.org)"
@@ -55,7 +68,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '## Session Context\\n- Run /init on any new project to auto-generate codebase intelligence\\n- Use /build <feature> for multi-agent implementation\\n- Use /review for multi-agent code review\\n- Use /debug <problem> for multi-agent debugging'"
+            "command": "echo '## Session Context\\n- AWS credentials: run `ada credentials update --account=616047499392 --provider=isengard --role=Admin --once` if needed\\n- Projects: /workplace/ammydeen/DataCenterProcurementSystems | /workplace/ammydeen/Watermark\\n- Build: brazil-build release | brazil-build run start | brazil-build run test\\n- Providers: '$(which codex gemini amp 2>/dev/null | tr '\\n' ', ' || echo 'claude only')"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$TOOL_INPUT_file_path\"; EXT=\"${FILE##*.}\"; if [ \"$EXT\" = \"ts\" ] || [ \"$EXT\" = \"tsx\" ] || [ \"$EXT\" = \"js\" ] || [ \"$EXT\" = \"jsx\" ]; then cd \"$(dirname \"$FILE\")\" && npx eslint --no-error-on-unmatched-pattern --max-warnings=50 --format compact \"$FILE\" 2>/dev/null | head -20 || true; fi"
           }
         ]
       }
@@ -77,5 +101,6 @@
     "skill-creator@claude-plugins-official": true,
     "github@claude-plugins-official": true
   },
-  "showTurnDuration": true
+  "showTurnDuration": true,
+  "skipDangerousModePermissionPrompt": true
 }
