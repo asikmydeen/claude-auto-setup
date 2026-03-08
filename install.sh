@@ -25,9 +25,11 @@ set -euo pipefail
 #   ./install.sh --force            # Overwrite existing config
 #   ./install.sh --dry-run          # Preview changes
 #   ./install.sh --uninstall        # Remove all config
+#
+# Compatible with Bash 3.2+ (macOS default) and all modern shells.
 # ============================================================================
 
-VERSION="2.0.0"
+VERSION="2.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=false
 FORCE=false
@@ -62,7 +64,7 @@ for arg in "$@"; do
       echo "  --force            Overwrite existing config (backs up first)"
       echo "  --dry-run          Preview changes without making them"
       echo "  --uninstall        Remove all installed config"
-      echo "  --agents=NAMES     Comma-separated: claude,gemini,kiro,codex,cursor,all"
+      echo "  --agents=NAMES     Comma-separated: claude,gemini,kiro,codex,cursor,ampcode,all"
       echo "  --help             Show this help"
       echo ""
       echo "Examples:"
@@ -76,21 +78,31 @@ for arg in "$@"; do
   esac
 done
 
-# Agent detection
-declare -A AGENTS
+# Agent detection using simple variables (Bash 3.2 compatible — no associative arrays)
+AGENT_claude=false
+AGENT_gemini=false
+AGENT_kiro=false
+AGENT_codex=false
+AGENT_cursor=false
+AGENT_ampcode=false
+ALL_AGENTS="claude gemini kiro codex cursor ampcode"
+
+agent_is_enabled() {
+  local name="$1"
+  eval echo "\$AGENT_${name}"
+}
+
+agent_enable() {
+  local name="$1"
+  eval "AGENT_${name}=true"
+}
+
 detect_agents() {
   step "Detecting installed AI agents"
 
-  AGENTS[claude]=false
-  AGENTS[gemini]=false
-  AGENTS[kiro]=false
-  AGENTS[codex]=false
-  AGENTS[cursor]=false
-  AGENTS[ampcode]=false
-
   if [ "$AGENTS_FILTER" = "all" ]; then
-    for key in claude gemini kiro codex cursor ampcode; do
-      AGENTS[$key]=true
+    for key in $ALL_AGENTS; do
+      agent_enable "$key"
     done
     ok "Forced: all agents selected"
     return
@@ -99,7 +111,7 @@ detect_agents() {
   if [ -n "$AGENTS_FILTER" ]; then
     IFS=',' read -ra requested <<< "$AGENTS_FILTER"
     for agent in "${requested[@]}"; do
-      AGENTS[$agent]=true
+      agent_enable "$agent"
     done
     ok "Manual selection: ${AGENTS_FILTER}"
     return
@@ -107,42 +119,42 @@ detect_agents() {
 
   # Auto-detect
   if command -v claude &>/dev/null; then
-    AGENTS[claude]=true
+    agent_enable claude
     ok "Claude Code: $(claude --version 2>/dev/null || echo 'found')"
   else
     info "Claude Code: not found"
   fi
 
   if command -v gemini &>/dev/null; then
-    AGENTS[gemini]=true
+    agent_enable gemini
     ok "Gemini CLI: found"
   else
     info "Gemini CLI: not found"
   fi
 
   if command -v kiro &>/dev/null; then
-    AGENTS[kiro]=true
+    agent_enable kiro
     ok "Kiro CLI: found"
   else
     info "Kiro CLI: not found"
   fi
 
   if command -v codex &>/dev/null; then
-    AGENTS[codex]=true
+    agent_enable codex
     ok "Codex CLI: found"
   else
     info "Codex CLI: not found"
   fi
 
   if command -v cursor &>/dev/null || [ -d "$HOME/.cursor" ]; then
-    AGENTS[cursor]=true
+    agent_enable cursor
     ok "Cursor: found"
   else
     info "Cursor: not found"
   fi
 
   if command -v amp &>/dev/null; then
-    AGENTS[ampcode]=true
+    agent_enable ampcode
     ok "Amp Code: found"
   else
     info "Amp Code: not found"
@@ -150,16 +162,19 @@ detect_agents() {
 
   # Count detected
   local count=0
-  for key in "${!AGENTS[@]}"; do
-    if ${AGENTS[$key]}; then count=$((count + 1)); fi
+  for key in $ALL_AGENTS; do
+    if [ "$(agent_is_enabled "$key")" = "true" ]; then
+      count=$((count + 1))
+    fi
   done
 
   if [ $count -eq 0 ]; then
     warn "No AI agents detected. Install at least one:"
     echo "  Claude Code: npm install -g @anthropic-ai/claude-code"
-    echo "  Gemini CLI:  npm install -g @anthropic-ai/gemini-cli  (or brew install gemini)"
+    echo "  Gemini CLI:  npm install -g @google/gemini-cli"
     echo "  Kiro CLI:    See https://kiro.dev/cli/"
     echo "  Codex CLI:   npm install -g @openai/codex"
+    echo "  Amp Code:    See https://ampcode.com/"
     echo ""
     echo "  Or use --agents=all to install config for all agents anyway."
     exit 1
@@ -180,7 +195,7 @@ backup() {
 
   mkdir -p "$backup_dir"
 
-  [ -d "$HOME/.claude" ] && cp -r "$HOME/.claude/commands" "$backup_dir/claude-commands" 2>/dev/null || true
+  [ -d "$HOME/.claude/commands" ] && cp -r "$HOME/.claude/commands" "$backup_dir/claude-commands" 2>/dev/null || true
   [ -d "$HOME/.claude/rules" ] && cp -r "$HOME/.claude/rules" "$backup_dir/claude-rules" 2>/dev/null || true
   [ -f "$HOME/.claude/settings.json" ] && cp "$HOME/.claude/settings.json" "$backup_dir/" 2>/dev/null || true
   [ -f "$HOME/.claude/CLAUDE.md" ] && cp "$HOME/.claude/CLAUDE.md" "$backup_dir/" 2>/dev/null || true
@@ -192,8 +207,8 @@ backup() {
 
 # Install per agent
 install_agents() {
-  for agent in claude gemini kiro codex cursor ampcode; do
-    if ${AGENTS[$agent]}; then
+  for agent in $ALL_AGENTS; do
+    if [ "$(agent_is_enabled "$agent")" = "true" ]; then
       local adapter="$SCRIPT_DIR/agents"
 
       case $agent in
@@ -206,7 +221,7 @@ install_agents() {
       esac
 
       if [ -f "$adapter" ]; then
-        step "Installing: ${agent^}"
+        step "Installing: $(echo "$agent" | sed 's/^./\U&/')"
         if $DRY_RUN; then
           info "[DRY RUN] Would run $adapter install"
         else
@@ -223,14 +238,15 @@ install_agents() {
 # Uninstall
 uninstall_agents() {
   step "Uninstalling all agent configurations"
-  for agent in claude gemini kiro codex cursor; do
+  for agent in $ALL_AGENTS; do
     local adapter="$SCRIPT_DIR/agents"
     case $agent in
-      claude) adapter="$adapter/claude-code/adapter.sh" ;;
-      gemini) adapter="$adapter/gemini-cli/adapter.sh" ;;
-      kiro)   adapter="$adapter/kiro-cli/adapter.sh" ;;
-      codex)  adapter="$adapter/codex-cli/adapter.sh" ;;
-      cursor) adapter="$adapter/cursor/adapter.sh" ;;
+      claude)  adapter="$adapter/claude-code/adapter.sh" ;;
+      gemini)  adapter="$adapter/gemini-cli/adapter.sh" ;;
+      kiro)    adapter="$adapter/kiro-cli/adapter.sh" ;;
+      codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
+      cursor)  adapter="$adapter/cursor/adapter.sh" ;;
+      ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
     esac
     if [ -f "$adapter" ]; then
       chmod +x "$adapter"
@@ -246,9 +262,9 @@ summary() {
   step "Installation Complete!"
   echo ""
   echo "  ${BOLD}Agents configured:${RESET}"
-  for agent in claude gemini kiro codex cursor; do
-    if ${AGENTS[$agent]}; then
-      echo "    ${GREEN}*${RESET} ${agent^}"
+  for agent in $ALL_AGENTS; do
+    if [ "$(agent_is_enabled "$agent")" = "true" ]; then
+      echo "    ${GREEN}*${RESET} $(echo "$agent" | sed 's/^./\U&/')"
     fi
   done
   echo ""
