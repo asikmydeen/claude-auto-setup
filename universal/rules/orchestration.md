@@ -194,6 +194,28 @@ Always use these when relevant:
 - **`code-review`**: After implementation — run multi-agent review before marking done
 - **`code-simplifier`**: After implementation — simplify and refine the code
 
+## Step 3.5: Dashboard Reporting
+
+If the dashboard is running (port 3200), report agent state at each phase transition:
+```bash
+# Register session (done automatically by SessionStart hook, but ensure SESSION_ID is set)
+# Report agent state:
+curl -s -X POST http://localhost:3200/api/sessions/$SESSION_ID/agents \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"AGENT_ID","role":"ROLE","status":"STATUS","task":"DESCRIPTION","progress":{"done":N,"total":M}}' \
+  --connect-timeout 1 -o /dev/null 2>/dev/null || true
+```
+
+Status values: `exploring`, `implementing`, `reviewing`, `done`, `error`, `idle`
+
+Each subagent should report its own state when it starts and when its status changes. The `|| true` ensures reporting never blocks work.
+
+**Check for steering commands** between phases:
+```bash
+curl -s http://localhost:3200/api/sessions/$SESSION_ID/commands --connect-timeout 1 2>/dev/null || echo '[]'
+```
+If a `pause` command is pending, inform the user before continuing. If an `instruct` command is pending, incorporate the instruction.
+
 ## Step 4: Execute with Multi-Agent Pattern
 
 For **Medium** tasks:

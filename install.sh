@@ -518,9 +518,10 @@ summary() {
     echo "    3. Run ./project-init.sh (or /init in Claude Code)"
   fi
   echo ""
-  echo "  ${BOLD}Backup:${RESET} ~/.ai-setup-backups/"
-  echo "  ${BOLD}Rollback:${RESET} ./install.sh --uninstall"
-  echo "  ${BOLD}Update:${RESET}  ./install.sh --update  (or --self-update to pull latest first)"
+  echo "  ${BOLD}Dashboard:${RESET} http://localhost:3200"
+  echo "  ${BOLD}Backup:${RESET}    ~/.ai-setup-backups/"
+  echo "  ${BOLD}Rollback:${RESET}  ./install.sh --uninstall"
+  echo "  ${BOLD}Update:${RESET}    ./install.sh --update  (or --self-update to pull latest first)"
 }
 
 # ============================================================================
@@ -551,5 +552,18 @@ if $UPDATE; then
   summary "update"
 else
   install_agents
+
+  # Install dashboard service
+  if [ -f "$SCRIPT_DIR/dashboard/install-service.sh" ]; then
+    echo ""
+    step "Installing Agent Dashboard"
+    chmod +x "$SCRIPT_DIR/dashboard/install-service.sh"
+    if $DRY_RUN; then
+      info "[DRY RUN] Would install dashboard service on port 3200"
+    else
+      bash "$SCRIPT_DIR/dashboard/install-service.sh"
+    fi
+  fi
+
   summary "install"
 fi
