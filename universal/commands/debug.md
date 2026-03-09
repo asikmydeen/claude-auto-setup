@@ -4,6 +4,15 @@ You are diagnosing and fixing an issue using multi-agent investigation. The user
 
 $ARGUMENTS
 
+## Context Preservation
+
+Before starting, check for an existing checkpoint: `cat .claude/scratch/task-state.md 2>/dev/null`
+- **If it exists**: You may be resuming after compaction. Read it to recover your state. Say "Resuming from checkpoint — [phase], [next action]" and continue from where you left off.
+- **If not**: Fresh start. Create the checkpoint directory: `mkdir -p .claude/scratch`
+
+**Checkpoint at every phase transition** by writing to `.claude/scratch/task-state.md`. This file survives compaction.
+**Delete the checkpoint** when the task is fully delivered: `rm -f .claude/scratch/task-state.md`
+
 ## Phase 1: Investigate (parallel agents)
 
 ### Agent 1: Error Analysis

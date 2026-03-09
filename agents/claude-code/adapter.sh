@@ -71,6 +71,18 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     echo "    Settings: skipped (python3 needed for merge)"
   fi
 
+  # Install native agents
+  if [ -d "$AGENT_DIR/agents" ]; then
+    mkdir -p "$CLAUDE_HOME/agents"
+    local agent_count=0
+    for f in "$AGENT_DIR/agents/"*.md; do
+      [ -f "$f" ] || continue
+      \cp -f "$f" "$CLAUDE_HOME/agents/"
+      agent_count=$((agent_count + 1))
+    done
+    echo "    Native agents: $agent_count installed"
+  fi
+
   # Install plugins
   if command -v claude &>/dev/null; then
     echo "    Installing plugins..."

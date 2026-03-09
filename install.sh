@@ -321,6 +321,25 @@ update_agents() {
       ok "Rules: $rules_updated files synced"
     fi
 
+    # Always update native agents (these are ours, not user-modified)
+    local native_agents_src="$SCRIPT_DIR/agents/claude-code/agents"
+    if [ -d "$native_agents_src" ]; then
+      mkdir -p "$HOME/.claude/agents"
+      local agents_updated=0
+      for f in "$native_agents_src"/*.md; do
+        [ -f "$f" ] || continue
+        local fname
+        fname=$(basename "$f")
+        if $DRY_RUN; then
+          info "[DRY RUN] Would update: agents/$fname"
+        else
+          cp "$f" "$HOME/.claude/agents/$fname"
+        fi
+        agents_updated=$((agents_updated + 1))
+      done
+      ok "Native agents: $agents_updated files synced"
+    fi
+
     # PRESERVE these user-modified files (never overwrite in update mode):
     local preserved_files="settings.json CLAUDE.md"
     for pf in $preserved_files; do

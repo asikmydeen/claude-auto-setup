@@ -2,6 +2,85 @@
 
 When the user asks for any implementation work (feature, bugfix, refactor, migration), follow this orchestration protocol automatically.
 
+## Context Preservation (CRITICAL — prevents losing progress)
+
+Context compaction can happen at any time during a long task. To survive it:
+
+### Checkpoint System
+Use `.claude/scratch/task-state.md` as a persistent checkpoint file. This file lives on disk and survives compaction.
+
+**When to write checkpoints** (write BEFORE moving to the next phase):
+- After exploration completes → checkpoint discoveries
+- After plan is approved → checkpoint the approved spec
+- After each task/file is implemented → checkpoint what's done vs remaining
+- After review findings → checkpoint issues found
+- After any significant decision or discovery
+
+**Checkpoint format** (overwrite the file each time — it's current state, not a log):
+```markdown
+# Task State Checkpoint
+> Last updated: [timestamp]
+
+## Current Task
+[One-line description of what we're building]
+
+## Phase
+[Current phase: explore / plan / implement / review / verify]
+
+## Approved Plan
+[The spec that was approved — or "pending approval"]
+
+## Progress
+- [x] task-1: description [files changed: a.ts, b.ts]
+- [x] task-2: description [files changed: c.ts]
+- [ ] task-3: description [CURRENT — in progress]
+- [ ] task-4: description
+- [ ] task-5: description
+
+## Key Discoveries
+[Non-obvious things learned during exploration that affect implementation]
+
+## Decisions Made
+[Architecture choices, pattern selections, approach decisions with rationale]
+
+## Files Modified So Far
+[List of all files changed with one-line description of each change]
+
+## Blocked / Issues
+[Any blockers or open questions]
+```
+
+**When to read the checkpoint**:
+- At the START of every response, check if `.claude/scratch/task-state.md` exists
+- If it exists and you don't remember the context, READ IT — you've been compacted
+- The checkpoint tells you exactly where you were and what to do next
+
+**Checkpoint rules**:
+- Create `.claude/scratch/` directory on first checkpoint
+- Keep the file under 100 lines — it's a state snapshot, not documentation
+- Delete the checkpoint file when the task is fully complete
+- If resuming after compaction, say: "Resuming from checkpoint — [phase], [next action]"
+
+### What Already Survives Compaction (no action needed)
+- `CLAUDE.md` files — re-read from disk automatically
+- `.claude/rules/` files (including project-intel.md) — re-loaded
+- Auto memory (`MEMORY.md`) — re-loaded (first 200 lines)
+- Git state — all committed/staged work is safe
+- Native agent memory — persisted to their own dirs
+
+### What DOESN'T Survive Compaction (must checkpoint)
+- The approved plan/spec
+- Which tasks are done vs remaining
+- Exploration results and discoveries
+- Intermediate decisions and rationale
+- Uncommitted work-in-progress state
+
+### Additional Context Protection
+- **Prefer native agents** for exploration and review — their work stays in their own context, not yours
+- **Commit frequently** during implementation — `git add -p` + commit after each logical unit, so work is persisted even if the session crashes
+- **Delegate verbose operations** (running full test suites, fetching large docs) to subagents — keeps your main context clean
+- **Use `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`** in env to trigger compaction earlier, giving more room to work after compaction instead of hitting the wall at 95%
+
 ## Step 0: Context Gathering (ALWAYS)
 
 Before planning, gather context using the right tools:

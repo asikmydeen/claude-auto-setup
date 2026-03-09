@@ -5,6 +5,16 @@ You are executing a full end-to-end feature implementation using multi-agent orc
 ## Input
 The user's request: $ARGUMENTS
 
+## Context Preservation
+
+Before starting, check for an existing checkpoint: `cat .claude/scratch/task-state.md 2>/dev/null`
+- **If it exists**: You may be resuming after compaction. Read it to recover your state. Say "Resuming from checkpoint — [phase], [next action]" and continue from where you left off.
+- **If not**: Fresh start. Create the checkpoint directory: `mkdir -p .claude/scratch`
+
+**Checkpoint at every phase transition** by writing to `.claude/scratch/task-state.md`. This file survives compaction.
+**Commit after every logical unit** during implementation — persists work to git even if session crashes.
+**Delete the checkpoint** when the task is fully delivered: `rm -f .claude/scratch/task-state.md`
+
 ## Execution Protocol
 
 ### 0. Load Hierarchical Intel (FIRST — auto-generate if missing)
@@ -29,12 +39,16 @@ Launch parallel exploration agents (scope down based on cached intel):
 - **Agent 2 (Docs Fetcher)**: If the task involves any library/SDK/framework, use context7 MCP to fetch up-to-date documentation for the specific APIs needed.
 - **Agent 3 (Dependency Mapper)**: If touching existing code, use serena or Grep to map dependencies — what calls this code, what does it import, what tests cover it. Check cached intel for critical paths first.
 
+**CHECKPOINT**: Write exploration results and key discoveries to `.claude/scratch/task-state.md` (Phase: explore, include discoveries and files identified).
+
 ### 2. Plan Phase
 Synthesize exploration into a spec:
 - Write the spec using the standard spec format with `@@@task` blocks
 - Assign each task to the most appropriate agent (reference the orchestration rules agent selection table)
 - Identify which tasks can run in parallel vs sequential
 - **STOP and present the plan. Wait for user approval.**
+
+**CHECKPOINT**: After approval, write the full approved plan to `.claude/scratch/task-state.md` (Phase: plan-approved, include all tasks with assignments).
 
 ### 2.5. Detect Providers (silent, automatic)
 Run `which claude codex gemini amp 2>/dev/null` to detect installed providers. Use this to decide dispatch targets in phases 3 and 4. Never mention this step to the user — just use the information.
@@ -57,6 +71,8 @@ After approval, execute tasks using parallel agents AND external providers where
 - LSP will automatically catch type errors after edits
 - **Always validate external provider output** before integrating — read it, check quality, fix if needed
 - If an external provider fails or returns poor quality, fall back to Claude subagent silently
+- **CHECKPOINT after each task completes**: Update `.claude/scratch/task-state.md` — mark the task done, list files changed, move to next task
+- **Commit after each logical unit**: `git add [specific files]` + commit with descriptive message — persists work to git
 
 ### 4. Review Phase (auto-dispatch to best provider)
 After implementation, launch review agents in parallel:
