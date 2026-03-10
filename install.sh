@@ -145,7 +145,7 @@ detect_agents() {
     info "Gemini CLI: not found"
   fi
 
-  if command -v kiro &>/dev/null; then
+  if command -v kiro &>/dev/null || command -v kiro-cli &>/dev/null; then
     agent_enable kiro
     ok "Kiro CLI: found"
   else

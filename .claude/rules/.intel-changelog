@@ -25,4 +25,26 @@
 
 ---
 
+## 2026-03-10 - Targeted Intel Refresh
+- **Agent**: Coordinator (Claude)
+- **Task**: Refresh stale intel (1 year old, 13 commits behind)
+- **Method**: Targeted scan of git history + file diffs (not full 6-agent research)
+- **Key changes captured**:
+  - Native agent system: 5 agents with model/tool/memory config (code-reviewer, debugger, test-writer, explorer, security-auditor)
+  - Agent teams: experimental multi-session coordination (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1)
+  - Context preservation: checkpoint system at .claude/scratch/task-state.md
+  - CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80 for earlier compaction
+  - Dashboard expanded: session registration, agent state reporting, steering commands API
+  - install-service.sh for systemd/launchd background dashboard service
+  - PostToolUse hook: ESLint auto-runs on JS/TS files after Edit/Write
+  - SessionStart hook: auto-registers with dashboard
+  - 14 enabled plugins (up from ~8)
+  - New scripts: orchestration-intel.sh (169 lines), demo-intelligence.sh (143 lines)
+  - dispatch.sh expanded to 265 lines (was 241)
+  - 52 commands (12,096 lines total)
+  - Fixed paths from macOS to Linux EC2 instance
+  - Provider detection: only claude installed on this machine
+- **Files updated**: project-intel.md (full rewrite), .intel-changelog
+
+---
 

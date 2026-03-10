@@ -55,11 +55,12 @@ while [[ $# -gt 0 ]]; do
     --output)        OUTPUT_FILE="$2"; shift 2 ;;
     --list-providers)
       echo "Available providers:"
-      for cmd in claude codex gemini amp kiro; do
-        if command -v "$cmd" &>/dev/null; then
-          echo "  ${GREEN}*${RESET} $cmd (installed)"
+      for name in claude codex gemini amp kiro; do
+        cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
+        if command -v "$cli" &>/dev/null; then
+          echo "  ${GREEN}*${RESET} $name ($cli — installed)"
         else
-          echo "  ${DIM}- $cmd (not installed)${RESET}"
+          echo "  ${DIM}- $name ($cli — not installed)${RESET}"
         fi
       done
       exit 0
@@ -112,15 +113,33 @@ if [ -z "$TASK" ]; then
   exit 1
 fi
 
+# --- Auto-detect Amazon/AWS tasks → route to Kiro ---
+if [ -z "$TASK_TYPE" ] || [ -z "$FORCE_PROVIDER" ]; then
+  TASK_LOWER=$(echo "$TASK" | tr '[:upper:]' '[:lower:]')
+  AMAZON_PATTERNS="aws |aws-|amazon|brazil|cdk |cloudformation|lambda|dynamodb|s3 bucket|api gateway|sqs|sns|iam |isengard|pipelines|hydra|coral|brazil-build|packageinfo|internal|cr review|code review.*amazon|integration.test|fleet|sev2|sev1|ticket|sim |i.t\.|oncall|pager"
+  if echo "$TASK_LOWER" | grep -qEi "$AMAZON_PATTERNS"; then
+    if command -v kiro-cli &>/dev/null; then
+      if [ -z "$FORCE_PROVIDER" ]; then
+        FORCE_PROVIDER="kiro"
+        info "Amazon/AWS task detected → routing to Kiro (builder-mcp)"
+      fi
+      if [ -z "$TASK_TYPE" ]; then
+        TASK_TYPE="amazon-internal"
+      fi
+    fi
+  fi
+fi
+
 # --- Resolve provider ---
 resolve_provider() {
   # If forced, use that
   if [ -n "$FORCE_PROVIDER" ]; then
-    if command -v "$FORCE_PROVIDER" &>/dev/null; then
+    local cli="$FORCE_PROVIDER"; [ "$FORCE_PROVIDER" = "kiro" ] && cli="kiro-cli"
+    if command -v "$cli" &>/dev/null; then
       echo "$FORCE_PROVIDER"
       return
     else
-      error "Forced provider '$FORCE_PROVIDER' not installed"
+      error "Forced provider '$FORCE_PROVIDER' ($cli) not installed"
       exit 1
     fi
   fi
@@ -131,10 +150,11 @@ resolve_provider() {
 
     # Detect available providers
     local available_providers=""
-    for cmd in claude codex gemini amp kiro; do
-      if command -v "$cmd" &>/dev/null; then
+    for name in claude codex gemini amp kiro; do
+      local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
+      if command -v "$cli" &>/dev/null; then
         [ -n "$available_providers" ] && available_providers="${available_providers},"
-        available_providers="${available_providers}${cmd}"
+        available_providers="${available_providers}${name}"
       fi
     done
 
@@ -156,16 +176,18 @@ resolve_provider() {
 import json, shutil
 with open('$PROVIDERS_FILE') as f:
     data = json.load(f)
+providers = data.get('providers', {})
+cli_map = {name: info.get('cli', name) for name, info in providers.items()}
 routes = data.get('task_routing', {})
 chain = routes.get('$TASK_TYPE', ['claude', 'codex', 'gemini', 'amp'])
 for p in chain:
-    if shutil.which(p):
+    cli = cli_map.get(p, p)
+    if shutil.which(cli):
         print(p)
         break
 else:
-    # Fallback: try any installed provider
-    for p in ['claude', 'codex', 'gemini', 'amp', 'kiro']:
-        if shutil.which(p):
+    for p, cli in cli_map.items():
+        if shutil.which(cli):
             print(p)
             break
 ")
@@ -176,9 +198,10 @@ else:
   fi
 
   # Default fallback chain
-  for cmd in claude codex gemini amp; do
-    if command -v "$cmd" &>/dev/null; then
-      echo "$cmd"
+  for name in claude codex gemini amp kiro; do
+    local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
+    if command -v "$cli" &>/dev/null; then
+      echo "$name"
       return
     fi
   done
@@ -242,8 +265,25 @@ dispatch() {
       echo "$full_prompt" | amp 2>/dev/null
       ;;
     kiro)
-      warn "Kiro CLI doesn't support non-interactive mode. Falling back to claude."
-      claude -p "$full_prompt" --output-format text 2>/dev/null
+      local kiro_tools="@builder-mcp/ReadRemoteTestRun,@builder-mcp/InternalCodeSearch,@builder-mcp/ReadInternalWebsites"
+      local kiro_models="${KIRO_MODEL:-claude-sonnet-4.5 claude-sonnet-4 claude-haiku-4.5}"
+      local kiro_output=""
+      for model in $kiro_models; do
+        info "Trying: kiro-cli --model=$model (trusted: builder-mcp)"
+        kiro_output=$(kiro-cli chat --no-interactive --model="$model" --trust-tools="$kiro_tools" "$full_prompt" 2>&1) || true
+        # Strip ANSI codes and check if there's real content (not just warnings/errors)
+        local clean_output
+        clean_output=$(echo "$kiro_output" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\x1b\[[?0-9]*[a-zA-Z]//g' | grep -v '^\s*$' | grep -v 'WARNING:' | grep -v 'having trouble' | grep -v 'Credits:' | grep -v 'tools are now trusted' | grep -v 'understand the risks' | grep -v 'Learn more at' | grep -v 'temporarily unavailable' | grep -v 'Request ID:' | grep -v 'relaunch with' | head -1)
+        if [ -n "$clean_output" ]; then
+          echo "$kiro_output"
+          break
+        fi
+        warn "Model $model unavailable, trying next..."
+      done
+      if [ -z "$clean_output" ]; then
+        error "All Kiro models failed. Raw output:"
+        echo "$kiro_output"
+      fi
       ;;
     *)
       error "Unknown provider: $PROVIDER"
