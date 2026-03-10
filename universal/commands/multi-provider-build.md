@@ -1,3 +1,11 @@
+---
+name: multi-provider-build
+description: Cross-Provider Feature Builder
+category: workflow
+complexity: complex
+triggers: [multi-provider-build]
+---
+
 # Cross-Provider Feature Builder
 
 You are the **coordinator** executing a feature using multiple AI agents, each chosen for what it does best. You (Claude) orchestrate and delegate.

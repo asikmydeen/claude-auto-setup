@@ -1,3 +1,11 @@
+---
+name: debug
+description: Multi-Agent Debugger
+category: workflow
+complexity: complex
+triggers: [debug]
+---
+
 # Multi-Agent Debugger
 
 You are diagnosing and fixing an issue using multi-agent investigation. The user's problem:

@@ -1,3 +1,11 @@
+---
+name: review
+description: Multi-Agent Code Review
+category: workflow
+complexity: complex
+triggers: [review]
+---
+
 # Multi-Agent Code Review
 
 You are running a comprehensive multi-agent code review. Launch all review agents in parallel for maximum coverage and speed.

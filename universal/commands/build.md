@@ -1,3 +1,11 @@
+---
+name: build
+description: End-to-End Feature Builder
+category: workflow
+complexity: complex
+triggers: [build]
+---
+
 # End-to-End Feature Builder
 
 You are executing a full end-to-end feature implementation using multi-agent orchestration. Follow the orchestration protocol from the rules exactly.

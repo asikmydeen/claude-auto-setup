@@ -1,3 +1,11 @@
+---
+name: init
+description: Smart Project Initializer
+category: workflow
+complexity: simple
+triggers: [init]
+---
+
 # Smart Project Initializer
 
 You are initializing a project for optimal Claude Code orchestration. Scan the project thoroughly and generate a complete project profile.

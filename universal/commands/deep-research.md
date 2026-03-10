@@ -1,3 +1,11 @@
+---
+name: deep-research
+description: Deep Codebase Research & Intelligence Generator
+category: workflow
+complexity: complex
+triggers: [deep-research]
+---
+
 # Deep Codebase Research & Intelligence Generator
 
 You are performing a comprehensive multi-agent codebase analysis to produce a compact, high-density project intelligence file. This file acts as "cached context" — loaded every session so Claude never needs to re-explore the codebase from scratch.

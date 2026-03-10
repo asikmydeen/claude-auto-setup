@@ -518,7 +518,7 @@ summary() {
     echo "    3. Run ./project-init.sh (or /init in Claude Code)"
   fi
   echo ""
-  echo "  ${BOLD}Dashboard:${RESET} http://localhost:3200"
+  echo "  ${BOLD}Dashboard:${RESET} cd dashboard && pnpm dev (http://localhost:3200)"
   echo "  ${BOLD}Backup:${RESET}    ~/.ai-setup-backups/"
   echo "  ${BOLD}Rollback:${RESET}  ./install.sh --uninstall"
   echo "  ${BOLD}Update:${RESET}    ./install.sh --update  (or --self-update to pull latest first)"
@@ -553,15 +553,15 @@ if $UPDATE; then
 else
   install_agents
 
-  # Install dashboard service
-  if [ -f "$SCRIPT_DIR/dashboard/install-service.sh" ]; then
+  # Install dashboard dependencies
+  if [ -f "$SCRIPT_DIR/dashboard/package.json" ]; then
     echo ""
     step "Installing Agent Dashboard"
-    chmod +x "$SCRIPT_DIR/dashboard/install-service.sh"
     if $DRY_RUN; then
-      info "[DRY RUN] Would install dashboard service on port 3200"
+      info "[DRY RUN] Would install dashboard dependencies"
     else
-      bash "$SCRIPT_DIR/dashboard/install-service.sh"
+      (cd "$SCRIPT_DIR/dashboard" && pnpm install --frozen-lockfile 2>/dev/null || pnpm install)
+      ok "Dashboard ready: cd dashboard && pnpm dev"
     fi
   fi
 

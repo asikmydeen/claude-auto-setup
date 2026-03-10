@@ -1,3 +1,11 @@
+---
+name: intel-refresh
+description: Targeted Intel Refresh
+category: workflow
+complexity: complex
+triggers: [intel-refresh]
+---
+
 # Targeted Intel Refresh
 
 Refresh specific sections of the cached project intelligence without a full re-scan.

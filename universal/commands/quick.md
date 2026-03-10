@@ -1,3 +1,11 @@
+---
+name: quick
+description: Quick Task (Skip Full Spec)
+category: workflow
+complexity: simple
+triggers: [quick]
+---
+
 # Quick Task (Skip Full Spec)
 
 For small, well-defined tasks that don't need multi-agent orchestration. Skip the spec ceremony and just do it.
