@@ -125,7 +125,31 @@ resolve_provider() {
     fi
   fi
 
-  # If task type given, use routing table
+  # Try performance-based routing first (if available and task type given)
+  if [ -n "$TASK_TYPE" ] && [ -f "${HOME}/.claude/lib/performance-tracker.sh" ]; then
+    source "${HOME}/.claude/lib/performance-tracker.sh"
+
+    # Detect available providers
+    local available_providers=""
+    for cmd in claude codex gemini amp kiro; do
+      if command -v "$cmd" &>/dev/null; then
+        [ -n "$available_providers" ] && available_providers="${available_providers},"
+        available_providers="${available_providers}${cmd}"
+      fi
+    done
+
+    if [ -n "$available_providers" ]; then
+      local best_provider
+      best_provider=$(get_best_agent_for_task "$TASK_TYPE" "$available_providers")
+      if [ -n "$best_provider" ] && command -v "$best_provider" &>/dev/null; then
+        info "Using performance-based routing"
+        echo "$best_provider"
+        return
+      fi
+    fi
+  fi
+
+  # Fallback: use routing table from providers.json
   if [ -n "$TASK_TYPE" ] && command -v python3 &>/dev/null; then
     local provider
     provider=$(python3 -c "
