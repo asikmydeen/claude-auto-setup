@@ -397,7 +397,6 @@ update_agents() {
   if [ -f "$SCRIPT_DIR/dispatch.sh" ]; then
     local dispatch_dest="$HOME/claude-code-setup"
     if [ -d "$dispatch_dest" ] || [ "$SCRIPT_DIR" = "$dispatch_dest" ]; then
-      # dispatch.sh is already in place (we're running from the install dir)
       ok "dispatch.sh: up to date (in-place)"
     else
       mkdir -p "$dispatch_dest"
@@ -408,6 +407,24 @@ update_agents() {
         chmod +x "$dispatch_dest/dispatch.sh"
         ok "dispatch.sh: updated"
       fi
+    fi
+  fi
+
+  # --- Update orchestration server ---
+  if [ -f "$SCRIPT_DIR/orchestration/server.js" ]; then
+    local orch_dest="$HOME/.claude/orchestration"
+    if [ -d "$orch_dest" ]; then
+      if $DRY_RUN; then
+        info "[DRY RUN] Would update orchestration server"
+      else
+        \cp -f "$SCRIPT_DIR/orchestration/server.js" "$orch_dest/"
+        \cp -f "$SCRIPT_DIR/orchestration/lib/"*.js "$orch_dest/lib/"
+        \cp -f "$SCRIPT_DIR/orchestration/hooks/"* "$orch_dest/hooks/" 2>/dev/null || true
+        chmod +x "$orch_dest/hooks/"* 2>/dev/null || true
+        ok "Orchestration server: updated"
+      fi
+    else
+      info "Orchestration server: not installed yet (run without --update first)"
     fi
   fi
 }
@@ -568,6 +585,82 @@ else
         ok "Dashboard ready: cd dashboard && npm start"
       else
         warn "Dashboard skipped: install pnpm or npm first, then run: cd dashboard && npm install"
+      fi
+    fi
+  fi
+
+  # Install orchestration MCP server
+  if [ -f "$SCRIPT_DIR/orchestration/package.json" ]; then
+    echo ""
+    step "Installing Orchestration MCP Server"
+    if $DRY_RUN; then
+      info "[DRY RUN] Would install orchestration server"
+    else
+      local orch_dest="$HOME/.claude/orchestration"
+      mkdir -p "$orch_dest/lib" "$orch_dest/hooks"
+      \cp -f "$SCRIPT_DIR/orchestration/package.json" "$orch_dest/"
+      \cp -f "$SCRIPT_DIR/orchestration/server.js" "$orch_dest/"
+      \cp -f "$SCRIPT_DIR/orchestration/lib/"*.js "$orch_dest/lib/"
+      \cp -f "$SCRIPT_DIR/orchestration/hooks/"* "$orch_dest/hooks/" 2>/dev/null || true
+      chmod +x "$orch_dest/hooks/"* 2>/dev/null || true
+
+      # Install npm dependencies
+      if command -v npm &>/dev/null; then
+        (cd "$orch_dest" && npm install --production 2>&1 | tail -3)
+        ok "Orchestration server installed"
+      else
+        warn "Orchestration: npm not found, run: cd $orch_dest && npm install"
+      fi
+
+      # Register MCP server with Claude
+      local claude_mcp="$HOME/.config/claude-code/mcp_config.json"
+      if [ -f "$claude_mcp" ] && command -v python3 &>/dev/null; then
+        python3 -c "
+import json
+mcp_path = '$claude_mcp'
+with open(mcp_path) as f:
+    data = json.load(f)
+data.setdefault('mcpServers', {})
+data['mcpServers']['orchestration'] = {
+    'command': 'node',
+    'args': ['$orch_dest/server.js'],
+    'description': 'Pipeline orchestration, task queue, and analytics'
+}
+with open(mcp_path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+"
+        ok "Registered MCP: orchestration (Claude)"
+      fi
+
+      # Register MCP server with Kiro
+      local kiro_mcp="$HOME/.kiro/settings/mcp.json"
+      if [ -f "$kiro_mcp" ] && command -v python3 &>/dev/null; then
+        python3 -c "
+import json
+mcp_path = '$kiro_mcp'
+with open(mcp_path) as f:
+    data = json.load(f)
+data.setdefault('mcpServers', {})
+data['mcpServers']['orchestration'] = {
+    'command': 'node',
+    'args': ['$orch_dest/server.js']
+}
+with open(mcp_path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+"
+        ok "Registered MCP: orchestration (Kiro)"
+      fi
+
+      # Install git post-commit hook template
+      if [ -f "$orch_dest/hooks/post-commit" ]; then
+        local git_hooks_dir="$HOME/.claude/git-hooks"
+        mkdir -p "$git_hooks_dir"
+        \cp -f "$orch_dest/hooks/post-commit" "$git_hooks_dir/post-commit"
+        chmod +x "$git_hooks_dir/post-commit"
+        ok "Git post-commit hook template: $git_hooks_dir/post-commit"
+        info "To activate in a project: cp $git_hooks_dir/post-commit .git/hooks/post-commit"
       fi
     fi
   fi

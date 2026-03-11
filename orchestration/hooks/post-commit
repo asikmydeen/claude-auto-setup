@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Git post-commit hook: auto-tracks commits and queues intel refresh for large changes
+# Installed by claude-code-setup install.sh
+
+ENFORCE="$HOME/.claude/scripts/enforce.sh"
+QUEUE="$HOME/.claude/scratch/task-queue.json"
+INTEL_FILE=".claude/rules/project-intel.md"
+
+# Count files changed in this commit
+FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null | wc -l | tr -d ' ')
+
+# Mark tests as done if the commit message mentions tests
+COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+if echo "$COMMIT_MSG" | grep -qiE '(test|spec|jest|vitest|pytest)'; then
+  [ -x "$ENFORCE" ] && "$ENFORCE" mark tests 2>/dev/null || true
+fi
+
+# If 10+ files changed and intel exists, queue a refresh
+if [ "$FILES_CHANGED" -ge 10 ] && [ -f "$INTEL_FILE" ]; then
+  # Write a queue entry for intel refresh
+  if command -v python3 &>/dev/null; then
+    python3 -c "
+import json, os, time
+
+queue_file = '$QUEUE'
+try:
+    with open(queue_file) as f:
+        queue = json.load(f)
+except:
+    queue = {'tasks': []}
+
+# Don't queue if there's already a pending intel refresh
+pending = [t for t in queue['tasks'] if t.get('task_type') == 'intel-refresh' and t.get('status') == 'pending']
+if not pending:
+    queue['tasks'].append({
+        'id': f'intel-{int(time.time())}',
+        'created_at': int(time.time()),
+        'started_at': None,
+        'completed_at': None,
+        'status': 'pending',
+        'provider': 'claude',
+        'task_type': 'intel-refresh',
+        'prompt': f'Run /intel-refresh — {$FILES_CHANGED} files changed in last commit',
+        'priority': 'low',
+        'output_file': None,
+        'result': None,
+    })
+    os.makedirs(os.path.dirname(queue_file), exist_ok=True)
+    with open(queue_file, 'w') as f:
+        json.dump(queue, f, indent=2)
+" 2>/dev/null
+  fi
+fi
+
+exit 0
