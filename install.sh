@@ -613,24 +613,10 @@ else
       fi
 
       # Register MCP server with Claude
-      claude_mcp="$HOME/.config/claude-code/mcp_config.json"
-      if [ -f "$claude_mcp" ] && command -v python3 &>/dev/null; then
-        python3 -c "
-import json
-mcp_path = '$claude_mcp'
-with open(mcp_path) as f:
-    data = json.load(f)
-data.setdefault('mcpServers', {})
-data['mcpServers']['orchestration'] = {
-    'command': 'node',
-    'args': ['$orch_dest/server.js'],
-    'description': 'Pipeline orchestration, task queue, and analytics'
-}
-with open(mcp_path, 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-"
-        ok "Registered MCP: orchestration (Claude)"
+      if command -v claude &>/dev/null; then
+        claude mcp add -s user orchestration -- node "$orch_dest/server.js" 2>/dev/null \
+          && ok "Registered MCP: orchestration (Claude)" \
+          || warn "Could not register orchestration MCP with Claude CLI"
       fi
 
       # Register MCP server with Kiro
