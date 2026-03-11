@@ -596,7 +596,7 @@ else
     if $DRY_RUN; then
       info "[DRY RUN] Would install orchestration server"
     else
-      local orch_dest="$HOME/.claude/orchestration"
+      orch_dest="$HOME/.claude/orchestration"
       mkdir -p "$orch_dest/lib" "$orch_dest/hooks"
       \cp -f "$SCRIPT_DIR/orchestration/package.json" "$orch_dest/"
       \cp -f "$SCRIPT_DIR/orchestration/server.js" "$orch_dest/"
@@ -613,7 +613,7 @@ else
       fi
 
       # Register MCP server with Claude
-      local claude_mcp="$HOME/.config/claude-code/mcp_config.json"
+      claude_mcp="$HOME/.config/claude-code/mcp_config.json"
       if [ -f "$claude_mcp" ] && command -v python3 &>/dev/null; then
         python3 -c "
 import json
@@ -634,7 +634,7 @@ with open(mcp_path, 'w') as f:
       fi
 
       # Register MCP server with Kiro
-      local kiro_mcp="$HOME/.kiro/settings/mcp.json"
+      kiro_mcp="$HOME/.kiro/settings/mcp.json"
       if [ -f "$kiro_mcp" ] && command -v python3 &>/dev/null; then
         python3 -c "
 import json
@@ -655,7 +655,7 @@ with open(mcp_path, 'w') as f:
 
       # Install git post-commit hook template
       if [ -f "$orch_dest/hooks/post-commit" ]; then
-        local git_hooks_dir="$HOME/.claude/git-hooks"
+        git_hooks_dir="$HOME/.claude/git-hooks"
         mkdir -p "$git_hooks_dir"
         \cp -f "$orch_dest/hooks/post-commit" "$git_hooks_dir/post-commit"
         chmod +x "$git_hooks_dir/post-commit"
