@@ -83,6 +83,19 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     echo "    Native agents: $agent_count installed"
   fi
 
+  # Install enforcement scripts
+  if [ -d "$AGENT_DIR/scripts" ]; then
+    mkdir -p "$CLAUDE_HOME/scripts"
+    local script_count=0
+    for f in "$AGENT_DIR/scripts/"*.sh; do
+      [ -f "$f" ] || continue
+      \cp -f "$f" "$CLAUDE_HOME/scripts/"
+      chmod +x "$CLAUDE_HOME/scripts/$(basename "$f")"
+      script_count=$((script_count + 1))
+    done
+    echo "    Enforcement scripts: $script_count installed"
+  fi
+
   # Install plugins
   if command -v claude &>/dev/null; then
     echo "    Installing plugins..."

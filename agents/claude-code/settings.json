@@ -42,6 +42,7 @@
       "Bash(codex *)",
       "Bash(gemini *)",
       "Bash(amp *)",
+      "Bash($HOME/.claude/scripts/enforce.sh *)",
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:docs.aws.amazon.com)",
@@ -73,6 +74,10 @@
           {
             "type": "command",
             "command": "SESSION_ID=\"session-$$-$(date +%s)\"; curl -s -X POST http://localhost:3200/api/sessions -H 'Content-Type: application/json' -d \"{\\\"id\\\":\\\"$SESSION_ID\\\",\\\"pid\\\":\\\"$$\\\",\\\"cwd\\\":\\\"$(pwd)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" --connect-timeout 1 -o /dev/null 2>/dev/null; echo \"## Session Context\\n- Dashboard session: $SESSION_ID\\n- AWS credentials: run \\`ada credentials update --account=616047499392 --provider=isengard --role=Admin --once\\` if needed\\n- Projects: /workplace/ammydeen/DataCenterProcurementSystems | /workplace/ammydeen/Watermark\\n- Build: brazil-build release | brazil-build run start | brazil-build run test\\n- Providers: \"$(which codex gemini amp 2>/dev/null | tr '\\n' ', ' || echo 'claude only')"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/scripts/enforce.sh session-start 2>/dev/null || true"
           }
         ]
       }
@@ -84,6 +89,39 @@
           {
             "type": "command",
             "command": "FILE=\"$TOOL_INPUT_file_path\"; EXT=\"${FILE##*.}\"; if [ \"$EXT\" = \"ts\" ] || [ \"$EXT\" = \"tsx\" ] || [ \"$EXT\" = \"js\" ] || [ \"$EXT\" = \"jsx\" ]; then cd \"$(dirname \"$FILE\")\" && npx eslint --no-error-on-unmatched-pattern --max-warnings=50 --format compact \"$FILE\" 2>/dev/null | head -20 || true; fi"
+          },
+          {
+            "type": "command",
+            "command": "F=\"${TOOL_INPUT_file_path:-}\"; if [ -z \"$F\" ] && [ -n \"${TOOL_RESULT:-}\" ]; then F=$(echo \"$TOOL_RESULT\" | grep -oE '/[^ \"]+\\.[a-z]+' | head -1); fi; $HOME/.claude/scripts/enforce.sh track-edit \"${F:-unknown}\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"$TOOL_INPUT_command\"; if echo \"$CMD\" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; if echo \"$CMD\" | grep -qE '(code-review|security-audit)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$CMD\" | grep -qE 'intel-refresh'; then $HOME/.claude/scripts/enforce.sh mark intel 2>/dev/null; fi; true"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DESC=\"$TOOL_INPUT_description\"; PROMPT=\"$TOOL_INPUT_prompt\"; TYPE=\"${TOOL_INPUT_subagent_type:-}\"; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(code-review|reviewer|review)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(test-writer|test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/scripts/enforce.sh session-stop 2>/dev/null || true"
           }
         ]
       }
