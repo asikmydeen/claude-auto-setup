@@ -1,25 +1,46 @@
-import { getDb } from './db.js';
+import { getDb, persistDb } from './db.js';
 
-export function logEvent(sessionId, type, detail) {
-  const db = getDb();
-  db.prepare(
-    'INSERT INTO events (session_id, timestamp, type, detail) VALUES (?, ?, ?, ?)'
-  ).run(sessionId, Math.floor(Date.now() / 1000), type, detail || null);
+// Helper: run a SELECT and return rows as objects
+function query(db, sql, params = []) {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
+}
+
+function queryOne(db, sql, params = []) {
+  const rows = query(db, sql, params);
+  return rows[0] || null;
+}
+
+export async function logEvent(sessionId, type, detail) {
+  const db = await getDb();
+  db.run(
+    'INSERT INTO events (session_id, timestamp, type, detail) VALUES (?, ?, ?, ?)',
+    [sessionId, Math.floor(Date.now() / 1000), type, detail || null]
+  );
+  persistDb();
   return { logged: true, type };
 }
 
-export function startSession(sessionId, project, cwd) {
-  const db = getDb();
-  db.prepare(
-    'INSERT OR REPLACE INTO sessions (id, started_at, project, cwd) VALUES (?, ?, ?, ?)'
-  ).run(sessionId, Math.floor(Date.now() / 1000), project || null, cwd || null);
-  logEvent(sessionId, 'session_start', `Project: ${project || 'unknown'}`);
+export async function startSession(sessionId, project, cwd) {
+  const db = await getDb();
+  db.run(
+    'INSERT OR REPLACE INTO sessions (id, started_at, project, cwd) VALUES (?, ?, ?, ?)',
+    [sessionId, Math.floor(Date.now() / 1000), project || null, cwd || null]
+  );
+  persistDb();
+  await logEvent(sessionId, 'session_start', `Project: ${project || 'unknown'}`);
   return { session_id: sessionId, message: 'Session started' };
 }
 
-export function endSession(sessionId, state) {
-  const db = getDb();
-  db.prepare(`
+export async function endSession(sessionId, state) {
+  const db = await getDb();
+  db.run(`
     UPDATE sessions SET
       ended_at = ?,
       edit_count = ?,
@@ -29,7 +50,7 @@ export function endSession(sessionId, state) {
       intel_updated = ?,
       outcome = ?
     WHERE id = ?
-  `).run(
+  `, [
     Math.floor(Date.now() / 1000),
     state.edit_count || 0,
     state.files_changed?.length || 0,
@@ -38,20 +59,21 @@ export function endSession(sessionId, state) {
     state.intel_updated ? 1 : 0,
     state.tests_run && state.review_run ? 'complete' : 'incomplete',
     sessionId,
-  );
-  logEvent(sessionId, 'session_end', `Edits: ${state.edit_count}, Phase: ${state.phase}`);
+  ]);
+  persistDb();
+  await logEvent(sessionId, 'session_end', `Edits: ${state.edit_count}, Phase: ${state.phase}`);
   return { message: 'Session ended' };
 }
 
-export function getSessionSummary(limit = 10) {
-  const db = getDb();
-  const sessions = db.prepare(`
+export async function getSessionSummary(limit = 10) {
+  const db = await getDb();
+  const sessions = query(db, `
     SELECT id, started_at, ended_at, project, edit_count, files_changed,
            tests_run, review_run, intel_updated, outcome
     FROM sessions ORDER BY started_at DESC LIMIT ?
-  `).all(limit);
+  `, [limit]);
 
-  const stats = db.prepare(`
+  const stats = queryOne(db, `
     SELECT
       COUNT(*) as total_sessions,
       AVG(edit_count) as avg_edits,
@@ -60,7 +82,7 @@ export function getSessionSummary(limit = 10) {
       SUM(CASE WHEN intel_updated = 1 THEN 1 ELSE 0 END) as sessions_with_intel,
       SUM(CASE WHEN outcome = 'complete' THEN 1 ELSE 0 END) as complete_sessions
     FROM sessions WHERE ended_at IS NOT NULL
-  `).get();
+  `);
 
   return {
     recent_sessions: sessions,
@@ -83,19 +105,20 @@ export function getSessionSummary(limit = 10) {
   };
 }
 
-export function getPatterns() {
-  const db = getDb();
+export async function getPatterns() {
+  const db = await getDb();
+  const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 86400;
 
-  const eventCounts = db.prepare(`
+  const eventCounts = query(db, `
     SELECT type, COUNT(*) as count
     FROM events
     WHERE timestamp > ?
     GROUP BY type
     ORDER BY count DESC
     LIMIT 20
-  `).all(Math.floor(Date.now() / 1000) - 30 * 86400);
+  `, [thirtyDaysAgo]);
 
-  const skippedSteps = db.prepare(`
+  const skippedSteps = queryOne(db, `
     SELECT
       SUM(CASE WHEN tests_run = 0 THEN 1 ELSE 0 END) as tests_skipped,
       SUM(CASE WHEN review_run = 0 THEN 1 ELSE 0 END) as reviews_skipped,
@@ -103,16 +126,16 @@ export function getPatterns() {
       COUNT(*) as total
     FROM sessions
     WHERE ended_at IS NOT NULL AND ended_at > ?
-  `).get(Math.floor(Date.now() / 1000) - 30 * 86400);
+  `, [thirtyDaysAgo]);
 
-  const busyHours = db.prepare(`
+  const busyHours = query(db, `
     SELECT (started_at / 3600 % 24) as hour, COUNT(*) as count
     FROM sessions
     WHERE started_at > ?
     GROUP BY hour
     ORDER BY count DESC
     LIMIT 5
-  `).all(Math.floor(Date.now() / 1000) - 30 * 86400);
+  `, [thirtyDaysAgo]);
 
   return {
     period: 'last 30 days',

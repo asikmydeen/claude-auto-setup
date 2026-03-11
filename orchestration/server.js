@@ -211,13 +211,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // Analytics
       case 'analytics_log':
-        result = logEvent(args.session_id || 'unknown', args.type, args.detail);
+        result = await logEvent(args.session_id || 'unknown', args.type, args.detail);
         break;
       case 'analytics_summary':
-        result = getSessionSummary(args.limit);
+        result = await getSessionSummary(args.limit);
         break;
       case 'analytics_patterns':
-        result = getPatterns();
+        result = await getPatterns();
         break;
 
       default:
