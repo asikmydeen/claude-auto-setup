@@ -560,8 +560,15 @@ else
     if $DRY_RUN; then
       info "[DRY RUN] Would install dashboard dependencies"
     else
-      (cd "$SCRIPT_DIR/dashboard" && pnpm install --frozen-lockfile 2>/dev/null || pnpm install)
-      ok "Dashboard ready: cd dashboard && pnpm dev"
+      if command -v pnpm &>/dev/null; then
+        (cd "$SCRIPT_DIR/dashboard" && pnpm install --frozen-lockfile 2>/dev/null || pnpm install)
+        ok "Dashboard ready: cd dashboard && pnpm dev"
+      elif command -v npm &>/dev/null; then
+        (cd "$SCRIPT_DIR/dashboard" && npm install)
+        ok "Dashboard ready: cd dashboard && npm start"
+      else
+        warn "Dashboard skipped: install pnpm or npm first, then run: cd dashboard && npm install"
+      fi
     fi
   fi
 
