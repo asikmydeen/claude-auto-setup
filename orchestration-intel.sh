@@ -7,18 +7,8 @@ set -euo pipefail
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Colors
-if [ -t 1 ] && command -v tput &>/dev/null && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
-  RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-  BLUE=$(tput setaf 4); CYAN=$(tput setaf 6); BOLD=$(tput bold); RESET=$(tput sgr0)
-else
-  RED=""; GREEN=""; YELLOW=""; BLUE=""; CYAN=""; BOLD=""; RESET=""
-fi
-
-info()  { echo "${BLUE}[INFO]${RESET}  $*"; }
-ok()    { echo "${GREEN}[OK]${RESET}    $*"; }
-warn()  { echo "${YELLOW}[WARN]${RESET}  $*"; }
-error() { echo "${RED}[ERROR]${RESET} $*" >&2; }
+# Shared colors and logging
+source "${SCRIPT_DIR}/lib/common.sh"
 
 # Source libraries
 source "${SCRIPT_DIR}/../.claude/lib/error-patterns.sh"

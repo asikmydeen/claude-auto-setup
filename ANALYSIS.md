@@ -42,11 +42,8 @@ This means we can generate a **universal instruction set** and translate it per-
 
 ```
 claude-auto-setup/
-  config/
-    CLAUDE.md           ← Claude-specific
-    commands/           ← Claude-specific
-    rules/              ← Claude-specific
-    settings.json       ← Claude-specific
+  # (legacy config/ directory has been removed)
+  # All content was Claude-specific; now lives in universal/ + agents/claude-code/
   install.sh            ← Claude-specific installer
 ```
 

@@ -192,7 +192,6 @@ claude-code-setup/
 │   ├── install-service.sh          # systemd/launchd service installer
 │   └── report.sh                   # Agent state reporter
 │
-├── config/                         # Legacy (duplicate of universal/)
 │
 ├── install.sh                      # Main installer (569 lines)
 ├── project-init.sh                 # Per-project initializer (239 lines)
@@ -298,7 +297,6 @@ claude-code-setup/
 6. **Agent teams experimental** - Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 7. **Dashboard optional** - File-based fallback if server not running; `--connect-timeout 1` prevents blocking
 8. **macOS bash 3.2** - All scripts compatible (no `declare -A`, no bash 4+ features)
-9. **config/ directory** - Legacy duplicate of universal/; may cause confusion
 10. **Hook ESLint** - PostToolUse hook runs eslint on JS/TS files after Edit/Write; may slow workflow
 
 ---

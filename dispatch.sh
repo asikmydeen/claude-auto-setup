@@ -32,14 +32,10 @@ FORCE_PROVIDER=""
 CONTEXT_FILES=""
 OUTPUT_FILE=""
 
-# Colors
-if [ -t 1 ] && command -v tput &>/dev/null && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
-  RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-  CYAN=$(tput setaf 6); DIM=$(tput dim); BOLD=$(tput bold); RESET=$(tput sgr0)
-else
-  RED=""; GREEN=""; YELLOW=""; CYAN=""; DIM=""; BOLD=""; RESET=""
-fi
+# Shared colors and logging
+source "${SCRIPT_DIR}/lib/common.sh"
 
+# Override logging for dispatch (prefixed, stderr)
 info()  { echo "${DIM}[dispatch]${RESET} $*" >&2; }
 ok()    { echo "${GREEN}[dispatch]${RESET} $*" >&2; }
 warn()  { echo "${YELLOW}[dispatch]${RESET} $*" >&2; }

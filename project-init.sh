@@ -28,15 +28,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(pwd)"
 PROJECT_NAME="$(basename "$PROJECT_DIR")"
 
-# Colors
-if [ -t 1 ] && command -v tput &>/dev/null && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
-  GREEN=$(tput setaf 2); CYAN=$(tput setaf 6); BOLD=$(tput bold); RESET=$(tput sgr0)
-else
-  GREEN=""; CYAN=""; BOLD=""; RESET=""
-fi
-
-ok()   { echo "${GREEN}[OK]${RESET}    $*"; }
-step() { echo ""; echo "${BOLD}${CYAN}==> $*${RESET}"; }
+# Shared colors and logging
+source "${SCRIPT_DIR}/lib/common.sh"
 
 step "Initializing AI configuration for: $PROJECT_NAME"
 
