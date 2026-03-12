@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034  # AGENT_* and FORCE are used via eval/export
 set -euo pipefail
 
 # ============================================================================
@@ -31,13 +32,14 @@ set -euo pipefail
 # Compatible with Bash 3.2+ (macOS default) and all modern shells.
 # ============================================================================
 
-VERSION="3.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo '0.0.0')"
 DRY_RUN=false
 FORCE=false
 UNINSTALL=false
 UPDATE=false
 SELF_UPDATE=false
+DOCTOR=false
 AGENTS_FILTER=""
 
 # Shared colors and logging
@@ -52,6 +54,7 @@ for arg in "$@"; do
     --update)      UPDATE=true ;;
     --self-update) SELF_UPDATE=true; UPDATE=true ;;
     --agents=*)    AGENTS_FILTER="${arg#--agents=}" ;;
+    --doctor)      DOCTOR=true ;;
     --version|-V) echo "claude-code-setup v${VERSION}"; exit 0 ;;
     --help|-h)
       echo "Usage: $0 [OPTIONS]"
@@ -62,6 +65,7 @@ for arg in "$@"; do
       echo "                     Preserves: settings.json, CLAUDE.md, project intel"
       echo "  --self-update      Git pull latest version, then --update"
       echo "  --force            Full install, overwrite everything (backs up first)"
+      echo "  --doctor           Check installation health and report issues"
       echo "  --uninstall        Remove all installed config"
       echo ""
       echo "Options:"
@@ -81,13 +85,8 @@ for arg in "$@"; do
   esac
 done
 
-# Agent detection using simple variables (Bash 3.2 compatible)
-AGENT_claude=false
-AGENT_gemini=false
-AGENT_kiro=false
-AGENT_codex=false
-AGENT_cursor=false
-AGENT_ampcode=false
+# Agent detection using simple variables (Bash 3.2 compatible — used via eval)
+AGENT_claude=false; AGENT_gemini=false; AGENT_kiro=false; AGENT_codex=false; AGENT_cursor=false; AGENT_ampcode=false
 ALL_AGENTS="claude gemini kiro codex cursor ampcode"
 
 agent_is_enabled() {
@@ -232,7 +231,8 @@ self_update() {
 # Backup
 backup() {
   step "Backing up existing config"
-  local backup_dir="$HOME/.ai-setup-backups/$(date +%Y%m%d-%H%M%S)"
+  local backup_dir
+  backup_dir="$HOME/.ai-setup-backups/$(date +%Y%m%d-%H%M%S)"
 
   if $DRY_RUN; then
     info "[DRY RUN] Would backup to $backup_dir"
@@ -532,8 +532,127 @@ summary() {
 }
 
 # ============================================================================
+# Doctor — health check
+# ============================================================================
+doctor() {
+  echo ""
+  echo "${BOLD}Universal AI Agent Setup v${VERSION} — Health Check${RESET}"
+  echo "=================================================="
+  local issues=0 checks=0 warnings=0
+
+  check_pass() { checks=$((checks + 1)); echo "  ${GREEN}OK${RESET}    $*"; }
+  check_fail() { checks=$((checks + 1)); issues=$((issues + 1)); echo "  ${RED}FAIL${RESET}  $*"; }
+  check_warn() { checks=$((checks + 1)); warnings=$((warnings + 1)); echo "  ${YELLOW}WARN${RESET}  $*"; }
+
+  # --- Repository ---
+  step "Repository"
+  [ -d "$SCRIPT_DIR/.git" ] && check_pass "Git repo intact" || check_fail "Not a git repo"
+  [ -d "$SCRIPT_DIR/universal" ] && check_pass "universal/ directory" || check_fail "universal/ missing"
+  [ -d "$SCRIPT_DIR/agents" ] && check_pass "agents/ directory" || check_fail "agents/ missing"
+  [ -f "$SCRIPT_DIR/lib/common.sh" ] && check_pass "lib/common.sh" || check_fail "lib/common.sh missing"
+
+  # --- Agent CLIs ---
+  step "Agent CLIs"
+  local agent_count=0
+  if command -v claude &>/dev/null; then
+    check_pass "Claude Code: $(claude --version 2>/dev/null || echo 'found')"
+    agent_count=$((agent_count + 1))
+  else
+    check_warn "Claude Code: not installed"
+  fi
+  if command -v kiro-cli &>/dev/null || command -v kiro &>/dev/null; then
+    check_pass "Kiro CLI: found"
+    agent_count=$((agent_count + 1))
+  else
+    check_warn "Kiro CLI: not installed"
+  fi
+  for cli in gemini codex cursor amp; do
+    if command -v "$cli" &>/dev/null; then
+      check_pass "$cli: found"
+      agent_count=$((agent_count + 1))
+    fi
+  done
+  [ $agent_count -gt 0 ] || check_fail "No AI agent CLIs detected"
+
+  # --- Claude Code Installation ---
+  if command -v claude &>/dev/null; then
+    step "Claude Code Config"
+    [ -f "$HOME/.claude/CLAUDE.md" ] && check_pass "CLAUDE.md installed" || check_fail "CLAUDE.md missing — run ./install.sh"
+    [ -f "$HOME/.claude/settings.json" ] && check_pass "settings.json exists" || check_fail "settings.json missing"
+    if [ -d "$HOME/.claude/commands" ]; then
+      local cmd_count
+      cmd_count=$(find "$HOME/.claude/commands" -name '*.md' 2>/dev/null | wc -l)
+      [ "$cmd_count" -gt 0 ] && check_pass "Commands: $cmd_count installed" || check_warn "Commands directory empty"
+    else
+      check_fail "Commands directory missing"
+    fi
+    if [ -d "$HOME/.claude/rules" ]; then
+      local rule_count
+      rule_count=$(find "$HOME/.claude/rules" -name '*.md' 2>/dev/null | wc -l)
+      [ "$rule_count" -gt 0 ] && check_pass "Rules: $rule_count installed" || check_warn "Rules directory empty"
+    else
+      check_fail "Rules directory missing"
+    fi
+    if [ -d "$HOME/.claude/agents" ]; then
+      local na_count
+      na_count=$(find "$HOME/.claude/agents" -name '*.md' 2>/dev/null | wc -l)
+      [ "$na_count" -gt 0 ] && check_pass "Native agents: $na_count installed" || check_warn "No native agents"
+    else
+      check_warn "Native agents directory missing"
+    fi
+  fi
+
+  # --- Orchestration MCP ---
+  step "Orchestration"
+  if [ -f "$HOME/.claude/orchestration/server.js" ]; then
+    check_pass "MCP server: installed"
+    [ -f "$HOME/.claude/orchestration/package.json" ] && check_pass "MCP package.json" || check_fail "MCP package.json missing"
+    [ -d "$HOME/.claude/orchestration/node_modules" ] && check_pass "MCP dependencies installed" || check_fail "MCP node_modules missing — run: cd ~/.claude/orchestration && npm install"
+  else
+    check_warn "Orchestration MCP server not installed"
+  fi
+
+  # --- cmux ---
+  step "cmux (worktree management)"
+  if [ -x "$HOME/.local/bin/cmux" ]; then
+    check_pass "cmux wrapper: ~/.local/bin/cmux"
+    if "$HOME/.local/bin/cmux" version &>/dev/null; then
+      check_pass "cmux wrapper functional"
+    else
+      check_fail "cmux wrapper exists but fails to run"
+    fi
+  else
+    check_warn "cmux wrapper not installed — run ./install.sh"
+  fi
+
+  # --- Dependencies ---
+  step "Dependencies"
+  command -v git &>/dev/null && check_pass "git: $(git --version 2>/dev/null | head -1)" || check_fail "git not found"
+  command -v node &>/dev/null && check_pass "node: $(node --version 2>/dev/null)" || check_warn "node not found (needed for dashboard + MCP)"
+  command -v python3 &>/dev/null && check_pass "python3: found (used for settings merge)" || check_warn "python3 not found (settings merge will be skipped)"
+
+  # --- Summary ---
+  echo ""
+  echo "=================================================="
+  if [ $issues -eq 0 ] && [ $warnings -eq 0 ]; then
+    echo "  ${GREEN}${BOLD}All $checks checks passed.${RESET}"
+  elif [ $issues -eq 0 ]; then
+    echo "  ${GREEN}${BOLD}$((checks - warnings)) passed${RESET}, ${YELLOW}${BOLD}$warnings warnings${RESET}"
+  else
+    echo "  ${GREEN}${BOLD}$((checks - issues - warnings)) passed${RESET}, ${RED}${BOLD}$issues failed${RESET}, ${YELLOW}${BOLD}$warnings warnings${RESET}"
+    echo "  Run ${BOLD}./install.sh${RESET} to fix failed checks."
+  fi
+  echo ""
+  exit $issues
+}
+
+# ============================================================================
 # Main
 # ============================================================================
+
+# Handle doctor before main flow (no install/detect needed)
+$DOCTOR && doctor
+
 echo ""
 echo "${BOLD}Universal AI Agent Setup v${VERSION}${RESET}"
 echo "===================================="

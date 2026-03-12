@@ -1,5 +1,5 @@
 # Universal AI Agent Setup — Makefile
-.PHONY: install update self-update uninstall dry-run test lint clean version help
+.PHONY: install update self-update uninstall dry-run test lint clean version doctor help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -39,4 +39,7 @@ clean: ## Remove stale worktrees
 	@git worktree prune
 
 version: ## Show version
-	./install.sh --version
+	@cat VERSION
+
+doctor: ## Check installation health
+	./install.sh --doctor

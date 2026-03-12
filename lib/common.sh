@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034  # Color vars exported for sourcing scripts
 # Shared utilities for claude-code-setup scripts
 # Source this file: source "${SCRIPT_DIR}/lib/common.sh"
 

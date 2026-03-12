@@ -81,7 +81,8 @@
 - Project init: `./project-init.sh`
 - Dispatch: `./dispatch.sh --task "prompt" --type <task-type>`
 - Dashboard: `cd dashboard && npm start`
-- Version: `./install.sh --version` (or `make version`)
+- Health check: `./install.sh --doctor` (or `make doctor`)
+- Version: `./install.sh --version` (or `make version` / `cat VERSION`)
 - Clean worktrees: `make clean`
 
 ---
@@ -199,10 +200,12 @@ claude-code-setup/
 │   └── common.sh                   # Colors, logging, has_cmd helper
 │
 ├── tests/                          # Smoke tests
-│   └── run.sh                      # 24 tests (CLI flags, structure, shellcheck)
+│   └── run.sh                      # 29 tests (CLI flags, doctor, version, structure, shellcheck)
 │
 ├── Makefile                        # Task runner (install, test, lint, clean, etc.)
-├── install.sh                      # Main installer (670 lines)
+├── VERSION                         # Centralized version (single source of truth)
+├── CHANGELOG.md                    # Release changelog
+├── install.sh                      # Main installer (~770 lines, includes --doctor)
 ├── project-init.sh                 # Per-project initializer (238 lines)
 ├── dispatch.sh                     # Cross-provider dispatcher with fallback (340 lines)
 ├── orchestration-intel.sh          # Orchestration intelligence helper (155 lines)

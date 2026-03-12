@@ -129,6 +129,24 @@ fi
 
 # ============================================================================
 echo ""
+echo "=== install.sh --doctor ==="
+
+rc=0
+output=$(bash "$ROOT_DIR/install.sh" --doctor 2>&1) || rc=$?
+assert_exit_code "install.sh --doctor exits 0" "0" "$rc"
+assert_contains "doctor checks repo" "Repository" "$output"
+assert_contains "doctor checks CLIs" "Agent CLIs" "$output"
+
+# ============================================================================
+echo ""
+echo "=== version ==="
+
+assert_file_exists "VERSION file exists" "$ROOT_DIR/VERSION"
+output=$(bash "$ROOT_DIR/install.sh" --version 2>&1) || true
+assert_contains "version reads from VERSION file" "3.1.0" "$output"
+
+# ============================================================================
+echo ""
 echo "=== shellcheck ==="
 
 if command -v shellcheck &>/dev/null; then
