@@ -662,12 +662,11 @@ with open(mcp_path, 'w') as f:
     fi
 
     # Install cmux non-interactive wrapper (needed for Node.js/MCP orchestration)
-    if [ -f "$HOME/.cmux/cmux.sh" ]; then
-      mkdir -p "$HOME/.local/bin"
-      \cp -f "$SCRIPT_DIR/universal/cmux-wrapper.sh" "$HOME/.local/bin/cmux"
-      chmod +x "$HOME/.local/bin/cmux"
-      ok "cmux wrapper: ~/.local/bin/cmux (callable from Node.js/MCP)"
-    fi
+    # Installed regardless of shell function — wrapper works standalone with git worktrees
+    mkdir -p "$HOME/.local/bin"
+    \cp -f "$SCRIPT_DIR/universal/cmux-wrapper.sh" "$HOME/.local/bin/cmux"
+    chmod +x "$HOME/.local/bin/cmux"
+    ok "cmux wrapper: ~/.local/bin/cmux (callable from Node.js/MCP)"
 
     # Install cmux setup template
     if [ -f "$SCRIPT_DIR/universal/cmux-setup.sh" ]; then

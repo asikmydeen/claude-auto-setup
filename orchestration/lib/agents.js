@@ -1,5 +1,5 @@
 import { execFileSync, execFile } from 'child_process';
-import { existsSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -49,7 +49,7 @@ export function spawnAgent({ branch, prompt, background }) {
 
     if (prompt) {
       // Launch Claude in the worktree with the prompt
-      const args = ['-p', prompt, '--dangerously-skip-permissions'];
+      const args = ['-p', prompt, '--permission-mode', 'bypassPermissions'];
 
       if (background) {
         // Fire and forget — agent works independently
@@ -61,11 +61,10 @@ export function spawnAgent({ branch, prompt, background }) {
         }, (error, stdout) => {
           // Write result to a marker file
           const resultFile = join(worktreePath, '.agent-result.md');
-          const fs = require('fs');
           const content = error
             ? `# Agent Failed\n\n${error.message}\n\n## Partial Output\n${stdout || ''}`
             : `# Agent Complete\n\n${stdout}`;
-          try { fs.writeFileSync(resultFile, content); } catch { /* ignore */ }
+          try { writeFileSync(resultFile, content); } catch { /* ignore */ }
         });
         child.unref();
 

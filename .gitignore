@@ -1,6 +1,7 @@
 node_modules/
 .claude/scratch/
 .claude/worktrees/
+.worktrees/
 *.db
 *.db-wal
 *.db-shm
