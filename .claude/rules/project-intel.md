@@ -341,7 +341,7 @@ claude-code-setup/
 
 ### File Counts
 
-- **6** universal rule files
+- **7** universal rule files
 - **52** command definitions (12,096 lines)
 - **6** agent adapters
 - **5** native agents (Claude Code)

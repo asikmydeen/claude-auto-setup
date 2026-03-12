@@ -243,7 +243,9 @@ dispatch_to() {
     claude)
       local tools="Read,Grep,Glob,Bash,Edit,Write"
       info "Invoking: claude -p (non-interactive)"
-      claude -p "$full_prompt" --allowedTools "$tools" --output-format text 2>/dev/null
+      # Unset CLAUDECODE to allow dispatch from inside a Claude Code session
+      # (mirrors orchestration/lib/agents.js which does the same for Node.js)
+      CLAUDECODE= claude -p "$full_prompt" --allowedTools "$tools" --output-format text 2>/dev/null
       ;;
     codex)
       info "Invoking: codex -q (quiet mode)"

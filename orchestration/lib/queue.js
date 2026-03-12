@@ -5,7 +5,20 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { randomUUID } from 'crypto';
 
-const DISPATCH_SCRIPT = join(homedir(), 'claude-code-setup', 'dispatch.sh');
+// Search for dispatch.sh in known locations
+function findDispatchScript() {
+  const candidates = [
+    join(homedir(), 'claude-code-setup', 'dispatch.sh'),
+    join(homedir(), 'projects', 'claude-auto-setup', 'dispatch.sh'),
+    join(new URL('../../..', import.meta.url).pathname, 'dispatch.sh'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return candidates[0]; // fallback to original default
+}
+
+const DISPATCH_SCRIPT = findDispatchScript();
 
 export function addTask({ prompt, taskType, provider, priority }) {
   const queue = readQueue();
@@ -88,9 +101,13 @@ export function dispatchNext() {
   }
 
   // Spawn in background — write output to file
+  // Unset CLAUDECODE to allow nested claude -p dispatch from MCP server context
+  const env = { ...process.env };
+  delete env.CLAUDECODE;
   const child = execFile('bash', [DISPATCH_SCRIPT, ...args], {
     timeout: 300000,
     maxBuffer: 1024 * 1024,
+    env,
   }, (error, stdout, stderr) => {
     const q = readQueue();
     const task = q.tasks.find(t => t.id === pending.id);

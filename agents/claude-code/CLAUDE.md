@@ -75,21 +75,63 @@ Testable checklist (no vague language).
 ### Follow-ups
 ```
 
+## Multi-Agent First (MANDATORY — ALL roles)
+
+Multi-agent is THE DEFAULT workflow, not an opt-in. Every task is evaluated for parallelization. Sequential single-agent work is the exception (only for single-file, < 30 line changes).
+
+### Automatic Triggers (no user action needed)
+
+1. **Task starts** → Spawn explorer agent(s) in background to gather context while you plan
+2. **3+ files will change** → Decompose by concern, spawn one agent per concern in parallel worktrees
+3. **Multiple layers involved** (frontend/backend/infra/tests) → One agent per layer
+4. **Implementation complete** → Spawn code-reviewer + security-auditor + test-writer in parallel
+5. **Bug report** → Spawn debugger + explorer in parallel
+6. **PR/review** → Spawn code-reviewer + security-auditor + test-analyzer in parallel
+
+### How to Spawn (in priority order)
+
+| Mechanism | When to use | Example |
+|-----------|-------------|---------|
+| **Agent tool** (primary) | Most cases — research, review, focused implementation | `Agent(subagent_type="explorer", run_in_background=true)` |
+| **Agent tool + worktree** | Parallel writes to different files | `Agent(isolation="worktree", run_in_background=true)` |
+| **orchestration MCP agent_spawn** | Full independent Claude sessions via cmux | `mcp__orchestration__agent_spawn(branch="feat-x", prompt="...", background=true)` |
+| **orchestration MCP queue** | Cross-provider dispatch (Kiro, Codex, etc.) | `mcp__orchestration__queue_add(prompt="...", task_type="test-writing")` |
+
+### Parallel Execution Rules
+
+- Launch ALL independent agents in a SINGLE message (multiple Agent calls = parallel)
+- Give each agent a clear, scoped prompt with file paths and relevant context
+- Use `run_in_background=true` for agents whose results you don't need immediately
+- Use `model="haiku"` for fast/cheap exploration, `model="sonnet"` for implementation/review
+- After agents complete, review and integrate results before proceeding
+
+### Pipeline Tracking
+
+Use the orchestration MCP to track multi-agent work:
+```
+pipeline_phase("explore")    → During research
+pipeline_phase("plan")       → During planning
+pipeline_phase("implement")  → During parallel implementation
+pipeline_phase("review")     → During parallel review
+pipeline_phase("verify")     → During verification
+checkpoint_write(...)        → Before each phase transition (survives compaction)
+```
+
 ## Auto-Orchestration (MANDATORY for Coordinator role)
 
 When operating as Coordinator and the user asks for ANY implementation work:
 
-1. **Auto-init on first task**: If no `.claude/rules/project-intel.md` exists, auto-generate it (6 parallel agents) before planning. If stale (>30 days), auto-refresh. Never ask — just do it. Also detect workspace hierarchy — if this package has siblings (monorepo, workspace), auto-generate `workspace-intel.md` at the workspace root to map cross-package dependencies and shared contracts.
-2. **Follow the orchestration rules** in `~/.claude/rules/orchestration.md` — classify task size, select agent team, select plugins, execute the multi-phase pipeline.
-3. **Make smart decisions autonomously** — choose agents, plugins, and workflow based on the task. Don't ask "should I use X?" — just use it if it's the right tool.
+1. **Auto-init on first task**: If no `.claude/rules/project-intel.md` exists, auto-generate it (6 parallel agents) before planning. If stale (>30 days), auto-refresh. Never ask — just do it.
+2. **Follow the multi-agent rules above** — classify, decompose, parallelize.
+3. **Follow the orchestration rules** in `~/.claude/rules/orchestration.md` for the full pipeline.
 4. **Always use plugins smartly**:
    - `context7` — fetch docs for any library/SDK before implementing (don't guess APIs)
    - `serena` — semantic code navigation on unfamiliar code
    - `typescript-lsp`/`pyright-lsp` — automatic type error detection (no action needed)
    - `security-guidance` — automatic security warnings on edits
    - `code-review` + `code-simplifier` — run after implementation, before delivery
-4. **Parallelize aggressively** — launch independent agents simultaneously, never sequentially when they don't depend on each other.
-5. **Every delivery must include**: build passing, tests passing, lint clean, verification report.
+5. **Parallelize aggressively** — launch independent agents simultaneously, never sequentially when they don't depend on each other.
+6. **Every delivery must include**: build passing, tests passing, lint clean, verification report.
 
 ## Auto-Learning Protocol
 
