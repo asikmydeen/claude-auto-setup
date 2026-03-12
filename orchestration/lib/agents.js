@@ -3,15 +3,19 @@ import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
-const CMUX_BIN = join(homedir(), '.local', 'bin', 'cmux');
-
 function cmuxCmd() {
+  // Check for the non-interactive wrapper binary first (installed by install.sh)
+  const wrapperPath = join(homedir(), '.local', 'bin', 'cmux');
+  if (existsSync(wrapperPath)) return wrapperPath;
+
+  // Fallback: check PATH (may find wrapper or other install location)
   try {
     const p = execFileSync('which', ['cmux'], { stdio: 'pipe' }).toString().trim();
-    return p;
-  } catch {
-    return existsSync(CMUX_BIN) ? CMUX_BIN : null;
-  }
+    // Verify it's an actual binary/script, not a shell function path
+    if (p && existsSync(p)) return p;
+  } catch { /* not found in PATH */ }
+
+  return null;
 }
 
 function getCwd() {
@@ -33,14 +37,14 @@ export function spawnAgent({ branch, prompt, background }) {
   const safeBranch = branch || `agent-${Date.now()}`;
 
   try {
-    // Create worktree + branch via cmux
+    // Create worktree + branch via cmux wrapper (non-interactive, no claude launch)
     execFileSync(cmux, ['new', safeBranch], {
       cwd,
       stdio: 'pipe',
       timeout: 30000,
     });
 
-    // Get worktree path
+    // Derive worktree path using cmux convention: .worktrees/<sanitized-branch>
     const worktreePath = join(cwd, '.worktrees', safeBranch.replace(/\//g, '-'));
 
     if (prompt) {

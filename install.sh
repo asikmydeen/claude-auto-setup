@@ -649,7 +649,7 @@ with open(mcp_path, 'w') as f:
     info "[DRY RUN] Would install cmux"
   else
     if command -v cmux &>/dev/null; then
-      ok "cmux already installed: $(cmux --version 2>/dev/null || echo 'found')"
+      ok "cmux already installed: $(cmux version 2>/dev/null || echo 'found')"
     else
       # Install cmux
       if command -v curl &>/dev/null; then
@@ -659,6 +659,14 @@ with open(mcp_path, 'w') as f:
       else
         warn "cmux: curl not found. Install manually: https://github.com/craigsc/cmux"
       fi
+    fi
+
+    # Install cmux non-interactive wrapper (needed for Node.js/MCP orchestration)
+    if [ -f "$HOME/.cmux/cmux.sh" ]; then
+      mkdir -p "$HOME/.local/bin"
+      \cp -f "$SCRIPT_DIR/universal/cmux-wrapper.sh" "$HOME/.local/bin/cmux"
+      chmod +x "$HOME/.local/bin/cmux"
+      ok "cmux wrapper: ~/.local/bin/cmux (callable from Node.js/MCP)"
     fi
 
     # Install cmux setup template
