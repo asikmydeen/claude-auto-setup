@@ -10,6 +10,7 @@ import { getStatus, setPhase, markDone, setTaskSummary, resetPipeline } from './
 import { writeRichCheckpoint, getCurrentCheckpoint, getResumeInstructions } from './lib/checkpoint.js';
 import { addTask, listTasks, dispatchNext, getTaskResult, clearCompleted } from './lib/queue.js';
 import { logEvent, startSession, endSession, getSessionSummary, getPatterns } from './lib/analytics.js';
+import { spawnAgent, listAgents, agentStatus, mergeAgent, removeAgent } from './lib/agents.js';
 
 const server = new Server(
   { name: 'orchestration', version: '1.0.0' },
@@ -152,6 +153,59 @@ const TOOLS = [
     description: 'Identify recurring patterns: what gets skipped most, active hours, event frequency. Provides actionable insights.',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
+
+  // Agent Worktrees (cmux)
+  {
+    name: 'agent_spawn',
+    description: 'Spawn a parallel Claude agent in its own git worktree (via cmux). Each agent gets an isolated directory so it can work without conflicts. Use this to delegate tests, reviews, or implementation to a parallel agent.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        branch: { type: 'string', description: 'Branch name for the worktree (e.g. "test-auth", "review-api"). Auto-generated if omitted.' },
+        prompt: { type: 'string', description: 'The task prompt for the agent. The agent runs Claude with this prompt in its worktree.' },
+        background: { type: 'boolean', description: 'If true, agent runs in background and you can check status later. Default: true.' },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
+    name: 'agent_list',
+    description: 'List all active agent worktrees and their status (active, completed). Shows which parallel agents are running.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'agent_status',
+    description: 'Check the status of a specific agent worktree. Shows recent commits, diff stats, and result if completed.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        branch: { type: 'string', description: 'Branch name of the agent to check' },
+      },
+      required: ['branch'],
+    },
+  },
+  {
+    name: 'agent_merge',
+    description: 'Merge a completed agent\'s work back into the main branch. Use after reviewing the agent\'s changes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        branch: { type: 'string', description: 'Branch name to merge' },
+      },
+      required: ['branch'],
+    },
+  },
+  {
+    name: 'agent_remove',
+    description: 'Remove an agent worktree and its branch. Use after merging or if the agent\'s work is no longer needed.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        branch: { type: 'string', description: 'Branch name to remove' },
+      },
+      required: ['branch'],
+    },
+  },
 ];
 
 // ── Tool Handler ────────────────────────────────────────────────────────────
@@ -218,6 +272,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case 'analytics_patterns':
         result = await getPatterns();
+        break;
+
+      // Agent Worktrees
+      case 'agent_spawn':
+        result = spawnAgent({ branch: args.branch, prompt: args.prompt, background: args.background !== false });
+        break;
+      case 'agent_list':
+        result = listAgents();
+        break;
+      case 'agent_status':
+        result = agentStatus({ branch: args.branch });
+        break;
+      case 'agent_merge':
+        result = mergeAgent({ branch: args.branch });
+        break;
+      case 'agent_remove':
+        result = removeAgent({ branch: args.branch });
         break;
 
       default:

@@ -12,6 +12,7 @@
 #   checkpoint [desc]   Write auto-checkpoint for compaction survival
 #   phase <name>        Set current pipeline phase
 #   reset               Clear state for a fresh task
+#   suggest-delegate    Check if delegation is warranted and output suggestion
 #
 # State: ~/.claude/scratch/enforce-state.json
 # Checkpoint: ~/.claude/scratch/task-state.md
@@ -27,6 +28,13 @@ CHANGES_LOG="${SCRATCH_DIR}/changed-files.log"
 SOFT_REMIND_EDITS=8
 HARD_REMIND_EDITS=16
 AUTO_CHECKPOINT_EDITS=6
+
+# Delegation thresholds
+DELEGATE_FILE_THRESHOLD=5       # 5+ files across 2+ dirs → suggest delegation
+DELEGATE_DIR_THRESHOLD=2
+DELEGATE_EDIT_THRESHOLD=10      # 10+ edits without any agent use → nag
+FORCE_DELEGATE_EDITS=15         # 15+ edits → strong delegation message
+KIRO_KEYWORDS="aws|amazon|brazil|cdk|lambda|dynamodb|pipeline|hydra|coral|isengard|cr|integration.test|sam|cloudformation|s3|sqs|sns|iam|ec2"
 
 mkdir -p "$SCRATCH_DIR"
 
@@ -46,7 +54,10 @@ json.dump({
   'checkpoint_at_edit': 0,
   'phase': 'idle',
   'task_summary': '',
-  'session_start': int(time.time())
+  'session_start': int(time.time()),
+  'agents_spawned': 0,
+  'delegation_reminded': 0,
+  'kiro_delegated': False
 }, open('${STATE_FILE}', 'w'), indent=2)
 "
 }
@@ -134,6 +145,11 @@ else:
     fi
   fi
 
+  # Check for cmux availability
+  if command -v cmux &>/dev/null; then
+    output="${output}\n## Multi-Agent Ready\ncmux installed — use \`agent_spawn\` MCP tool or \`cmux new <branch>\` to run parallel agents in isolated worktrees."
+  fi
+
   # Reset state for new session
   rm -f "$STATE_FILE"
   ensure_state
@@ -161,14 +177,10 @@ s['phase'] = 'implement'
   echo "$(date +%H:%M:%S) $file" >> "$CHANGES_LOG"
 
   # Read current state and produce formatted output directly from Python
-  local state_json
-  state_json=$(read_state)
-
-  local needs_checkpoint=false
   local reminder_output=""
 
   reminder_output=$(python3 -c "
-import json, sys
+import json, sys, os
 
 state_file = '${STATE_FILE}'
 s = json.load(open(state_file))
@@ -178,10 +190,17 @@ files = s.get('files_changed', [])
 tests = s.get('tests_run', False)
 review = s.get('review_run', False)
 ckpt = s.get('checkpoint_at_edit', 0)
+agents_spawned = s.get('agents_spawned', 0)
+delegation_reminded = s.get('delegation_reminded', 0)
+kiro_delegated = s.get('kiro_delegated', False)
 
 SOFT = ${SOFT_REMIND_EDITS}
 HARD = ${HARD_REMIND_EDITS}
 CKPT = ${AUTO_CHECKPOINT_EDITS}
+DELEGATE_FILES = ${DELEGATE_FILE_THRESHOLD}
+DELEGATE_DIRS = ${DELEGATE_DIR_THRESHOLD}
+DELEGATE_EDITS = ${DELEGATE_EDIT_THRESHOLD}
+FORCE_DELEGATE = ${FORCE_DELEGATE_EDITS}
 
 need_checkpoint = ec - ckpt >= CKPT
 
@@ -189,6 +208,54 @@ flist = ', '.join(files[-8:])
 if len(files) > 8:
     flist += f' (+{len(files)-8} more)'
 
+# Count unique directories
+dirs = set()
+for f in files:
+    d = os.path.dirname(f) or '.'
+    dirs.add(d)
+num_dirs = len(dirs)
+
+# --- Delegation suggestions ---
+delegation_msg = ''
+
+# Check for Kiro keywords in task summary or changed files
+task_summary = s.get('task_summary', '')
+all_context = (task_summary + ' ' + ' '.join(files)).lower()
+import re
+kiro_pattern = '${KIRO_KEYWORDS}'
+needs_kiro = not kiro_delegated and re.search(kiro_pattern, all_context)
+
+if needs_kiro:
+    delegation_msg += '## Delegate to Kiro\n'
+    delegation_msg += 'This task involves Amazon/AWS systems. Kiro has internal tools (InternalCodeSearch, ReadRemoteTestRun, ReadInternalWebsites) that you lack.\n'
+    delegation_msg += '**Action**: Run \`~/claude-code-setup/dispatch.sh --task \"<your prompt>\" --provider kiro\` for Amazon-specific work.\n\n'
+
+# Multi-file delegation: many files across directories, no agents spawned
+if len(files) >= DELEGATE_FILES and num_dirs >= DELEGATE_DIRS and agents_spawned == 0 and ec - delegation_reminded >= 5:
+    delegation_msg += '## Delegate: Use Parallel Agents\n'
+    delegation_msg += f'You have **{ec} edits** across **{len(files)} files** in **{num_dirs} directories** — all in the main context.\n'
+    delegation_msg += 'Spawn parallel agents for independent work:\n'
+    if not tests:
+        delegation_msg += '- **Tests**: \`agent_spawn\` with branch \"test-<feature>\" and prompt to write tests\n'
+    if not review:
+        delegation_msg += '- **Review**: \`agent_spawn\` with branch \"review-<feature>\" and prompt to review changes\n'
+    delegation_msg += '- **Implementation**: Split remaining work by concern into separate \`agent_spawn\` calls\n'
+    delegation_msg += '\nEach agent gets its own git worktree — no conflicts with your work.\n\n'
+    s['delegation_reminded'] = ec
+
+# Force delegation at high edit count
+if ec >= FORCE_DELEGATE and agents_spawned == 0 and not tests:
+    delegation_msg += '## ENFORCEMENT: Delegate Now\n'
+    delegation_msg += f'**{ec} edits** without spawning any parallel agents. You are doing all the work yourself.\n'
+    delegation_msg += 'You MUST delegate at least one of these right now:\n'
+    delegation_msg += '1. \`agent_spawn\` — tests for changed files\n'
+    delegation_msg += '2. \`agent_spawn\` — code review of changes\n'
+    delegation_msg += '3. Run tests directly if delegation is not possible\n\n'
+
+if delegation_msg:
+    print(delegation_msg.rstrip())
+
+# --- Standard enforcement reminders ---
 if ec >= HARD and ec - lr >= 8 and not tests:
     print('## ENFORCEMENT: Review Required')
     print(f'You have made **{ec} edits** across **{len(files)} files** without running tests or review.')
@@ -199,13 +266,13 @@ if ec >= HARD and ec - lr >= 8 and not tests:
     print('2. Launch code-reviewer agent on changed files')
     print('3. Write a checkpoint (task progress, decisions, remaining work)')
     s['last_remind_edit'] = ec
-    json.dump(s, open(state_file, 'w'), indent=2)
 elif ec >= SOFT and ec - lr >= SOFT and not tests:
     print('## Enforcement Reminder')
     print(f'{ec} edits across {len(files)} files. Consider running tests and review soon.')
     print(f'Changed: {flist}')
     s['last_remind_edit'] = ec
-    json.dump(s, open(state_file, 'w'), indent=2)
+
+json.dump(s, open(state_file, 'w'), indent=2)
 
 if need_checkpoint:
     print('__CHECKPOINT__', file=sys.stderr)
@@ -305,13 +372,14 @@ tests = s.get('tests_run', False)
 review = s.get('review_run', False)
 intel = s.get('intel_updated', False)
 phase = s.get('phase', 'idle')
+agents = s.get('agents_spawned', 0)
 
 if ec == 0:
     # No edits made, nothing to report
     exit(0)
 
 print('## Pipeline Enforcement Report')
-print(f'Phase: {phase} | Edits: {ec} | Files: {len(files)}')
+print(f'Phase: {phase} | Edits: {ec} | Files: {len(files)} | Agents spawned: {agents}')
 print()
 
 issues = []
@@ -321,6 +389,8 @@ if not review:
     issues.append('REVIEW NOT RUN — launch code-reviewer on changed files')
 if not intel and ec > 5:
     issues.append('INTEL NOT UPDATED — run /intel-refresh if structural changes were made')
+if agents == 0 and ec >= 10:
+    issues.append('NO AGENTS USED — for tasks this size, delegate testing/review to parallel agents')
 
 if issues:
     print('### Missing Steps')
@@ -346,7 +416,9 @@ action_mark() {
     tests)   update_state "s['tests_run'] = True" ;;
     review)  update_state "s['review_run'] = True" ;;
     intel)   update_state "s['intel_updated'] = True" ;;
-    *)       echo "Usage: enforce.sh mark [tests|review|intel]" >&2; exit 1 ;;
+    agent)   update_state "s['agents_spawned'] = s.get('agents_spawned', 0) + 1" ;;
+    kiro)    update_state "s['kiro_delegated'] = True" ;;
+    *)       echo "Usage: enforce.sh mark [tests|review|intel|agent|kiro]" >&2; exit 1 ;;
   esac
 }
 
@@ -363,6 +435,7 @@ import json
 s = json.load(open('${STATE_FILE}'))
 print(f\"Phase: {s.get('phase','idle')} | Edits: {s.get('edit_count',0)} | Files: {len(s.get('files_changed',[]))}\")
 print(f\"Tests: {'yes' if s.get('tests_run') else 'no'} | Review: {'yes' if s.get('review_run') else 'no'} | Intel: {'yes' if s.get('intel_updated') else 'no'}\")
+print(f\"Agents spawned: {s.get('agents_spawned',0)} | Kiro delegated: {'yes' if s.get('kiro_delegated') else 'no'}\")
 ckpt = 'exists' if __import__('os').path.exists('${CHECKPOINT_FILE}') else 'none'
 print(f\"Checkpoint: {ckpt}\")
 " 2>/dev/null

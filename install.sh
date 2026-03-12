@@ -651,5 +651,34 @@ with open(mcp_path, 'w') as f:
     fi
   fi
 
+  # Install cmux (parallel agent worktrees)
+  echo ""
+  step "Installing cmux (parallel agent worktrees)"
+  if $DRY_RUN; then
+    info "[DRY RUN] Would install cmux"
+  else
+    if command -v cmux &>/dev/null; then
+      ok "cmux already installed: $(cmux --version 2>/dev/null || echo 'found')"
+    else
+      # Install cmux
+      if command -v curl &>/dev/null; then
+        curl -fsSL https://github.com/craigsc/cmux/releases/latest/download/install.sh 2>/dev/null | sh 2>/dev/null \
+          && ok "cmux installed" \
+          || warn "cmux install failed — install manually: https://github.com/craigsc/cmux"
+      else
+        warn "cmux: curl not found. Install manually: https://github.com/craigsc/cmux"
+      fi
+    fi
+
+    # Install cmux setup template
+    if [ -f "$SCRIPT_DIR/universal/cmux-setup.sh" ]; then
+      mkdir -p "$HOME/.claude/templates"
+      \cp -f "$SCRIPT_DIR/universal/cmux-setup.sh" "$HOME/.claude/templates/cmux-setup.sh"
+      chmod +x "$HOME/.claude/templates/cmux-setup.sh"
+      ok "cmux setup template: ~/.claude/templates/cmux-setup.sh"
+      info "To use in a project: mkdir -p .cmux && cp ~/.claude/templates/cmux-setup.sh .cmux/setup"
+    fi
+  fi
+
   summary "install"
 fi

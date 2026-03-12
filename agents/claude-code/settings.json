@@ -43,6 +43,8 @@
       "Bash(gemini *)",
       "Bash(amp *)",
       "Bash($HOME/.claude/scripts/enforce.sh *)",
+      "Bash(cmux *)",
+      "Bash(kiro-cli *)",
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:docs.aws.amazon.com)",
@@ -101,7 +103,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CMD=\"$TOOL_INPUT_command\"; if echo \"$CMD\" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; if echo \"$CMD\" | grep -qE '(code-review|security-audit)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$CMD\" | grep -qE 'intel-refresh'; then $HOME/.claude/scripts/enforce.sh mark intel 2>/dev/null; fi; true"
+            "command": "CMD=\"$TOOL_INPUT_command\"; if echo \"$CMD\" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; if echo \"$CMD\" | grep -qE '(code-review|security-audit)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$CMD\" | grep -qE 'intel-refresh'; then $HOME/.claude/scripts/enforce.sh mark intel 2>/dev/null; fi; if echo \"$CMD\" | grep -qE '(dispatch.sh.*kiro|kiro-cli)'; then $HOME/.claude/scripts/enforce.sh mark kiro 2>/dev/null; fi; if echo \"$CMD\" | grep -qE '(cmux new|agent_spawn)'; then $HOME/.claude/scripts/enforce.sh mark agent 2>/dev/null; fi; true"
           }
         ]
       },
@@ -110,7 +112,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "DESC=\"$TOOL_INPUT_description\"; PROMPT=\"$TOOL_INPUT_prompt\"; TYPE=\"${TOOL_INPUT_subagent_type:-}\"; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(code-review|reviewer|review)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(test-writer|test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; true"
+            "command": "DESC=\"$TOOL_INPUT_description\"; PROMPT=\"$TOOL_INPUT_prompt\"; TYPE=\"${TOOL_INPUT_subagent_type:-}\"; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(code-review|reviewer|review)'; then $HOME/.claude/scripts/enforce.sh mark review 2>/dev/null; fi; if echo \"$TYPE $DESC $PROMPT\" | grep -qiE '(test-writer|test)'; then $HOME/.claude/scripts/enforce.sh mark tests 2>/dev/null; fi; $HOME/.claude/scripts/enforce.sh mark agent 2>/dev/null; true"
           }
         ]
       }
