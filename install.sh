@@ -612,8 +612,9 @@ else
         warn "Orchestration: npm not found, run: cd $orch_dest && npm install"
       fi
 
-      # Register MCP server with Claude
+      # Register MCP server with Claude (remove first to handle re-installs)
       if command -v claude &>/dev/null; then
+        claude mcp remove -s user orchestration 2>/dev/null || true
         claude mcp add -s user orchestration -- node "$orch_dest/server.js" 2>/dev/null \
           && ok "Registered MCP: orchestration (Claude)" \
           || warn "Could not register orchestration MCP with Claude CLI"

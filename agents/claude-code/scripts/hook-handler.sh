@@ -15,6 +15,11 @@ ACTION="${1:-}"
 # Read JSON from stdin (only available once)
 INPUT=$(cat)
 
+# Debug log (remove after confirming hooks work)
+DEBUG_LOG="$HOME/.claude/scratch/hook-debug.log"
+echo "=== $(date) ACTION=$ACTION ===" >> "$DEBUG_LOG" 2>/dev/null || true
+echo "$INPUT" >> "$DEBUG_LOG" 2>/dev/null || true
+
 case "$ACTION" in
   edit)
     # Extract file path from tool_input
@@ -24,14 +29,7 @@ case "$ACTION" in
     fi
     # Fallback: try python3
     if [ -z "$FILE" ] && command -v python3 &>/dev/null; then
-      FILE=$(python3 -c "
-import json, sys
-try:
-    d = json.loads('''$INPUT''')
-    print(d.get('tool_input', {}).get('file_path', ''))
-except:
-    print('')
-" 2>/dev/null)
+      FILE=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))" 2>/dev/null)
     fi
 
     # Run ESLint on JS/TS files
@@ -53,14 +51,7 @@ except:
       CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
     fi
     if [ -z "$CMD" ] && command -v python3 &>/dev/null; then
-      CMD=$(python3 -c "
-import json, sys
-try:
-    d = json.loads('''$INPUT''')
-    print(d.get('tool_input', {}).get('command', ''))
-except:
-    print('')
-" 2>/dev/null)
+      CMD=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
     fi
 
     if [ -n "$CMD" ]; then
@@ -97,15 +88,7 @@ except:
       CONTEXT="$TYPE $DESC $PROMPT"
     fi
     if [ -z "$CONTEXT" ] && command -v python3 &>/dev/null; then
-      CONTEXT=$(python3 -c "
-import json
-try:
-    d = json.loads('''$INPUT''')
-    ti = d.get('tool_input', {})
-    print(f\"{ti.get('subagent_type','')} {ti.get('description','')} {ti.get('prompt','')}\")
-except:
-    print('')
-" 2>/dev/null)
+      CONTEXT=$(echo "$INPUT" | python3 -c "import json,sys; ti=json.load(sys.stdin).get('tool_input',{}); print(f\"{ti.get('subagent_type','')} {ti.get('description','')} {ti.get('prompt','')}\")" 2>/dev/null)
     fi
 
     if [ -n "$CONTEXT" ]; then
