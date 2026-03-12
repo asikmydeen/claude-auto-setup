@@ -67,19 +67,22 @@
 - Dashboard: `cd dashboard && npm install` (only if running dashboard)
 
 ### Test
-- **No automated tests** - Manual testing only
-- Test mode: `./install.sh --dry-run`
+- `make test` or `./tests/run.sh` — 24 smoke tests (CLI flags, structure, shellcheck)
+- `./install.sh --dry-run` — preview install without changes
 
 ### Lint
-- **No linter configured** - Could add `shellcheck` for bash scripts
+- `make lint` — shellcheck (error-level) on all main scripts
+- `make lint-warn` — shellcheck (warning-level) for stricter check
 
 ### Run
-- Installation: `./install.sh`
-- Update only: `./install.sh --update`
-- Self-update: `./install.sh --self-update`
+- Installation: `./install.sh` (or `make install`)
+- Update only: `./install.sh --update` (or `make update`)
+- Self-update: `./install.sh --self-update` (or `make self-update`)
 - Project init: `./project-init.sh`
 - Dispatch: `./dispatch.sh --task "prompt" --type <task-type>`
 - Dashboard: `cd dashboard && npm start`
+- Version: `./install.sh --version` (or `make version`)
+- Clean worktrees: `make clean`
 
 ---
 
@@ -192,11 +195,17 @@ claude-code-setup/
 │   ├── install-service.sh          # systemd/launchd service installer
 │   └── report.sh                   # Agent state reporter
 │
+├── lib/                            # Shared shell utilities
+│   └── common.sh                   # Colors, logging, has_cmd helper
 │
-├── install.sh                      # Main installer (569 lines)
-├── project-init.sh                 # Per-project initializer (239 lines)
-├── dispatch.sh                     # Cross-provider dispatcher (265 lines)
-├── orchestration-intel.sh          # Orchestration intelligence helper (169 lines)
+├── tests/                          # Smoke tests
+│   └── run.sh                      # 24 tests (CLI flags, structure, shellcheck)
+│
+├── Makefile                        # Task runner (install, test, lint, clean, etc.)
+├── install.sh                      # Main installer (670 lines)
+├── project-init.sh                 # Per-project initializer (238 lines)
+├── dispatch.sh                     # Cross-provider dispatcher with fallback (340 lines)
+├── orchestration-intel.sh          # Orchestration intelligence helper (155 lines)
 ├── demo-intelligence.sh            # Intelligence system demo (143 lines)
 ├── ORCHESTRATION-INTEL.md          # Orchestration intelligence docs
 ├── ANALYSIS.md                     # Architecture and roadmap

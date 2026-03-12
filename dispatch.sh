@@ -235,14 +235,11 @@ build_context() {
 
 CONTEXT=$(build_context)
 
-# --- Dispatch to provider ---
-dispatch() {
-  local full_prompt="$TASK"
-  if [ -n "$CONTEXT" ]; then
-    full_prompt="Context:\n$CONTEXT\n\nTask:\n$TASK"
-  fi
+# --- Dispatch to a single provider (returns 0 on success, 1 on failure) ---
+dispatch_to() {
+  local provider="$1" full_prompt="$2"
 
-  case "$PROVIDER" in
+  case "$provider" in
     claude)
       local tools="Read,Grep,Glob,Bash,Edit,Write"
       info "Invoking: claude -p (non-interactive)"
@@ -267,29 +264,72 @@ dispatch() {
       for model in $kiro_models; do
         info "Trying: kiro-cli --model=$model (trusted: builder-mcp)"
         kiro_output=$(kiro-cli chat --no-interactive --model="$model" --trust-tools="$kiro_tools" "$full_prompt" 2>&1) || true
-        # Strip ANSI codes and check if there's real content (not just warnings/errors)
         local clean_output
         clean_output=$(echo "$kiro_output" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\x1b\[[?0-9]*[a-zA-Z]//g' | grep -v '^\s*$' | grep -v 'WARNING:' | grep -v 'having trouble' | grep -v 'Credits:' | grep -v 'tools are now trusted' | grep -v 'understand the risks' | grep -v 'Learn more at' | grep -v 'temporarily unavailable' | grep -v 'Request ID:' | grep -v 'relaunch with' | head -1)
         if [ -n "$clean_output" ]; then
           echo "$kiro_output"
-          break
+          return 0
         fi
         warn "Model $model unavailable, trying next..."
       done
-      if [ -z "$clean_output" ]; then
-        error "All Kiro models failed. Raw output:"
-        echo "$kiro_output"
-      fi
+      return 1
       ;;
     *)
-      error "Unknown provider: $PROVIDER"
-      exit 1
+      error "Unknown provider: $provider"
+      return 1
       ;;
   esac
 }
 
+# --- Build fallback chain (providers to try after primary) ---
+get_fallback_chain() {
+  local primary="$1"
+  local chain=""
+  for name in claude kiro codex gemini amp; do
+    [ "$name" = "$primary" ] && continue
+    local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
+    if command -v "$cli" &>/dev/null; then
+      chain="$chain $name"
+    fi
+  done
+  echo "$chain"
+}
+
+# --- Execute with fallback ---
+dispatch() {
+  local full_prompt="$TASK"
+  if [ -n "$CONTEXT" ]; then
+    full_prompt="Context:\n$CONTEXT\n\nTask:\n$TASK"
+  fi
+
+  # Try primary provider
+  local result
+  if result=$(dispatch_to "$PROVIDER" "$full_prompt"); then
+    echo "$result"
+    return 0
+  fi
+
+  # Primary failed — try fallback chain
+  warn "$PROVIDER failed, trying fallback providers..."
+  local fallbacks
+  fallbacks=$(get_fallback_chain "$PROVIDER")
+  for fallback in $fallbacks; do
+    info "Falling back to: $fallback"
+    if result=$(dispatch_to "$fallback" "$full_prompt"); then
+      ok "Fallback to $fallback succeeded"
+      PROVIDER="$fallback (fallback)"
+      echo "$result"
+      return 0
+    fi
+    warn "$fallback also failed"
+  done
+
+  error "All providers failed"
+  return 1
+}
+
 # --- Execute ---
-RESULT=$(dispatch)
+RESULT=$(dispatch) || { error "Dispatch failed for all providers"; exit 1; }
 
 if [ -n "$OUTPUT_FILE" ]; then
   echo "$RESULT" > "$OUTPUT_FILE"

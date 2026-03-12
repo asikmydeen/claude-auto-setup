@@ -163,7 +163,6 @@ if command -v amp &>/dev/null; then
   # Link shared rules as checks
   for f in "$PROJECT_DIR/.ai/rules/"*.md; do
     local_name=$(basename "$f" .md)
-    local desc
     desc=$(head -1 "$f" | sed 's/^#\s*//')
     {
       echo "---"
