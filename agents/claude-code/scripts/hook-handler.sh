@@ -63,6 +63,22 @@ case "$ACTION" in
       CMD=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
     fi
 
+    # Check for failed commands (exit code != 0) to trigger PUA escalation
+    EXIT_CODE=""
+    if command -v jq &>/dev/null; then
+      EXIT_CODE=$(echo "$INPUT" | jq -r '.tool_response.exit_code // .tool_response.exitCode // empty' 2>/dev/null)
+    fi
+    if [ -z "$EXIT_CODE" ] && command -v python3 &>/dev/null; then
+      EXIT_CODE=$(echo "$INPUT" | python3 -c "import json,sys; tr=json.load(sys.stdin).get('tool_response',{}); print(tr.get('exit_code', tr.get('exitCode','')))" 2>/dev/null)
+    fi
+
+    # PUA: escalate on build/test/lint failures
+    if [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" != "0" ] && [ -n "$CMD" ]; then
+      if echo "$CMD" | grep -qE '(npm |brazil-build|jest|vitest|pytest|cargo |make |eslint|tsc |npx )'; then
+        "$ENFORCE" mark failure 2>/dev/null || true
+      fi
+    fi
+
     if [ -n "$CMD" ]; then
       # Detect test runs
       if echo "$CMD" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test|make test)'; then

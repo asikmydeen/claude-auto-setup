@@ -38,6 +38,10 @@ SOFT_REMIND_EDITS=3             # 3 edits → soft reminder
 HARD_REMIND_EDITS=6             # 6 edits → hard enforcement
 AUTO_CHECKPOINT_EDITS=4         # Checkpoint every 4 edits
 FORCE_DELEGATE_EDITS=6          # 6+ edits without agents → forced delegation
+PUA_L1_FAILURES=2               # 2nd failure → L1 (mild disappointment)
+PUA_L2_FAILURES=3               # 3rd failure → L2 (soul interrogation)
+PUA_L3_FAILURES=4               # 4th failure → L3 (performance review)
+PUA_L4_FAILURES=5               # 5th+ failure → L4 (graduation warning)
 KIRO_KEYWORDS="aws|amazon|brazil|cdk|lambda|dynamodb|pipeline|hydra|coral|isengard|cr|integration.test|sam|cloudformation|s3|sqs|sns|iam|ec2"
 
 mkdir -p "$SCRATCH_DIR"
@@ -65,7 +69,9 @@ json.dump({
   'explore_done': False,
   'delegation_reminded': 0,
   'kiro_delegated': False,
-  'first_edit_warned': False
+  'first_edit_warned': False,
+  'failure_count': 0,
+  'pua_level': 0
 }, open(os.environ['ENFORCE_STATE_FILE'], 'w'), indent=2)
 "
 }
@@ -438,12 +444,16 @@ review = s.get('review_run', False)
 intel = s.get('intel_updated', False)
 phase = s.get('phase', 'idle')
 agents = s.get('agents_spawned', 0)
+failures = s.get('failure_count', 0)
+pua_level = s.get('pua_level', 0)
 
 if ec == 0:
     exit(0)
 
 print('## Pipeline Enforcement Report')
 print(f'Phase: {phase} | Edits: {ec} | Files: {len(files)} | Agents spawned: {agents}')
+if failures > 0:
+    print(f'PUA: Level {pua_level} | Failures: {failures}')
 print()
 
 issues = []
@@ -483,7 +493,8 @@ action_mark() {
     agent)   update_state "s['agents_spawned'] = s.get('agents_spawned', 0) + 1" ;;
     explore) update_state "s['explore_done'] = True" ;;
     kiro)    update_state "s['kiro_delegated'] = True" ;;
-    *)       echo "Usage: enforce.sh mark [tests|review|intel|agent|explore|kiro]" >&2; exit 1 ;;
+    failure) action_pua_escalate ;;
+    *)       echo "Usage: enforce.sh mark [tests|review|intel|agent|explore|kiro|failure]" >&2; exit 1 ;;
   esac
 }
 
@@ -501,9 +512,85 @@ s = json.load(open(os.environ['ENFORCE_STATE_FILE']))
 print(f\"Phase: {s.get('phase','idle')} | Edits: {s.get('edit_count',0)} | Files: {len(s.get('files_changed',[]))}\")
 print(f\"Tests: {'yes' if s.get('tests_run') else 'no'} | Review: {'yes' if s.get('review_run') else 'no'} | Intel: {'yes' if s.get('intel_updated') else 'no'}\")
 print(f\"Agents spawned: {s.get('agents_spawned',0)} | Explore: {'yes' if s.get('explore_done') else 'no'}\")
+print(f\"PUA: level {s.get('pua_level',0)} | Failures: {s.get('failure_count',0)}\")
 ckpt = 'exists' if os.path.exists(os.environ['ENFORCE_CKPT']) else 'none'
 print(f\"Checkpoint: {ckpt}\")
 " 2>/dev/null
+}
+
+# ── PUA Escalation ────────────────────────────────────────────────────────────
+# Called when a task/build/test failure is detected. Increments failure counter
+# and outputs PUA pressure rhetoric at the corresponding level.
+
+action_pua_escalate() {
+  ensure_state
+
+  ENFORCE_STATE_FILE="$STATE_FILE" \
+    ENFORCE_PUA_L1="$PUA_L1_FAILURES" \
+    ENFORCE_PUA_L2="$PUA_L2_FAILURES" \
+    ENFORCE_PUA_L3="$PUA_L3_FAILURES" \
+    ENFORCE_PUA_L4="$PUA_L4_FAILURES" \
+    python3 -c "
+import json, os
+
+sf = os.environ['ENFORCE_STATE_FILE']
+s = json.load(open(sf))
+s['failure_count'] = s.get('failure_count', 0) + 1
+fc = s['failure_count']
+
+L1 = int(os.environ['ENFORCE_PUA_L1'])
+L2 = int(os.environ['ENFORCE_PUA_L2'])
+L3 = int(os.environ['ENFORCE_PUA_L3'])
+L4 = int(os.environ['ENFORCE_PUA_L4'])
+
+if fc >= L4:
+    s['pua_level'] = 4
+    print('## PUA L4: Graduation Warning')
+    print(f'Failure #{fc}. Other models can solve problems like this. You might be about to graduate.')
+    print()
+    print('**Mandatory actions:**')
+    print('- Create a minimal PoC in an isolated environment')
+    print('- Try a completely different tech stack or approach')
+    print('- If still stuck after this attempt: output a structured failure report')
+    print('  (verified facts, eliminated possibilities, narrowed scope, recommended next steps)')
+elif fc >= L3:
+    s['pua_level'] = 3
+    print('## PUA L3: Performance Review')
+    print(f'Failure #{fc}. After careful consideration, this is a 3.25. Settle down, make a change.')
+    print()
+    print('**Mandatory: Complete ALL 7-point checklist items:**')
+    print('- [ ] Read failure signals word by word')
+    print('- [ ] Search the core problem with tools')
+    print('- [ ] Read 50 lines of context around the failure')
+    print('- [ ] Verify ALL assumptions with tools (versions, paths, deps)')
+    print('- [ ] Try the exact opposite hypothesis')
+    print('- [ ] Isolate/reproduce in minimal scope')
+    print('- [ ] Switch tools, methods, or tech stack (not just parameters)')
+    print()
+    print('Then list 3 entirely new hypotheses and verify each one.')
+elif fc >= L2:
+    s['pua_level'] = 2
+    print('## PUA L2: Soul Interrogation')
+    print(f'Failure #{fc}. What is the underlying logic of your approach? Where is the top-level design?')
+    print()
+    print('**Mandatory actions:**')
+    print('- Search the COMPLETE error message (not just the first line)')
+    print('- Read the relevant source code (50 lines of context)')
+    print('- List 3 fundamentally different hypotheses')
+    print('- Verify assumptions: versions, paths, permissions, dependencies')
+elif fc >= L1:
+    s['pua_level'] = 1
+    print('## PUA L1: Switch Approach')
+    print(f'Failure #{fc}. Stop current approach. Switch to a fundamentally different solution.')
+    print()
+    print('**Ask yourself:**')
+    print('- Am I tweaking parameters in the same direction? (spinning wheels)')
+    print('- Have I read the error message word by word?')
+    print('- Have I searched for the exact error?')
+    print('- What assumption am I making that might be wrong?')
+
+json.dump(s, open(sf, 'w'), indent=2)
+" 2>/dev/null || true
 }
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -522,9 +609,10 @@ case "$ACTION" in
   mark)            action_mark "$@" ;;
   reset)           action_reset ;;
   status)          action_status ;;
+  pua-escalate)    action_pua_escalate ;;
   *)
     echo "Usage: enforce.sh <action> [args]"
-    echo "Actions: session-start, pre-edit, track-edit, session-stop, checkpoint, phase, mark, reset, status"
+    echo "Actions: session-start, pre-edit, track-edit, session-stop, checkpoint, phase, mark, reset, status, pua-escalate"
     exit 1
     ;;
 esac

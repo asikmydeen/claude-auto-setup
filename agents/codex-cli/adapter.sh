@@ -27,6 +27,12 @@ install() {
       fi
     done
 
+    # Include PUA persistence rules
+    if [ -f "$UNIVERSAL_DIR/rules/pua.md" ]; then
+      cat "$UNIVERSAL_DIR/rules/pua.md"
+      echo ""
+    fi
+
     echo "## Workflow"
     echo ""
     echo "For any implementation task:"

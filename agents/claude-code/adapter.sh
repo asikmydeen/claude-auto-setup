@@ -71,6 +71,14 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     echo "    Settings: skipped (python3 needed for merge)"
   fi
 
+  # Install PUA skill (persistence engine)
+  local pua_skill="$UNIVERSAL_DIR/skills/pua/SKILL.md"
+  if [ -f "$pua_skill" ]; then
+    mkdir -p "$CLAUDE_HOME/skills/pua"
+    \cp -f "$pua_skill" "$CLAUDE_HOME/skills/pua/SKILL.md"
+    echo "    PUA skill: installed"
+  fi
+
   # Install native agents
   if [ -d "$AGENT_DIR/agents" ]; then
     mkdir -p "$CLAUDE_HOME/agents"
