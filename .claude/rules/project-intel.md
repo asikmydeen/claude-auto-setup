@@ -1,8 +1,8 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-10
+> **Last updated**: 2026-03-13
 > **Purpose**: Universal AI agent orchestration and configuration system
-> **Auto-generated**: Via intel refresh (targeted scan of 13 commits since last update)
+> **Auto-generated**: Via intel refresh (PUA integration + worktree agent demo)
 
 ---
 
@@ -20,6 +20,7 @@
 - **Agent teams** (experimental) - Multi-session parallel agent coordination
 - **Context preservation** - Checkpoint system surviving context compaction
 - **Cross-provider dispatch** - Routes tasks to best available AI agent
+- **PUA persistence engine** - Prevents AI from giving up; escalating pressure (L1-L4) on build/test failures
 - **Git-based distribution** - Self-updating via `git pull`
 
 **No build tools** - Pure shell script execution (no compilation step)
@@ -67,7 +68,7 @@
 - Dashboard: `cd dashboard && npm install` (only if running dashboard)
 
 ### Test
-- `make test` or `./tests/run.sh` — 24 smoke tests (CLI flags, structure, shellcheck)
+- `make test` or `./tests/run.sh` — 31 smoke tests (CLI flags, structure, PUA escalation, shellcheck)
 - `./install.sh --dry-run` — preview install without changes
 
 ### Lint
@@ -93,14 +94,15 @@
 
 ```
 universal/                      # Single source of truth (agent-agnostic)
-├── rules/                      # 6 shared global rules
-├── commands/                   # 52 command definitions (12,096 lines total)
+├── rules/                      # 8 shared global rules (incl. pua.md)
+├── commands/                   # 54 command definitions (incl. pua.md)
+├── skills/pua/SKILL.md        # Full PUA skill (32KB, all corporate flavors)
 ├── intel-template.md          # Template for cached codebase intelligence
 └── providers.json             # Cross-provider routing config (5 providers)
 
 agents/                         # Agent-specific adapters
 ├── claude-code/               # Translates universal → Claude format
-│   ├── agents/                # 5 native agent definitions
+│   ├── agents/                # 6 native agent definitions (incl. pua-enforcer)
 │   ├── settings.json          # 14 plugins, hooks, permissions, env vars
 │   └── CLAUDE.md              # Global rules + auto-role
 ├── gemini-cli/                # → Gemini format
@@ -150,25 +152,29 @@ dispatch.sh → read providers.json → detect installed providers → select be
 ```
 claude-code-setup/
 ├── universal/                      # Agent-agnostic shared content
-│   ├── rules/                      # 6 global rule files
+│   ├── rules/                      # 8 global rule files
 │   │   ├── code-quality.md         # TypeScript/React standards
 │   │   ├── git-workflow.md         # Commit format, branch naming
 │   │   ├── security.md             # OWASP Top 10, secrets
 │   │   ├── testing.md              # Test-first approach
 │   │   ├── aws-development.md      # AWS-specific patterns
-│   │   └── orchestration.md        # Multi-agent protocol (expanded w/ checkpoints)
-│   ├── commands/                   # 52 command definitions (12,096 lines)
+│   │   ├── orchestration.md        # Multi-agent protocol (expanded w/ checkpoints)
+│   │   ├── multi-agent.md          # Multi-agent enforcement mandate
+│   │   └── pua.md                  # PUA persistence engine (auto-loaded by all agents)
+│   ├── commands/                   # 54 command definitions
 │   │   ├── init.md                 # Smart project initializer
 │   │   ├── deep-research.md        # 6-agent parallel analysis
 │   │   ├── build.md                # Multi-agent feature implementation
 │   │   ├── debug.md                # Multi-agent debugging
 │   │   ├── review.md               # Multi-agent code review
 │   │   ├── quick.md                # Fast single-file changes
+│   │   ├── pua.md                  # Manual PUA activation trigger
 │   │   ├── multi-provider-build.md # Cross-provider feature builder
 │   │   ├── intel-refresh.md        # Targeted intel refresh
 │   │   ├── coordinator.md          # Coordinator role
 │   │   ├── [7 role commands]       # developer, reviewer, shepherd, etc.
 │   │   └── [37 specialist commands]# api-designer, backend-developer, etc.
+│   ├── skills/pua/SKILL.md        # Full PUA skill (corporate flavors, team integration)
 │   ├── intel-template.md           # Template for project-intel.md
 │   └── providers.json              # 5 providers, 18 task routes
 │
@@ -177,12 +183,13 @@ claude-code-setup/
 │   │   ├── adapter.sh              # Install/uninstall + native agent install
 │   │   ├── CLAUDE.md               # Global rules + auto-role
 │   │   ├── settings.json           # 14 plugins, hooks, permissions, env
-│   │   └── agents/                 # 5 native agent definitions
+│   │   └── agents/                 # 6 native agent definitions
 │   │       ├── code-reviewer.md    # Sonnet, read-only, persistent memory
-│   │       ├── debugger.md         # Full tools, 40 turn limit
+│   │       ├── debugger.md         # Full tools, 40 turns, PUA methodology
 │   │       ├── test-writer.md      # Background execution
 │   │       ├── explorer.md         # Haiku (fast/cheap), read-only, 20 turns
-│   │       └── security-auditor.md # Persistent memory for patterns
+│   │       ├── security-auditor.md # Persistent memory for patterns
+│   │       └── pua-enforcer.md     # Team watchdog, detects slacking patterns
 │   ├── gemini-cli/
 │   ├── kiro-cli/
 │   ├── codex-cli/
@@ -200,7 +207,7 @@ claude-code-setup/
 │   └── common.sh                   # Colors, logging, has_cmd helper
 │
 ├── tests/                          # Smoke tests
-│   └── run.sh                      # 29 tests (CLI flags, doctor, version, structure, shellcheck)
+│   └── run.sh                      # 31 tests (CLI flags, doctor, version, structure, PUA, shellcheck)
 │
 ├── Makefile                        # Task runner (install, test, lint, clean, etc.)
 ├── VERSION                         # Centralized version (single source of truth)
@@ -272,7 +279,7 @@ claude-code-setup/
     "SessionStart": [{ "command": "register with dashboard + enforce.sh session-start" }],
     "PreToolUse": [{ "matcher": "Edit|Write", "command": "enforce.sh pre-edit (first-edit agent check)" }],
     "PostToolUse": [{ "matcher": "Edit|Write", "command": "eslint + enforce.sh track-edit" },
-                    { "matcher": "Bash", "command": "detect tests/review/kiro" },
+                    { "matcher": "Bash", "command": "detect tests/review/kiro + PUA failure escalation" },
                     { "matcher": "Agent", "command": "mark agent spawned" }],
     "Stop": [{ "command": "enforce.sh session-stop (enforcement report)" }]
   },
@@ -298,6 +305,7 @@ claude-code-setup/
 | test-writer | Sonnet 4.6 | Full access | Persistent | Background exec |
 | explorer | Haiku 4.5 | Read + Bash (no Edit/Write) | — | 20 turns, background, fast/cheap |
 | security-auditor | Opus 4.6 | Read + Bash (no Edit/Write) | Persistent | Learns patterns |
+| pua-enforcer | Sonnet 4.6 | Read + Grep + Glob + Bash | Persistent | Team watchdog, detects slacking |
 
 **Priority**: Native agents > Command agents > Agent teams
 
@@ -316,6 +324,9 @@ claude-code-setup/
 10. **Hook ESLint** - PostToolUse hook runs eslint on JS/TS files after Edit/Write; may slow workflow
 11. **PreToolUse enforcement** - PreToolUse hook fires `enforce.sh pre-edit` before EVERY Edit/Write, warns if no agents spawned
 12. **File paths with quotes** - enforce.sh passes file paths via env vars (ENFORCE_FILE) to avoid Python injection
+13. **PUA auto-escalation** - hook-handler detects `exit_code != 0` from build/test/lint → triggers `enforce.sh mark failure` → escalates PUA level (L1-L4)
+14. **PUA state file** - enforce.sh tracks `failure_count` and `pua_level` in `~/.claude/scratch/enforce-state.json`; reset with `enforce.sh reset`
+15. **Installed vs source enforce.sh** - Hooks run the installed version at `~/.claude/scripts/enforce.sh`, not the repo source; must re-install after changes
 
 ---
 
@@ -344,13 +355,14 @@ claude-code-setup/
 | `/quick <task>` | Fast no-spec single-file changes |
 | `/intel-refresh` | Targeted intel update |
 | `/multi-provider-build` | Cross-provider feature builder |
+| `/pua` | Manual PUA persistence engine activation |
 
 ### File Counts
 
-- **7** universal rule files
-- **52** command definitions (12,096 lines)
+- **8** universal rule files (incl. pua.md, multi-agent.md)
+- **54** command definitions (incl. pua.md)
 - **6** agent adapters
-- **5** native agents (Claude Code)
+- **6** native agents (Claude Code, incl. pua-enforcer)
 - **5** main shell scripts (1,883 lines total)
 - **14** enabled plugins
 
