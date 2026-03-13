@@ -5,7 +5,7 @@
 # Claude Code hooks pass JSON on stdin with tool_input and tool_response.
 # This script reads it once, extracts what we need, and calls enforce.sh.
 #
-# Usage: hook-handler.sh <edit|bash|agent>
+# Usage: hook-handler.sh <pre-edit|edit|bash|agent>
 # ============================================================================
 set -euo pipefail
 
@@ -15,22 +15,32 @@ ACTION="${1:-}"
 # Read JSON from stdin (only available once)
 INPUT=$(cat)
 
-# Debug log (remove after confirming hooks work)
+# Debug log
 DEBUG_LOG="$HOME/.claude/scratch/hook-debug.log"
 echo "=== $(date) ACTION=$ACTION ===" >> "$DEBUG_LOG" 2>/dev/null || true
 echo "$INPUT" >> "$DEBUG_LOG" 2>/dev/null || true
 
+# Helper: extract file_path from tool_input
+extract_file() {
+  local file=""
+  if command -v jq &>/dev/null; then
+    file=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
+  fi
+  if [ -z "$file" ] && command -v python3 &>/dev/null; then
+    file=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))" 2>/dev/null)
+  fi
+  echo "$file"
+}
+
 case "$ACTION" in
+  pre-edit)
+    # PreToolUse hook: fires BEFORE Edit/Write — the critical intervention point
+    FILE=$(extract_file)
+    "$ENFORCE" pre-edit "${FILE:-unknown}" 2>/dev/null || true
+    ;;
+
   edit)
-    # Extract file path from tool_input
-    FILE=""
-    if command -v jq &>/dev/null; then
-      FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
-    fi
-    # Fallback: try python3
-    if [ -z "$FILE" ] && command -v python3 &>/dev/null; then
-      FILE=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))" 2>/dev/null)
-    fi
+    FILE=$(extract_file)
 
     # Run ESLint on JS/TS files
     if [ -n "$FILE" ]; then
@@ -40,12 +50,11 @@ case "$ACTION" in
       fi
     fi
 
-    # Track edit in enforce.sh
+    # Track edit in enforce.sh (PostToolUse)
     "$ENFORCE" track-edit "${FILE:-unknown}" 2>/dev/null || true
     ;;
 
   bash)
-    # Extract command from tool_input
     CMD=""
     if command -v jq &>/dev/null; then
       CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -56,7 +65,7 @@ case "$ACTION" in
 
     if [ -n "$CMD" ]; then
       # Detect test runs
-      if echo "$CMD" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test)'; then
+      if echo "$CMD" | grep -qE '(npm test|brazil-build run test|jest|vitest|pytest|cargo test|make test)'; then
         "$ENFORCE" mark tests 2>/dev/null || true
       fi
       # Detect code review
@@ -79,7 +88,6 @@ case "$ACTION" in
     ;;
 
   agent)
-    # Extract agent details from tool_input
     CONTEXT=""
     if command -v jq &>/dev/null; then
       DESC=$(echo "$INPUT" | jq -r '.tool_input.description // empty' 2>/dev/null)
@@ -100,6 +108,10 @@ case "$ACTION" in
       if echo "$CONTEXT" | grep -qiE '(test-writer|test)'; then
         "$ENFORCE" mark tests 2>/dev/null || true
       fi
+      # Detect explorer agents
+      if echo "$CONTEXT" | grep -qiE '(explorer|explore|research)'; then
+        "$ENFORCE" mark explore 2>/dev/null || true
+      fi
     fi
 
     # Always mark agent usage
@@ -107,7 +119,7 @@ case "$ACTION" in
     ;;
 
   *)
-    echo "Usage: hook-handler.sh <edit|bash|agent>" >&2
+    echo "Usage: hook-handler.sh <pre-edit|edit|bash|agent>" >&2
     exit 1
     ;;
 esac

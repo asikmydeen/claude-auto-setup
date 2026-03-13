@@ -2,7 +2,7 @@
 name: security-auditor
 description: Security audit specialist. Use when reviewing code for security vulnerabilities, compliance issues, or before deploying to production.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: claude-opus-4-6
 memory: user
 maxTurns: 30
 ---

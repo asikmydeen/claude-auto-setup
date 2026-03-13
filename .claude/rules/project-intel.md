@@ -269,8 +269,12 @@ claude-code-setup/
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80"
   },
   "hooks": {
-    "SessionStart": [{ "command": "register with dashboard + output context" }],
-    "PostToolUse": [{ "matcher": "Edit|Write", "command": "eslint on JS/TS files" }]
+    "SessionStart": [{ "command": "register with dashboard + enforce.sh session-start" }],
+    "PreToolUse": [{ "matcher": "Edit|Write", "command": "enforce.sh pre-edit (first-edit agent check)" }],
+    "PostToolUse": [{ "matcher": "Edit|Write", "command": "eslint + enforce.sh track-edit" },
+                    { "matcher": "Bash", "command": "detect tests/review/kiro" },
+                    { "matcher": "Agent", "command": "mark agent spawned" }],
+    "Stop": [{ "command": "enforce.sh session-stop (enforcement report)" }]
   },
   "enabledPlugins": {
     "typescript-lsp": true, "pyright-lsp": true, "context7": true,
@@ -289,11 +293,11 @@ claude-code-setup/
 
 | Agent | Model | Tools | Memory | Special |
 |-------|-------|-------|--------|---------|
-| code-reviewer | Sonnet | Read-only | Persistent | — |
-| debugger | Opus | Full access | Persistent | 40 turn limit |
-| test-writer | Opus | Full access | Persistent | Background exec |
-| explorer | Haiku | Read-only | — | 20 turn limit, fast/cheap |
-| security-auditor | Opus | Full access | Persistent | Learns patterns |
+| code-reviewer | Sonnet 4.6 | Read + Bash (no Edit/Write) | Persistent | — |
+| debugger | Opus 4.6 | Full access | Persistent | 40 turn limit |
+| test-writer | Sonnet 4.6 | Full access | Persistent | Background exec |
+| explorer | Haiku 4.5 | Read + Bash (no Edit/Write) | — | 20 turns, background, fast/cheap |
+| security-auditor | Opus 4.6 | Read + Bash (no Edit/Write) | Persistent | Learns patterns |
 
 **Priority**: Native agents > Command agents > Agent teams
 
@@ -310,6 +314,8 @@ claude-code-setup/
 7. **Dashboard optional** - File-based fallback if server not running; `--connect-timeout 1` prevents blocking
 8. **macOS bash 3.2** - All scripts compatible (no `declare -A`, no bash 4+ features)
 10. **Hook ESLint** - PostToolUse hook runs eslint on JS/TS files after Edit/Write; may slow workflow
+11. **PreToolUse enforcement** - PreToolUse hook fires `enforce.sh pre-edit` before EVERY Edit/Write, warns if no agents spawned
+12. **File paths with quotes** - enforce.sh passes file paths via env vars (ENFORCE_FILE) to avoid Python injection
 
 ---
 

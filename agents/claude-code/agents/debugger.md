@@ -2,7 +2,7 @@
 name: debugger
 description: Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues.
 tools: Read, Edit, Bash, Grep, Glob
-model: inherit
+model: claude-opus-4-6
 memory: user
 maxTurns: 40
 ---

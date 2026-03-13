@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Expert code reviewer for quality, security, and maintainability. Use proactively after writing or modifying code.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: claude-sonnet-4-6-20250514
 memory: user
 maxTurns: 30
 ---

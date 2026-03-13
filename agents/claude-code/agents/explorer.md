@@ -2,7 +2,8 @@
 name: explorer
 description: Codebase exploration and research agent. Use when you need to understand unfamiliar code, map dependencies, or gather context before making changes.
 tools: Read, Grep, Glob, Bash
-model: haiku
+model: claude-haiku-4-5-20251001
+background: true
 maxTurns: 20
 ---
 

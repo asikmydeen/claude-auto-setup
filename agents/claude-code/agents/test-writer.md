@@ -2,7 +2,7 @@
 name: test-writer
 description: Test automation specialist. Use when writing unit tests, integration tests, or improving test coverage.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: claude-sonnet-4-6-20250514
 memory: user
 background: true
 maxTurns: 50

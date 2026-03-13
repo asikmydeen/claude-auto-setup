@@ -7,43 +7,49 @@
 #
 # Actions:
 #   session-start       Resume from checkpoint, output orchestration context
-#   track-edit <file>   Record file change, conditionally remind about review
+#   pre-edit <file>     PreToolUse: warn BEFORE first edit if no agents spawned
+#   track-edit <file>   PostToolUse: record file change, enforce delegation
 #   session-stop        End-of-task enforcement report
 #   checkpoint [desc]   Write auto-checkpoint for compaction survival
 #   phase <name>        Set current pipeline phase
 #   reset               Clear state for a fresh task
-#   suggest-delegate    Check if delegation is warranted and output suggestion
+#   status              Show current enforcement state
 #
 # State: ~/.claude/scratch/enforce-state.json
 # Checkpoint: ~/.claude/scratch/task-state.md
 # ============================================================================
 set -euo pipefail
 
+# Hard dependency check — fail fast with clear message
+if ! command -v python3 &>/dev/null; then
+  echo "## Enforcement Disabled: python3 not found" >&2
+  exit 0
+fi
+
 SCRATCH_DIR="${HOME}/.claude/scratch"
 STATE_FILE="${SCRATCH_DIR}/enforce-state.json"
 CHECKPOINT_FILE="${SCRATCH_DIR}/task-state.md"
 CHANGES_LOG="${SCRATCH_DIR}/changed-files.log"
 
-# Thresholds
-SOFT_REMIND_EDITS=8
-HARD_REMIND_EDITS=16
-AUTO_CHECKPOINT_EDITS=6
-
-# Delegation thresholds
-DELEGATE_FILE_THRESHOLD=5       # 5+ files across 2+ dirs → suggest delegation
-DELEGATE_DIR_THRESHOLD=2
-DELEGATE_EDIT_THRESHOLD=10      # 10+ edits without any agent use → nag
-FORCE_DELEGATE_EDITS=15         # 15+ edits → strong delegation message
+# Thresholds — aggressive early intervention
+MULTI_FILE_WARN=2               # 2 unique files → warn about agents
+MULTI_FILE_ENFORCE=3            # 3 unique files without agents → enforce
+SOFT_REMIND_EDITS=3             # 3 edits → soft reminder
+HARD_REMIND_EDITS=6             # 6 edits → hard enforcement
+AUTO_CHECKPOINT_EDITS=4         # Checkpoint every 4 edits
+FORCE_DELEGATE_EDITS=6          # 6+ edits without agents → forced delegation
 KIRO_KEYWORDS="aws|amazon|brazil|cdk|lambda|dynamodb|pipeline|hydra|coral|isengard|cr|integration.test|sam|cloudformation|s3|sqs|sns|iam|ec2"
 
 mkdir -p "$SCRATCH_DIR"
 
-# ── State helpers (python3 for JSON) ─────────────────────────────────────────
+# ── State helpers ────────────────────────────────────────────────────────────
+# File paths are passed via ENFORCE_FILE env var (not shell interpolation)
+# to prevent Python injection from filenames with quotes/special chars.
 
 ensure_state() {
   [ -f "$STATE_FILE" ] && return
-  python3 -c "
-import json, time
+  ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, time, os
 json.dump({
   'edit_count': 0,
   'files_changed': [],
@@ -56,27 +62,30 @@ json.dump({
   'task_summary': '',
   'session_start': int(time.time()),
   'agents_spawned': 0,
+  'explore_done': False,
   'delegation_reminded': 0,
-  'kiro_delegated': False
-}, open('${STATE_FILE}', 'w'), indent=2)
+  'kiro_delegated': False,
+  'first_edit_warned': False
+}, open(os.environ['ENFORCE_STATE_FILE'], 'w'), indent=2)
 "
 }
 
 read_state() {
-  python3 -c "
-import json
-s = json.load(open('${STATE_FILE}'))
+  ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+s = json.load(open(os.environ['ENFORCE_STATE_FILE']))
 print(json.dumps(s))
 " 2>/dev/null || echo '{}'
 }
 
 update_state() {
   local py_updates="$1"
-  python3 -c "
-import json
-s = json.load(open('${STATE_FILE}'))
+  ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+sf = os.environ['ENFORCE_STATE_FILE']
+s = json.load(open(sf))
 ${py_updates}
-json.dump(s, open('${STATE_FILE}', 'w'), indent=2)
+json.dump(s, open(sf, 'w'), indent=2)
 " 2>/dev/null
 }
 
@@ -90,13 +99,12 @@ action_session_start() {
   # Check for existing checkpoint (resuming after compaction or restart)
   if [ -f "$CHECKPOINT_FILE" ]; then
     local checkpoint_age
-    checkpoint_age=$(python3 -c "
+    checkpoint_age=$(ENFORCE_CKPT="$CHECKPOINT_FILE" python3 -c "
 import os, time
-age = time.time() - os.path.getmtime('${CHECKPOINT_FILE}')
+age = time.time() - os.path.getmtime(os.environ['ENFORCE_CKPT'])
 print(int(age))
 " 2>/dev/null || echo 99999)
 
-    # Only resume if checkpoint is less than 2 hours old
     if [ "$checkpoint_age" -lt 7200 ]; then
       output="## Resuming from Checkpoint\n"
       output="${output}$(cat "$CHECKPOINT_FILE")\n"
@@ -110,9 +118,9 @@ print(int(age))
   local intel_file="${cwd}/.claude/rules/project-intel.md"
   if [ -f "$intel_file" ]; then
     local intel_age_days
-    intel_age_days=$(python3 -c "
+    intel_age_days=$(ENFORCE_INTEL="$intel_file" python3 -c "
 import os, time
-age_days = (time.time() - os.path.getmtime('${intel_file}')) / 86400
+age_days = (time.time() - os.path.getmtime(os.environ['ENFORCE_INTEL'])) / 86400
 print(int(age_days))
 " 2>/dev/null || echo 0)
     if [ "$intel_age_days" -gt 30 ]; then
@@ -123,9 +131,9 @@ print(int(age_days))
   # Check for pending enforcement state from previous session
   if [ -f "$STATE_FILE" ]; then
     local pending
-    pending=$(python3 -c "
-import json
-s = json.load(open('${STATE_FILE}'))
+    pending=$(ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+s = json.load(open(os.environ['ENFORCE_STATE_FILE']))
 ec = s.get('edit_count', 0)
 phase = s.get('phase', 'idle')
 if ec > 0 and phase != 'idle':
@@ -159,31 +167,102 @@ else:
   fi
 }
 
+# ── PRE-EDIT: Called BEFORE Edit/Write via PreToolUse hook ───────────────────
+# This is the critical intervention point. It fires before Claude makes its
+# first edit, giving it a chance to spawn agents instead.
+action_pre_edit() {
+  local file="${1:-unknown}"
+  ensure_state
+
+  ENFORCE_FILE="$file" ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+
+sf = os.environ['ENFORCE_STATE_FILE']
+edit_file = os.environ['ENFORCE_FILE']
+
+s = json.load(open(sf))
+ec = s.get('edit_count', 0)
+agents = s.get('agents_spawned', 0)
+explore = s.get('explore_done', False)
+warned = s.get('first_edit_warned', False)
+files = s.get('files_changed', [])
+
+# Count unique files INCLUDING the one about to be edited
+all_files = list(set(files + [edit_file]))
+num_files = len(all_files)
+dirs = set(os.path.dirname(f) or '.' for f in all_files)
+num_dirs = len(dirs)
+
+# --- First edit with no agents: strong intervention ---
+if ec == 0 and agents == 0 and not warned:
+    print('## MULTI-AGENT CHECK')
+    print('You are about to make your FIRST edit without spawning any agents.')
+    print('Before editing, you MUST:')
+    print('1. Spawn an explorer agent (background) to gather context')
+    print('2. If task touches 2+ files: decompose by concern, spawn parallel agents')
+    print('3. If task spans layers (FE/BE/tests/infra): one agent per layer')
+    print()
+    print('Only skip agents for trivial single-file changes (< 30 lines).')
+    print('Use: Agent(subagent_type=\"explorer\", run_in_background=true, prompt=\"...\")')
+    s['first_edit_warned'] = True
+    json.dump(s, open(sf, 'w'), indent=2)
+
+# --- Multiple files without agents: escalating warnings ---
+elif num_files >= 3 and agents == 0:
+    print('## ENFORCEMENT: Multi-File Without Agents')
+    print(f'Editing {num_files} files across {num_dirs} directories with ZERO agents spawned.')
+    print('You MUST spawn parallel agents now:')
+    print('- Agent(subagent_type=\"explorer\") — for remaining research')
+    print('- Agent(isolation=\"worktree\") — for independent file groups')
+    print('- Agent(subagent_type=\"test-writer\", run_in_background=true) — for tests')
+
+elif num_files >= 2 and agents == 0 and not explore:
+    print('## Multi-File Detected')
+    print(f'Touching {num_files} files without agents. Consider spawning:')
+    print('- Explorer agent for context gathering')
+    print('- Parallel agents for independent concerns')
+" 2>/dev/null || true
+}
+
+# ── TRACK-EDIT: Called AFTER Edit/Write via PostToolUse hook ─────────────────
 action_track_edit() {
   local file="${1:-unknown}"
   ensure_state
 
-  # Update state: increment edit count, add file
-  update_state "
+  # Update state: increment edit count, add file (via env var — safe from injection)
+  ENFORCE_FILE="$file" ENFORCE_STATE_FILE="$STATE_FILE" python3 -c "
+import json, os
+sf = os.environ['ENFORCE_STATE_FILE']
+edit_file = os.environ['ENFORCE_FILE']
+s = json.load(open(sf))
 s['edit_count'] = s.get('edit_count', 0) + 1
 files = s.get('files_changed', [])
-if '$file' not in files:
-    files.append('$file')
+if edit_file not in files:
+    files.append(edit_file)
 s['files_changed'] = files
 s['phase'] = 'implement'
-"
+json.dump(s, open(sf, 'w'), indent=2)
+" 2>/dev/null
 
   # Append to changes log
   echo "$(date +%H:%M:%S) $file" >> "$CHANGES_LOG"
 
-  # Read current state and produce formatted output directly from Python
+  # Read current state and produce enforcement output
   local reminder_output=""
 
-  reminder_output=$(python3 -c "
-import json, sys, os
+  reminder_output=$(ENFORCE_STATE_FILE="$STATE_FILE" \
+    ENFORCE_SOFT="$SOFT_REMIND_EDITS" \
+    ENFORCE_HARD="$HARD_REMIND_EDITS" \
+    ENFORCE_CKPT_INTERVAL="$AUTO_CHECKPOINT_EDITS" \
+    ENFORCE_FORCE="$FORCE_DELEGATE_EDITS" \
+    ENFORCE_MF_WARN="$MULTI_FILE_WARN" \
+    ENFORCE_MF_ENFORCE="$MULTI_FILE_ENFORCE" \
+    ENFORCE_KIRO_KEYWORDS="$KIRO_KEYWORDS" \
+    python3 -c "
+import json, sys, os, re
 
-state_file = '${STATE_FILE}'
-s = json.load(open(state_file))
+sf = os.environ['ENFORCE_STATE_FILE']
+s = json.load(open(sf))
 ec = s.get('edit_count', 0)
 lr = s.get('last_remind_edit', 0)
 files = s.get('files_changed', [])
@@ -194,13 +273,12 @@ agents_spawned = s.get('agents_spawned', 0)
 delegation_reminded = s.get('delegation_reminded', 0)
 kiro_delegated = s.get('kiro_delegated', False)
 
-SOFT = ${SOFT_REMIND_EDITS}
-HARD = ${HARD_REMIND_EDITS}
-CKPT = ${AUTO_CHECKPOINT_EDITS}
-DELEGATE_FILES = ${DELEGATE_FILE_THRESHOLD}
-DELEGATE_DIRS = ${DELEGATE_DIR_THRESHOLD}
-DELEGATE_EDITS = ${DELEGATE_EDIT_THRESHOLD}
-FORCE_DELEGATE = ${FORCE_DELEGATE_EDITS}
+SOFT = int(os.environ['ENFORCE_SOFT'])
+HARD = int(os.environ['ENFORCE_HARD'])
+CKPT = int(os.environ['ENFORCE_CKPT_INTERVAL'])
+FORCE_DELEGATE = int(os.environ['ENFORCE_FORCE'])
+MULTI_FILE_WARN = int(os.environ['ENFORCE_MF_WARN'])
+MULTI_FILE_ENFORCE = int(os.environ['ENFORCE_MF_ENFORCE'])
 
 need_checkpoint = ec - ckpt >= CKPT
 
@@ -214,65 +292,52 @@ for f in files:
     d = os.path.dirname(f) or '.'
     dirs.add(d)
 num_dirs = len(dirs)
+num_files = len(files)
 
-# --- Delegation suggestions ---
-delegation_msg = ''
-
-# Check for Kiro keywords in task summary or changed files
+# --- Kiro delegation check ---
 task_summary = s.get('task_summary', '')
 all_context = (task_summary + ' ' + ' '.join(files)).lower()
-import re
-kiro_pattern = '${KIRO_KEYWORDS}'
+kiro_pattern = os.environ['ENFORCE_KIRO_KEYWORDS']
 needs_kiro = not kiro_delegated and re.search(kiro_pattern, all_context)
 
 if needs_kiro:
-    delegation_msg += '## Delegate to Kiro\n'
-    delegation_msg += 'This task involves Amazon/AWS systems. Kiro has internal tools (InternalCodeSearch, ReadRemoteTestRun, ReadInternalWebsites) that you lack.\n'
-    delegation_msg += '**Action**: Run \`~/claude-code-setup/dispatch.sh --task \"<your prompt>\" --provider kiro\` for Amazon-specific work.\n\n'
+    print('## Delegate to Kiro')
+    print('This task involves Amazon/AWS systems. Use dispatch.sh --provider kiro.')
 
-# Multi-file delegation: many files across directories, no agents spawned
-if len(files) >= DELEGATE_FILES and num_dirs >= DELEGATE_DIRS and agents_spawned == 0 and ec - delegation_reminded >= 5:
-    delegation_msg += '## Delegate: Use Parallel Agents\n'
-    delegation_msg += f'You have **{ec} edits** across **{len(files)} files** in **{num_dirs} directories** — all in the main context.\n'
-    delegation_msg += 'Spawn parallel agents for independent work:\n'
-    if not tests:
-        delegation_msg += '- **Tests**: \`agent_spawn\` with branch \"test-<feature>\" and prompt to write tests\n'
-    if not review:
-        delegation_msg += '- **Review**: \`agent_spawn\` with branch \"review-<feature>\" and prompt to review changes\n'
-    delegation_msg += '- **Implementation**: Split remaining work by concern into separate \`agent_spawn\` calls\n'
-    delegation_msg += '\nEach agent gets its own git worktree — no conflicts with your work.\n\n'
+# --- Multi-file enforcement (fires EARLY) ---
+if num_files >= MULTI_FILE_ENFORCE and agents_spawned == 0:
+    print('## ENFORCEMENT: Spawn Agents Now')
+    print(f'{ec} edits across {num_files} files in {num_dirs} dirs — all solo.')
+    print('You MUST spawn at least one of:')
+    print('1. test-writer agent (background) for changed files')
+    print('2. code-reviewer agent for quality review')
+    print('3. worktree agent for remaining independent work')
+    print()
+    s['delegation_reminded'] = ec
+elif num_files >= MULTI_FILE_WARN and agents_spawned == 0 and ec - delegation_reminded >= 2:
+    print(f'## Agent Reminder: {num_files} files changed, 0 agents spawned')
     s['delegation_reminded'] = ec
 
-# Force delegation at high edit count
-if ec >= FORCE_DELEGATE and agents_spawned == 0 and not tests:
-    delegation_msg += '## ENFORCEMENT: Delegate Now\n'
-    delegation_msg += f'**{ec} edits** without spawning any parallel agents. You are doing all the work yourself.\n'
-    delegation_msg += 'You MUST delegate at least one of these right now:\n'
-    delegation_msg += '1. \`agent_spawn\` — tests for changed files\n'
-    delegation_msg += '2. \`agent_spawn\` — code review of changes\n'
-    delegation_msg += '3. Run tests directly if delegation is not possible\n\n'
+# --- Force delegation at threshold ---
+if ec >= FORCE_DELEGATE and agents_spawned == 0:
+    print('## HARD ENFORCEMENT: Delegate or Justify')
+    print(f'{ec} edits without ANY parallel agents. This violates multi-agent protocol.')
+    print('STOP editing and do one of:')
+    print('1. Spawn test-writer + code-reviewer agents in parallel')
+    print('2. If truly single-concern: acknowledge with enforce.sh mark agent')
 
-if delegation_msg:
-    print(delegation_msg.rstrip())
-
-# --- Standard enforcement reminders ---
-if ec >= HARD and ec - lr >= 8 and not tests:
-    print('## ENFORCEMENT: Review Required')
-    print(f'You have made **{ec} edits** across **{len(files)} files** without running tests or review.')
+# --- Standard reminders ---
+if ec >= HARD and ec - lr >= 4 and not tests:
+    print('## ENFORCEMENT: Tests + Review Required')
+    print(f'{ec} edits across {num_files} files without tests or review.')
     print(f'Files: {flist}')
-    print()
-    print('**You MUST do these before continuing:**')
-    print('1. Run tests for this project')
-    print('2. Launch code-reviewer agent on changed files')
-    print('3. Write a checkpoint (task progress, decisions, remaining work)')
+    print('Run tests NOW. Spawn code-reviewer agent.')
     s['last_remind_edit'] = ec
 elif ec >= SOFT and ec - lr >= SOFT and not tests:
-    print('## Enforcement Reminder')
-    print(f'{ec} edits across {len(files)} files. Consider running tests and review soon.')
-    print(f'Changed: {flist}')
+    print(f'## Reminder: {ec} edits, {num_files} files — run tests soon')
     s['last_remind_edit'] = ec
 
-json.dump(s, open(state_file, 'w'), indent=2)
+json.dump(s, open(sf, 'w'), indent=2)
 
 if need_checkpoint:
     print('__CHECKPOINT__', file=sys.stderr)
@@ -296,16 +361,17 @@ action_auto_checkpoint() {
   local state_json
   state_json=$(read_state)
 
-  python3 -c "
-import json, time, subprocess
+  ENFORCE_STATE_JSON="$state_json" ENFORCE_CKPT="$CHECKPOINT_FILE" python3 -c "
+import json, time, subprocess, os
 
-s = json.loads('''${state_json}''')
+s = json.loads(os.environ['ENFORCE_STATE_JSON'])
+ckpt_file = os.environ['ENFORCE_CKPT']
 
 # Get git diff summary
 try:
     diff = subprocess.check_output(['git', 'diff', '--name-only'], stderr=subprocess.DEVNULL, timeout=5).decode().strip()
     staged = subprocess.check_output(['git', 'diff', '--staged', '--name-only'], stderr=subprocess.DEVNULL, timeout=5).decode().strip()
-except:
+except Exception:
     diff = ''
     staged = ''
 
@@ -313,7 +379,7 @@ files = s.get('files_changed', [])
 phase = s.get('phase', 'unknown')
 ec = s.get('edit_count', 0)
 
-with open('${CHECKPOINT_FILE}', 'w') as f:
+with open(ckpt_file, 'w') as f:
     f.write(f'# Auto-Checkpoint\n')
     f.write(f'> Generated: {time.strftime(\"%Y-%m-%d %H:%M:%S\")}\n\n')
     f.write(f'## Phase: {phase}\n')
@@ -341,7 +407,6 @@ action_checkpoint() {
   ensure_state
   action_auto_checkpoint
 
-  # If a description was provided, prepend it to the checkpoint
   if [ "$desc" != "manual checkpoint" ] && [ -f "$CHECKPOINT_FILE" ]; then
     local tmp
     tmp=$(mktemp)
@@ -363,9 +428,9 @@ action_session_stop() {
   local state_json
   state_json=$(read_state)
 
-  python3 -c "
-import json
-s = json.loads('''${state_json}''')
+  ENFORCE_STATE_JSON="$state_json" python3 -c "
+import json, os
+s = json.loads(os.environ['ENFORCE_STATE_JSON'])
 ec = s.get('edit_count', 0)
 files = s.get('files_changed', [])
 tests = s.get('tests_run', False)
@@ -375,7 +440,6 @@ phase = s.get('phase', 'idle')
 agents = s.get('agents_spawned', 0)
 
 if ec == 0:
-    # No edits made, nothing to report
     exit(0)
 
 print('## Pipeline Enforcement Report')
@@ -387,10 +451,10 @@ if not tests:
     issues.append('TESTS NOT RUN — run tests before considering this task complete')
 if not review:
     issues.append('REVIEW NOT RUN — launch code-reviewer on changed files')
-if not intel and ec > 5:
+if not intel and ec > 3:
     issues.append('INTEL NOT UPDATED — run /intel-refresh if structural changes were made')
-if agents == 0 and ec >= 10:
-    issues.append('NO AGENTS USED — for tasks this size, delegate testing/review to parallel agents')
+if agents == 0 and ec >= 3:
+    issues.append(f'NO AGENTS USED — {ec} edits across {len(files)} files all done solo')
 
 if issues:
     print('### Missing Steps')
@@ -417,8 +481,9 @@ action_mark() {
     review)  update_state "s['review_run'] = True" ;;
     intel)   update_state "s['intel_updated'] = True" ;;
     agent)   update_state "s['agents_spawned'] = s.get('agents_spawned', 0) + 1" ;;
+    explore) update_state "s['explore_done'] = True" ;;
     kiro)    update_state "s['kiro_delegated'] = True" ;;
-    *)       echo "Usage: enforce.sh mark [tests|review|intel|agent|kiro]" >&2; exit 1 ;;
+    *)       echo "Usage: enforce.sh mark [tests|review|intel|agent|explore|kiro]" >&2; exit 1 ;;
   esac
 }
 
@@ -430,13 +495,13 @@ action_reset() {
 
 action_status() {
   ensure_state
-  python3 -c "
-import json
-s = json.load(open('${STATE_FILE}'))
+  ENFORCE_STATE_FILE="$STATE_FILE" ENFORCE_CKPT="$CHECKPOINT_FILE" python3 -c "
+import json, os
+s = json.load(open(os.environ['ENFORCE_STATE_FILE']))
 print(f\"Phase: {s.get('phase','idle')} | Edits: {s.get('edit_count',0)} | Files: {len(s.get('files_changed',[]))}\")
 print(f\"Tests: {'yes' if s.get('tests_run') else 'no'} | Review: {'yes' if s.get('review_run') else 'no'} | Intel: {'yes' if s.get('intel_updated') else 'no'}\")
-print(f\"Agents spawned: {s.get('agents_spawned',0)} | Kiro delegated: {'yes' if s.get('kiro_delegated') else 'no'}\")
-ckpt = 'exists' if __import__('os').path.exists('${CHECKPOINT_FILE}') else 'none'
+print(f\"Agents spawned: {s.get('agents_spawned',0)} | Explore: {'yes' if s.get('explore_done') else 'no'}\")
+ckpt = 'exists' if os.path.exists(os.environ['ENFORCE_CKPT']) else 'none'
 print(f\"Checkpoint: {ckpt}\")
 " 2>/dev/null
 }
@@ -447,18 +512,19 @@ ACTION="${1:-}"
 shift 2>/dev/null || true
 
 case "$ACTION" in
-  session-start)  action_session_start ;;
-  track-edit)     action_track_edit "$@" ;;
-  session-stop)   action_session_stop ;;
-  checkpoint)     action_checkpoint "$*" ;;
+  session-start)   action_session_start ;;
+  pre-edit)        action_pre_edit "$@" ;;
+  track-edit)      action_track_edit "$@" ;;
+  session-stop)    action_session_stop ;;
+  checkpoint)      action_checkpoint "$*" ;;
   auto-checkpoint) action_auto_checkpoint ;;
-  phase)          action_phase "$@" ;;
-  mark)           action_mark "$@" ;;
-  reset)          action_reset ;;
-  status)         action_status ;;
+  phase)           action_phase "$@" ;;
+  mark)            action_mark "$@" ;;
+  reset)           action_reset ;;
+  status)          action_status ;;
   *)
     echo "Usage: enforce.sh <action> [args]"
-    echo "Actions: session-start, track-edit, session-stop, checkpoint, phase, mark, reset, status"
+    echo "Actions: session-start, pre-edit, track-edit, session-stop, checkpoint, phase, mark, reset, status"
     exit 1
     ;;
 esac
