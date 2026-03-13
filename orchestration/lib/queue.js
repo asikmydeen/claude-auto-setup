@@ -8,14 +8,15 @@ import { randomUUID } from 'crypto';
 // Search for dispatch.sh in known locations
 function findDispatchScript() {
   const candidates = [
+    process.env.DISPATCH_SCRIPT_PATH,
     join(homedir(), 'claude-code-setup', 'dispatch.sh'),
     join(homedir(), 'projects', 'claude-auto-setup', 'dispatch.sh'),
     join(new URL('../../..', import.meta.url).pathname, 'dispatch.sh'),
-  ];
+  ].filter(Boolean);
   for (const p of candidates) {
     if (existsSync(p)) return p;
   }
-  return candidates[0]; // fallback to original default
+  throw new Error(`Dispatch script not found. Searched: ${candidates.join(', ')}. Set DISPATCH_SCRIPT_PATH to override.`);
 }
 
 const DISPATCH_SCRIPT = findDispatchScript();
@@ -104,27 +105,44 @@ export function dispatchNext() {
   // Unset CLAUDECODE to allow nested claude -p dispatch from MCP server context
   const env = { ...process.env };
   delete env.CLAUDECODE;
-  const child = execFile('bash', [DISPATCH_SCRIPT, ...args], {
-    timeout: 300000,
-    maxBuffer: 1024 * 1024,
-    env,
-  }, (error, stdout, stderr) => {
+
+  let child;
+  try {
+    child = execFile('bash', [DISPATCH_SCRIPT, ...args], {
+      timeout: 300000,
+      maxBuffer: 1024 * 1024,
+      env,
+    }, (error, stdout, stderr) => {
+      const q = readQueue();
+      const task = q.tasks.find(t => t.id === pending.id);
+      if (task) {
+        task.completed_at = Math.floor(Date.now() / 1000);
+        if (error) {
+          task.status = 'failed';
+          task.result = stderr || error.message;
+        } else {
+          task.status = 'completed';
+          task.result = stdout.length > 5000
+            ? stdout.slice(0, 5000) + '\n[truncated — full output: ' + stdout.length + ' chars]'
+            : stdout;
+        }
+        writeQueue(q);
+      }
+    });
+
+    child.unref();
+  } catch (spawnError) {
+    // execFile can throw synchronously (e.g., script not found, bash not found)
     const q = readQueue();
     const task = q.tasks.find(t => t.id === pending.id);
     if (task) {
+      task.status = 'failed';
       task.completed_at = Math.floor(Date.now() / 1000);
-      if (error) {
-        task.status = 'failed';
-        task.result = stderr || error.message;
-      } else {
-        task.status = 'completed';
-        task.result = stdout.slice(0, 5000);
-      }
+      task.result = `Spawn failed: ${spawnError.message}`;
       writeQueue(q);
     }
-  });
-
-  child.unref();
+    return { id: pending.id, status: 'failed', error: `Spawn failed: ${spawnError.message}` };
+  }
 
   return {
     id: pending.id,

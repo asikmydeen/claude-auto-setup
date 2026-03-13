@@ -41,6 +41,10 @@ ok()    { echo "${GREEN}[dispatch]${RESET} $*" >&2; }
 warn()  { echo "${YELLOW}[dispatch]${RESET} $*" >&2; }
 error() { echo "${RED}[dispatch]${RESET} $*" >&2; }
 
+# Valid task types and providers (for input validation)
+VALID_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|simple-edit|refactoring|migration|amazon-internal|general"
+VALID_PROVIDERS="claude|codex|gemini|amp|kiro"
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -106,6 +110,20 @@ done
 
 if [ -z "$TASK" ]; then
   error "Missing --task. Use --help for usage."
+  exit 1
+fi
+
+# Validate task type if provided
+if [ -n "$TASK_TYPE" ] && [[ ! "$TASK_TYPE" =~ ^($VALID_TASK_TYPES)$ ]]; then
+  error "Invalid task type: $TASK_TYPE"
+  error "Valid types: ${VALID_TASK_TYPES//|/, }"
+  exit 1
+fi
+
+# Validate provider if provided
+if [ -n "$FORCE_PROVIDER" ] && [[ ! "$FORCE_PROVIDER" =~ ^($VALID_PROVIDERS)$ ]]; then
+  error "Invalid provider: $FORCE_PROVIDER"
+  error "Valid providers: ${VALID_PROVIDERS//|/, }"
   exit 1
 fi
 
@@ -220,13 +238,26 @@ build_context() {
     ctx="$ctx\n--- Project Intelligence ---\n$(cat .claude/rules/project-intel.md)\n"
   fi
 
-  # Add specified context files
+  # Add specified context files (with path validation)
   if [ -n "$CONTEXT_FILES" ]; then
+    local project_root
+    project_root="$(pwd)"
     IFS=',' read -ra files <<< "$CONTEXT_FILES"
     for f in "${files[@]}"; do
-      if [ -f "$f" ]; then
-        ctx="$ctx\n--- File: $f ---\n$(cat "$f")\n"
+      # File must exist
+      if [ ! -f "$f" ]; then
+        warn "Context file not found: $f"
+        continue
       fi
+      # Resolve to absolute path (macOS-compatible, no -e flag)
+      local abs_path
+      abs_path=$(cd "$(dirname "$f")" && pwd)/$(basename "$f")
+      # Restrict to project root — prevent reading /etc/passwd, ~/.ssh/*, etc.
+      if [[ "$abs_path" != "$project_root"* ]]; then
+        warn "Context file outside project root, skipping: $f"
+        continue
+      fi
+      ctx="$ctx\n--- File: $f ---\n$(cat "$abs_path")\n"
     done
   fi
 
