@@ -37,6 +37,10 @@ install() {
     cat "$UNIVERSAL_DIR/rules/git-workflow.md" | grep -v "^#"
     echo ""
 
+    echo "### Persistence"
+    cat "$UNIVERSAL_DIR/rules/pua.md" | grep -v "^#"
+    echo ""
+
     echo "## Orchestration Protocol"
     echo ""
     echo "When asked to implement a feature, follow this workflow:"

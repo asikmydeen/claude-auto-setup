@@ -50,7 +50,7 @@ install() {
   mkdir -p "$AMP_HOME/checks"
 
   # Convert universal rules to Amp checks format
-  for f in "$UNIVERSAL_DIR/rules/code-quality.md" "$UNIVERSAL_DIR/rules/security.md" "$UNIVERSAL_DIR/rules/testing.md"; do
+  for f in "$UNIVERSAL_DIR/rules/code-quality.md" "$UNIVERSAL_DIR/rules/security.md" "$UNIVERSAL_DIR/rules/testing.md" "$UNIVERSAL_DIR/rules/pua.md"; do
     if [ -f "$f" ]; then
       local name
       name=$(basename "$f" .md)
@@ -87,6 +87,9 @@ install() {
     echo ""
     echo "### Git Workflow"
     cat "$UNIVERSAL_DIR/rules/git-workflow.md" | grep -v "^#"
+    echo ""
+    echo "### Persistence"
+    cat "$UNIVERSAL_DIR/rules/pua.md" | grep -v "^#"
     echo ""
     echo "## Workflow Protocol"
     echo ""

@@ -147,6 +147,20 @@ assert_contains "version reads from VERSION file" "3.1.0" "$output"
 
 # ============================================================================
 echo ""
+echo "=== PUA persistence engine ==="
+
+assert_file_exists "universal/rules/pua.md exists" "$ROOT_DIR/universal/rules/pua.md"
+assert_file_exists "universal/commands/pua.md exists" "$ROOT_DIR/universal/commands/pua.md"
+assert_file_exists "universal/skills/pua/SKILL.md exists" "$ROOT_DIR/universal/skills/pua/SKILL.md"
+assert_file_exists "pua-enforcer agent exists" "$ROOT_DIR/agents/claude-code/agents/pua-enforcer.md"
+
+# Test PUA escalation in enforce.sh
+pua_output=$(bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" reset 2>&1 && bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1 && bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1)
+assert_contains "PUA L1 triggers on 2nd failure" "PUA L1" "$pua_output"
+bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" reset >/dev/null 2>&1
+
+# ============================================================================
+echo ""
 echo "=== shellcheck ==="
 
 if command -v shellcheck &>/dev/null; then
