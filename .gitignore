@@ -5,3 +5,11 @@ node_modules/
 *.db
 *.db-wal
 *.db-shm
+
+# Runtime data (OpenViking vectordb, etc.)
+data/
+
+# IDE/tool configs (user-specific)
+.kiro/
+dashboard/mise.toml
+dashboard/package-lock.json
