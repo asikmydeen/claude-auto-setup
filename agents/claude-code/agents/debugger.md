@@ -2,7 +2,7 @@
 name: debugger
 description: Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues.
 tools: Read, Edit, Bash, Grep, Glob
-model: claude-opus-4-6
+model: sonnet
 memory: user
 maxTurns: 40
 ---
@@ -42,3 +42,8 @@ After debugging, update your agent memory with:
 - Patterns that caused the bug
 - Debugging shortcuts that worked
 - Which PUA escalation level was reached and what finally worked
+
+OpenViking integration (when available):
+- Query `viking://agent/memories/cases/` at start for past debugging cases in this codebase
+- Store resolved bugs as cases via `add_memory` — include root cause, fix, and prevention
+- Search `viking://resources/` for relevant API docs when debugging integration issues

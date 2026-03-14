@@ -92,7 +92,13 @@ Before planning, gather context using the right tools:
 - If no package-level intel exists, AUTO-GENERATE it by running the deep-research workflow (6 parallel agents). Do not ask — just do it. Print "No cached intel. Generating codebase intelligence..." and proceed.
 - If no workspace-level intel exists but sibling packages are detected, auto-generate workspace-intel.md too.
 
-### 0b: Standard Context
+### 0b: OpenViking Context (when available)
+- If OpenViking MCP is connected, search `viking://agent/memories/` for past learnings about this codebase
+- Search `viking://resources/` for project-relevant documentation
+- Search `viking://user/memories/` for user preferences and workflow patterns
+- If OpenViking is not available, skip this step — fall back to MEMORY.md and context7
+
+### 0c: Standard Context
 - Use `context7` MCP to fetch up-to-date docs for any library/framework you're unsure about
 - Use `serena` for semantic code navigation when exploring unfamiliar code
 - Use LSP diagnostics (automatic) to catch type errors after every edit

@@ -625,6 +625,19 @@ doctor() {
     check_warn "cmux wrapper not installed — run ./install.sh"
   fi
 
+  # --- OpenViking ---
+  step "OpenViking (context database)"
+  if command -v ov &>/dev/null; then
+    check_pass "OpenViking CLI: installed"
+    if curl -s --connect-timeout 1 http://localhost:1933/status &>/dev/null; then
+      check_pass "OpenViking server: running (port 1933)"
+    else
+      check_warn "OpenViking server: not running (start with: openviking-server)"
+    fi
+  else
+    check_warn "OpenViking: not installed (optional — pip install openviking)"
+  fi
+
   # --- Dependencies ---
   step "Dependencies"
   command -v git &>/dev/null && check_pass "git: $(git --version 2>/dev/null | head -1)" || check_fail "git not found"

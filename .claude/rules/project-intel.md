@@ -21,6 +21,7 @@
 - **Context preservation** - Checkpoint system surviving context compaction
 - **Cross-provider dispatch** - Routes tasks to best available AI agent
 - **PUA persistence engine** - Prevents AI from giving up; escalating pressure (L1-L4) on build/test failures
+- **OpenViking integration** (optional) - Context database for persistent memory, semantic search, tiered loading (L0/L1/L2)
 - **Git-based distribution** - Self-updating via `git pull`
 
 **No build tools** - Pure shell script execution (no compilation step)
@@ -160,7 +161,8 @@ claude-code-setup/
 │   │   ├── aws-development.md      # AWS-specific patterns
 │   │   ├── orchestration.md        # Multi-agent protocol (expanded w/ checkpoints)
 │   │   ├── multi-agent.md          # Multi-agent enforcement mandate
-│   │   └── pua.md                  # PUA persistence engine (auto-loaded by all agents)
+│   │   ├── pua.md                  # PUA persistence engine (auto-loaded by all agents)
+│   │   └── context-management.md   # OpenViking context database integration
 │   ├── commands/                   # 54 command definitions
 │   │   ├── init.md                 # Smart project initializer
 │   │   ├── deep-research.md        # 6-agent parallel analysis
@@ -172,6 +174,7 @@ claude-code-setup/
 │   │   ├── multi-provider-build.md # Cross-provider feature builder
 │   │   ├── intel-refresh.md        # Targeted intel refresh
 │   │   ├── coordinator.md          # Coordinator role
+│   │   ├── add-resource.md          # OpenViking resource ingestion
 │   │   ├── [7 role commands]       # developer, reviewer, shepherd, etc.
 │   │   └── [37 specialist commands]# api-designer, backend-developer, etc.
 │   ├── skills/pua/SKILL.md        # Full PUA skill (corporate flavors, team integration)
@@ -327,6 +330,9 @@ claude-code-setup/
 13. **PUA auto-escalation** - hook-handler detects `exit_code != 0` from build/test/lint → triggers `enforce.sh mark failure` → escalates PUA level (L1-L4)
 14. **PUA state file** - enforce.sh tracks `failure_count` and `pua_level` in `~/.claude/scratch/enforce-state.json`; reset with `enforce.sh reset`
 15. **Installed vs source enforce.sh** - Hooks run the installed version at `~/.claude/scripts/enforce.sh`, not the repo source; must re-install after changes
+16. **OpenViking optional** - All features degrade gracefully when OpenViking is not installed; never block workflows
+17. **OpenViking HTTP mode** - Use HTTP transport (port 1933) for multi-agent; stdio causes contention with concurrent agents
+18. **Intel template L0/L1/L2** - New intel template uses tiered loading; L0 for prompts, L1 for planning, L2 on demand
 
 ---
 
@@ -356,11 +362,12 @@ claude-code-setup/
 | `/intel-refresh` | Targeted intel update |
 | `/multi-provider-build` | Cross-provider feature builder |
 | `/pua` | Manual PUA persistence engine activation |
+| `/add-resource` | Ingest docs/repos into OpenViking context DB |
 
 ### File Counts
 
-- **8** universal rule files (incl. pua.md, multi-agent.md)
-- **54** command definitions (incl. pua.md)
+- **9** universal rule files (incl. pua.md, multi-agent.md, context-management.md)
+- **55** command definitions (incl. pua.md, add-resource.md)
 - **6** agent adapters
 - **6** native agents (Claude Code, incl. pua-enforcer)
 - **5** main shell scripts (1,883 lines total)

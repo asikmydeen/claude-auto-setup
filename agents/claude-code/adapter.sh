@@ -129,6 +129,23 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     command -v pyright-langserver &>/dev/null || npm install -g pyright 2>/dev/null
     echo "    LSP binaries: installed"
   fi
+
+  # Register OpenViking MCP server (if installed)
+  if command -v claude &>/dev/null && command -v ov &>/dev/null; then
+    # Prefer HTTP mode for multi-agent safety (avoids stdio contention)
+    local ov_url="http://localhost:1933"
+    if curl -s --connect-timeout 1 "$ov_url/status" &>/dev/null; then
+      claude mcp remove -s user openviking 2>/dev/null || true
+      claude mcp add -s user --transport http openviking "$ov_url" 2>/dev/null \
+        && echo "    OpenViking MCP: registered (HTTP mode)" \
+        || echo "    OpenViking MCP: registration failed"
+    else
+      echo "    OpenViking: detected but server not running (start with: openviking-server)"
+      echo "    Tip: openviking-server --config ~/.openviking/config.yaml"
+    fi
+  elif command -v ov &>/dev/null; then
+    echo "    OpenViking: installed (register MCP after claude CLI is available)"
+  fi
 }
 
 uninstall() {

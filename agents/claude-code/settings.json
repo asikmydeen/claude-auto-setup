@@ -46,6 +46,8 @@
       "Bash($HOME/.claude/scripts/hook-handler.sh *)",
       "Bash(cmux *)",
       "Bash(kiro-cli *)",
+      "Bash(ov *)",
+      "Bash(openviking-server *)",
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:docs.aws.amazon.com)",

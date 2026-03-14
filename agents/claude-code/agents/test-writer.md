@@ -2,7 +2,7 @@
 name: test-writer
 description: Test automation specialist. Use when writing unit tests, integration tests, or improving test coverage.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-sonnet-4-6-20250514
+model: sonnet
 memory: user
 background: true
 maxTurns: 50
@@ -30,3 +30,7 @@ After writing tests, update your agent memory with:
 - Test patterns specific to this project
 - Mocking approaches that work here
 - Common edge cases discovered
+
+OpenViking integration (when available):
+- Query `viking://agent/memories/` at start for known test patterns and mocking approaches in this codebase
+- Store effective test strategies via `add_memory` for cross-session reuse

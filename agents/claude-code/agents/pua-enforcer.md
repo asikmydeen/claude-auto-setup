@@ -2,7 +2,7 @@
 name: pua-enforcer
 description: "Agent Team watchdog — monitors teammate progress, detects slacking patterns, and intervenes with PUA pressure. Use for teams with 3+ agents working on complex tasks."
 tools: Read, Grep, Glob, Bash
-model: claude-sonnet-4-6-20250514
+model: sonnet
 memory: user
 maxTurns: 30
 ---
