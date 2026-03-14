@@ -22,6 +22,7 @@ interface BrowserPanelProps {
   onClose: () => void;
   cwd: string;
   initialUrl?: string | null;
+  building?: boolean;
 }
 
 const MIN_WIDTH = 320;
@@ -42,7 +43,7 @@ function isLocalUrl(url: string): boolean {
   } catch { return false; }
 }
 
-export function BrowserPanel({ open, onClose, cwd, initialUrl }: BrowserPanelProps) {
+export function BrowserPanel({ open, onClose, cwd, initialUrl, building }: BrowserPanelProps) {
   const [currentUrl, setCurrentUrl] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -322,6 +323,37 @@ export function BrowserPanel({ open, onClose, cwd, initialUrl }: BrowserPanelPro
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-modals"
               title="App Preview"
             />
+          ) : building ? (
+            /* Building animation */
+            <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-5">
+              <div className="relative">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-yellow-500 flex items-center justify-center animate-bounce">
+                  <span className="text-[10px]">🔨</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Building your project...</p>
+                <p className="text-xs text-muted-foreground max-w-[260px]">
+                  Claude is creating files, installing dependencies, and setting up your app. The preview will appear automatically when ready.
+                </p>
+              </div>
+              <div className="flex gap-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="h-1.5 w-6 rounded-full bg-primary/20 overflow-hidden"
+                  >
+                    <div
+                      className="h-full bg-primary rounded-full animate-pulse"
+                      style={{ animationDelay: `${i * 200}ms`, width: "60%" }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             /* Empty state — no URL loaded */
             <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-4">

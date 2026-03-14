@@ -392,5 +392,20 @@ export interface OpsRunResponse {
 
 export const runOpsCommand = (command: string, args: string[], cwd?: string) =>
   api.post<OpsRunResponse>("/ops/run", { command, args, cwd });
+
+// --- Dev Server ---
+export interface DevServerStatus {
+  running: boolean;
+  status?: string;
+  port?: number;
+  output?: string;
+}
+
+export const startDevServer = (cwd: string) =>
+  api.post<{ ok: boolean; port: number; status: string }>("/dev-server/start", { cwd });
+export const fetchDevServerStatus = (cwd: string) =>
+  api.get<DevServerStatus>(`/dev-server/status?cwd=${encodeURIComponent(cwd)}`);
+export const stopDevServer = (cwd: string) =>
+  api.post<{ ok: boolean }>("/dev-server/stop", { cwd });
 export const stopOpsProcess = (id: string) =>
   api.post<{ ok: boolean }>(`/ops/stop/${id}`, {});

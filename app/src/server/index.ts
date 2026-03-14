@@ -1718,7 +1718,7 @@ app.post("/api/projects/create", (req, res) => {
   // Launch Claude session to build the project
   try {
     const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
-    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch. Create the appropriate files, set up the project structure, install dependencies, and implement the core functionality. Use modern best practices.`;
+    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add, bun run dev) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built and how to run it`;
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose"];
@@ -2345,6 +2345,126 @@ app.post("/api/ops/stop/:id", (req, res) => {
 });
 
 // ============================================================
+// DEV SERVER MANAGEMENT — start/stop/status for project dev servers
+// ============================================================
+
+const devServers = new Map<string, { process: ReturnType<typeof spawn>; port: number; cwd: string; status: string; output: string[] }>();
+
+app.post("/api/dev-server/start", (req, res) => {
+  const { cwd: projectCwd } = req.body;
+  if (!projectCwd) return res.status(400).json({ error: "cwd is required" });
+
+  // Check if already running for this project
+  const existing = devServers.get(projectCwd);
+  if (existing && existing.status === "running") {
+    return res.json({ ok: true, port: existing.port, status: "already-running" });
+  }
+
+  // Detect package manager and dev command
+  let cmd = "bun";
+  let args = ["run", "dev"];
+  let port = 5173;
+
+  if (existsSync(join(projectCwd, "bun.lockb")) || existsSync(join(projectCwd, "bun.lock"))) {
+    cmd = "bun"; args = ["run", "dev"];
+  } else if (existsSync(join(projectCwd, "package-lock.json"))) {
+    cmd = "npm"; args = ["run", "dev"];
+  } else if (existsSync(join(projectCwd, "yarn.lock"))) {
+    cmd = "npx"; args = ["yarn", "dev"];
+  } else if (existsSync(join(projectCwd, "pnpm-lock.yaml"))) {
+    cmd = "npx"; args = ["pnpm", "dev"];
+  }
+
+  // Check if package.json exists and has a dev script
+  try {
+    const pkg = JSON.parse(readFileSync(join(projectCwd, "package.json"), "utf-8"));
+    if (!pkg.scripts?.dev) {
+      // Try start instead
+      if (pkg.scripts?.start) { args = ["run", "start"]; }
+      else { return res.status(400).json({ error: "No dev or start script in package.json" }); }
+    }
+  } catch {
+    return res.status(400).json({ error: "No package.json found. Build the project first." });
+  }
+
+  // First install deps if node_modules doesn't exist
+  if (!existsSync(join(projectCwd, "node_modules"))) {
+    try {
+      const installCmd = cmd === "bun" ? "bun" : "npm";
+      execFileSync(installCmd, ["install"], { cwd: projectCwd, encoding: "utf-8", timeout: 120_000 });
+    } catch {}
+  }
+
+  try {
+    const child = spawn(cmd, args, {
+      cwd: projectCwd,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, PORT: String(port), BROWSER: "none" },
+    });
+
+    const entry = { process: child, port, cwd: projectCwd, status: "starting", output: [] as string[] };
+    devServers.set(projectCwd, entry);
+
+    // Capture output to detect port and ready state
+    const onData = (data: Buffer) => {
+      const text = data.toString();
+      entry.output.push(text);
+      // Detect port from common frameworks
+      const portMatch = text.match(/(?:localhost|127\.0\.0\.1):(\d{4,5})/);
+      if (portMatch) entry.port = parseInt(portMatch[1], 10);
+      // Detect ready state
+      if (text.includes("ready") || text.includes("Local:") || text.includes("listening") || text.includes("started") || portMatch) {
+        entry.status = "running";
+      }
+    };
+    child.stdout?.on("data", onData);
+    child.stderr?.on("data", onData);
+
+    child.on("close", (code) => {
+      entry.status = code === 0 ? "stopped" : "error";
+    });
+
+    // Wait up to 8s for server to start
+    let waited = 0;
+    const checkReady = setInterval(() => {
+      waited += 500;
+      if (entry.status === "running" || waited >= 8000) {
+        clearInterval(checkReady);
+        if (entry.status !== "running") entry.status = "running"; // assume started
+        res.json({ ok: true, port: entry.port, status: entry.status });
+      }
+    }, 500);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to start dev server";
+    res.status(500).json({ error: msg });
+  }
+});
+
+app.get("/api/dev-server/status", (req, res) => {
+  const projectCwd = req.query.cwd as string;
+  if (!projectCwd) return res.status(400).json({ error: "cwd required" });
+
+  const entry = devServers.get(projectCwd);
+  if (!entry) return res.json({ running: false });
+
+  res.json({
+    running: entry.status === "running" || entry.status === "starting",
+    status: entry.status,
+    port: entry.port,
+    output: entry.output.slice(-20).join(""),
+  });
+});
+
+app.post("/api/dev-server/stop", (req, res) => {
+  const { cwd: projectCwd } = req.body;
+  const entry = devServers.get(projectCwd);
+  if (!entry) return res.json({ ok: true });
+  try { entry.process.kill("SIGTERM"); } catch {}
+  devServers.delete(projectCwd);
+  res.json({ ok: true });
+});
+
+// ============================================================
 // EMBEDDED BROWSER — full rewriting proxy for iframe embedding
 // ============================================================
 
@@ -2514,6 +2634,11 @@ function cleanupChildProcesses() {
     }
   }
   for (const entry of opsProcesses.values()) {
+    if (entry.process) {
+      try { entry.process.kill("SIGTERM"); } catch {}
+    }
+  }
+  for (const entry of devServers.values()) {
     if (entry.process) {
       try { entry.process.kill("SIGTERM"); } catch {}
     }

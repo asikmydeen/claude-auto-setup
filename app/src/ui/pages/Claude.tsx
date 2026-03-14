@@ -72,6 +72,7 @@ import {
   fetchGitStatus,
   fetchSuggestions,
   fetchFollowUpSuggestions,
+  startDevServer,
   type ClaudeSession,
   type InstallResponse,
   type FileChangesResponse,
@@ -1908,6 +1909,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const [undoAction, setUndoAction] = useState<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
   /** Which project the user last interacted with — drives suggestions, intel, and new session cwd */
   const [activeProjectPath, setActiveProjectPath] = useState<string | null>(null);
+  /** Project currently being built by Claude — triggers auto-start dev server when done */
+  const [buildingProjectDir, setBuildingProjectDir] = useState<string | null>(null);
   const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
   /** When the user clicks "+" on a specific project, store the cwd for the next new session */
   const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
@@ -1997,6 +2000,23 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     }
     return grouped;
   }, [sessions, openProjects]);
+
+  // --------------- Auto-start dev server when build completes ---------------
+  useEffect(() => {
+    if (!buildingProjectDir || !activeSession) return;
+    if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
+      const projectDir = buildingProjectDir;
+      setBuildingProjectDir(null);
+      setTimeout(async () => {
+        try {
+          const result = await startDevServer(projectDir);
+          if (result.ok && result.port) {
+            setBrowserInitialUrl(`http://localhost:${result.port}`);
+          }
+        } catch {}
+      }, 2000);
+    }
+  }, [activeSession?.status, activeSession?.cwd, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // File changes
   const fileChangesQuery = useQuery<FileChangesResponse>({
@@ -2691,9 +2711,10 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           {browserPanelOpen && (
             <BrowserPanel
               open={browserPanelOpen}
-              onClose={() => { setBrowserPanelOpen(false); setBrowserInitialUrl(null); }}
+              onClose={() => { setBrowserPanelOpen(false); setBrowserInitialUrl(null); setBuildingProjectDir(null); }}
               cwd={currentProjectCwd}
               initialUrl={browserInitialUrl}
+              building={!!buildingProjectDir}
             />
           )}
         </div>
@@ -2707,9 +2728,11 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           setOpenProjects((prev) => [...new Set([...prev, projectDir])]);
           setActiveProjectPath(projectDir);
           setActiveView("chat");
+          // Open browser panel immediately with "building" state
+          setBuildingProjectDir(projectDir);
+          setBrowserPanelOpen(true);
           if (sessionId) {
             setActiveId(sessionId);
-            // Force immediate refetch + retry after short delay (session may take a moment to appear)
             queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 2000);
           }
