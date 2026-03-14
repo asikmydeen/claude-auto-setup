@@ -48,15 +48,25 @@ app.use(
 );
 app.use(express.json({ limit: "100kb" }));
 
-// Serve built React app in production
-if (process.env.NODE_ENV === "production") {
-  const distPath = join(
-    dirname(new URL(import.meta.url).pathname),
-    "../../dist"
-  );
-  if (existsSync(distPath)) {
-    app.use(express.static(distPath));
+// Serve built React app — search multiple paths for dist/ (dev vs Electrobun bundle)
+function findDistDir(): string | null {
+  const scriptDir = dirname(new URL(import.meta.url).pathname);
+  const candidates = [
+    join(scriptDir, "../../dist"),              // dev: running from src/server/
+    join(PROJECT_ROOT, "app/dist"),             // from project root
+    join(PROJECT_ROOT, "dist"),                 // if running inside app/
+    join(scriptDir, "../dist"),                 // alternative layout
+    join(scriptDir, "dist"),                    // same dir
+  ];
+  for (const p of candidates) {
+    if (existsSync(join(p, "index.html"))) return p;
   }
+  return null;
+}
+const distPath = findDistDir();
+if (distPath) {
+  console.log(`Serving static files from: ${distPath}`);
+  app.use(express.static(distPath));
 }
 
 // --- Sanitization ---
@@ -1521,13 +1531,9 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// SPA fallback
-if (process.env.NODE_ENV === "production") {
+// SPA fallback — serve index.html for all non-API routes
+if (distPath) {
   app.get("*", (_req, res) => {
-    const distPath = join(
-      dirname(new URL(import.meta.url).pathname),
-      "../../dist"
-    );
     res.sendFile(join(distPath, "index.html"));
   });
 }

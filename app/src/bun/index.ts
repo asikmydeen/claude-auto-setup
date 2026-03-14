@@ -1,60 +1,69 @@
 import { BrowserWindow, Tray } from "electrobun/bun";
 
-// Start the Express API server
-import "../../src/server/index.js";
+// Start the Express API server (serves both API + built React UI in production)
+import "../server/index.js";
 
-const isDev = process.env.NODE_ENV !== "production";
-const UI_URL = isDev ? "http://localhost:5173" : "http://localhost:3201";
+const API_PORT = 3201;
+const UI_URL = `http://localhost:${API_PORT}`;
 
-// Main application window
-const win = new BrowserWindow({
-  title: "Claude Auto Setup",
-  url: UI_URL,
-  frame: {
-    width: 1400,
-    height: 900,
-    x: 100,
-    y: 100,
-  },
-});
-
-// System tray
-const tray = new Tray({
-  title: "Claude Auto Setup",
-  image: "views://assets/icon-template.png",
-  template: true,
-  width: 22,
-  height: 22,
-});
-
-tray.setMenu([
-  { type: "normal", label: "Open Dashboard", action: "open" },
-  { type: "normal", label: "Launch Claude Session", action: "launch-claude" },
-  { type: "divider" },
-  { type: "normal", label: "Settings", action: "settings" },
-  { type: "normal", label: "Quit", action: "quit" },
-]);
-
-tray.on("tray-clicked", (e: { data: { action: string } }) => {
-  const { action } = e.data;
-  switch (action) {
-    case "open":
-      // Focus the window
-      break;
-    case "launch-claude":
-      // Could trigger a Claude session via the API
-      fetch("http://localhost:3201/api/claude/launch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: "" }),
-      }).catch(() => {});
-      break;
-    case "settings":
-      // Navigate to settings page
-      break;
-    case "quit":
-      process.exit(0);
+// Wait for server to be ready, then open window
+async function waitForServer(url: string, maxWait = 10000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < maxWait) {
+    try {
+      const res = await fetch(`${url}/api/health`);
+      if (res.ok) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 200));
   }
-});
+  console.warn("Server did not start in time, opening window anyway");
+}
 
-console.log(`Claude Auto Setup running — UI at ${UI_URL}`);
+async function main() {
+  await waitForServer(UI_URL);
+
+  // Main application window
+  const win = new BrowserWindow({
+    title: "Claude Auto Setup",
+    url: UI_URL,
+    frame: {
+      width: 1400,
+      height: 900,
+      x: 100,
+      y: 100,
+    },
+  });
+
+  // System tray
+  try {
+    const tray = new Tray({
+      title: "Claude Auto Setup",
+      template: true,
+      width: 22,
+      height: 22,
+    });
+
+    tray.setMenu([
+      { type: "normal", label: "Open Dashboard", action: "open" },
+      { type: "normal", label: "Launch Claude Session", action: "launch-claude" },
+      { type: "divider" },
+      { type: "normal", label: "Settings", action: "settings" },
+      { type: "normal", label: "Quit", action: "quit" },
+    ]);
+
+    tray.on("tray-clicked", (e: unknown) => {
+      const { action } = (e as { data: { action: string } }).data;
+      switch (action) {
+        case "quit":
+          process.exit(0);
+      }
+    });
+  } catch {
+    // Tray may not be available in all environments
+    console.log("System tray not available");
+  }
+
+  console.log(`Claude Auto Setup running — ${UI_URL}`);
+}
+
+main();
