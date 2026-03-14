@@ -51,6 +51,9 @@ import {
   Sun,
   Moon,
   Settings2,
+  Plug,
+  Globe,
+  TerminalSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,6 +82,12 @@ import {
 import { cn, relativeTime } from "@/lib/utils";
 import { api } from "@/api/client";
 import { FolderBrowser } from "@/components/FolderBrowser";
+import { Integrations } from "@/pages/Integrations";
+import { ProjectIntelPanel } from "@/components/ProjectIntel";
+import { ProjectCreator } from "@/components/ProjectCreator";
+import { OpsPanel } from "@/components/OpsPanel";
+import { BrowserPanel } from "@/components/BrowserPanel";
+import { TerminalPanel } from "@/components/TerminalPanel";
 import { useTheme } from "@/context/ThemeContext";
 
 // ---------------------------------------------------------------------------
@@ -265,12 +274,15 @@ function renderMessageContent(content: string): React.ReactNode {
           const isBlock = String(children).includes("\n");
           if (isBlock) {
             return (
-              <div className="my-2 overflow-x-auto rounded-lg bg-[#1a1a2e] p-3">
-                {match && (
-                  <span className="mb-1 block text-[10px] uppercase tracking-wider text-gray-500">
-                    {match[1]}
-                  </span>
-                )}
+              <div className="group/code relative my-2 overflow-x-auto rounded-lg bg-[#1a1a2e] p-3">
+                <div className="flex items-center justify-between mb-1">
+                  {match && (
+                    <span className="text-[10px] uppercase tracking-wider text-gray-500">
+                      {match[1]}
+                    </span>
+                  )}
+                  <CopyButton text={String(children).replace(/\n$/, "")} />
+                </div>
                 <pre className="whitespace-pre font-mono text-[12px] leading-relaxed text-gray-300">
                   <code>{children}</code>
                 </pre>
@@ -351,7 +363,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="absolute right-2 top-2 rounded-md p-1 text-gray-500 opacity-0 transition-all hover:bg-white/10 hover:text-gray-300 group-hover:opacity-100"
+      className="rounded-md p-1 text-gray-500 opacity-0 transition-all hover:bg-white/10 hover:text-gray-300 group-hover/code:opacity-100"
       title="Copy to clipboard"
     >
       {copied ? (
@@ -862,7 +874,13 @@ function ProjectGroup({
           <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
         )}
         <FolderOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-        <span className="flex-1 text-left">{projectName}</span>
+        <span className="flex-1 text-left truncate">{projectName}</span>
+        {sessions.length > 0 && (
+          <span className="text-[9px] text-muted-foreground tabular-nums">{sessions.length}</span>
+        )}
+        {sessions.some(s => s.status === "running") && (
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+        )}
 
         {/* Always-visible new chat button */}
         <Button
@@ -981,6 +999,13 @@ function WelcomeScreen({ onTemplate, suggestions, suggestionsLoading, onSuggesti
             ))}
           </div>
         )}
+      </div>
+
+      {/* Keyboard hints */}
+      <div className="mt-6 flex items-center gap-4 text-[10px] text-muted-foreground/50">
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘N</kbd> New chat</span>
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘K</kbd> Search</span>
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘Enter</kbd> Send</span>
       </div>
     </div>
   );
@@ -1701,6 +1726,25 @@ function PromptInput({
 }
 
 // ---------------------------------------------------------------------------
+// Streaming timer — shows elapsed time during generation
+function StreamingTimer({ startedAt }: { startedAt: string }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const start = new Date(startedAt).getTime();
+    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  return (
+    <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
+      {mins > 0 ? `${mins}m ` : ""}{secs}s
+    </span>
+  );
+}
+
 // useSSE hook -- connects to /api/claude/stream/:id
 // ---------------------------------------------------------------------------
 
@@ -1833,6 +1877,15 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     new Set()
   );
   const [folderBrowserOpen, setFolderBrowserOpen] = useState(false);
+  const [projectCreatorOpen, setProjectCreatorOpen] = useState(false);
+  const [opsPanelOpen, setOpsPanelOpen] = useState(false);
+  const [browserPanelOpen, setBrowserPanelOpen] = useState(false);
+  const [terminalPanelOpen, setTerminalPanelOpen] = useState(false);
+  // Active view: "chat" (default), "integrations"
+  const [activeView, setActiveView] = useState<"chat" | "integrations">("chat");
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
   /** When the user clicks "+" on a specific project, store the cwd for the next new session */
   const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
     null
@@ -1842,6 +1895,46 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   useEffect(() => {
     localStorage.setItem("openProjects", JSON.stringify(openProjects));
   }, [openProjects]);
+
+  // Listen for "open in built-in browser" events from LinkProvider
+  useEffect(() => {
+    function handleOpenInBrowser(e: Event) {
+      const url = (e as CustomEvent).detail?.url;
+      if (url) {
+        setBrowserInitialUrl(url);
+        setBrowserPanelOpen(true);
+      }
+    }
+    window.addEventListener("open-in-browser", handleOpenInBrowser);
+    return () => window.removeEventListener("open-in-browser", handleOpenInBrowser);
+  }, []);
+
+  // --------------- Keyboard shortcuts ---------------
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const meta = e.metaKey || e.ctrlKey;
+      // Cmd+K — focus session search
+      if (meta && e.key === "k") {
+        e.preventDefault();
+        setSessionSearch("");
+        (document.querySelector("[data-session-search]") as HTMLInputElement)?.focus();
+      }
+      // Cmd+N — new chat in active project
+      if (meta && e.key === "n" && !e.shiftKey) {
+        e.preventDefault();
+        if (openProjects.length > 0) handleNewChatInProject(openProjects[0]);
+      }
+      // Escape — clear search, close panels, deselect session
+      if (e.key === "Escape") {
+        if (sessionSearch) { setSessionSearch(""); return; }
+        if (browserPanelOpen) { setBrowserPanelOpen(false); return; }
+        if (terminalPanelOpen) { setTerminalPanelOpen(false); return; }
+        if (opsPanelOpen) { setOpsPanelOpen(false); return; }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [openProjects, sessionSearch, browserPanelOpen, terminalPanelOpen, opsPanelOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --------------- Data fetching ---------------
 
@@ -2187,8 +2280,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           </div>
         </div>
 
-        {/* Open Project button */}
-        <div className="border-b border-border px-2 py-2">
+        {/* Open / Create Project buttons */}
+        <div className="border-b border-border px-2 py-2 space-y-1.5">
           <Button
             variant="outline"
             size="sm"
@@ -2198,6 +2291,32 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <FolderPlus className="h-4 w-4" />
             Open Project
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={() => setProjectCreatorOpen(true)}
+          >
+            <Sparkles className="h-4 w-4" />
+            Create Project
+          </Button>
+        </div>
+
+        {/* Session search + shortcuts */}
+        <div className="border-b border-border px-2 py-1.5">
+          <input
+            type="text"
+            value={sessionSearch}
+            onChange={(e) => setSessionSearch(e.target.value)}
+            placeholder="Search sessions... (⌘K)"
+            data-session-search
+            className="w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          <div className="flex items-center justify-between mt-1 px-1 text-[9px] text-muted-foreground/60">
+            <span>⌘N new</span>
+            <span>⌘K search</span>
+            <span>Esc close</span>
+          </div>
         </div>
 
         {/* Project groups */}
@@ -2215,7 +2334,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <ProjectGroup
               key={projectPath}
               projectPath={projectPath}
-              sessions={sessionsByProject[projectPath] || []}
+              sessions={(sessionsByProject[projectPath] || []).filter(s => !sessionSearch || s.prompt.toLowerCase().includes(sessionSearch.toLowerCase()))}
               activeSessionId={activeId}
               isCollapsed={collapsedProjects.has(projectPath)}
               onToggle={() => toggleProjectCollapse(projectPath)}
@@ -2224,8 +2343,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 setActiveId(id);
                 setPendingMessages([]);
                 setMobileSidebarOpen(false);
+                setActiveView("chat");
               }}
-              onDeleteSession={(id) => deleteMutation.mutate(id)}
+              onDeleteSession={(id) => setDeleteConfirmId(id)}
               onClose={() =>
                 setOpenProjects((prev) =>
                   prev.filter((p) => p !== projectPath)
@@ -2233,6 +2353,22 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               }
             />
           ))}
+        </div>
+
+        {/* Tool dock — bottom of sidebar */}
+        <div className="border-t border-border px-2 py-2">
+          <Button
+            variant={activeView === "integrations" ? "secondary" : "ghost"}
+            size="sm"
+            className="w-full justify-start gap-2 h-8"
+            onClick={() => {
+              setActiveView(activeView === "integrations" ? "chat" : "integrations");
+              setActiveId(null);
+            }}
+          >
+            <Plug className="h-3.5 w-3.5" />
+            Integrations
+          </Button>
         </div>
 
         {/* FolderBrowser dialog */}
@@ -2262,20 +2398,63 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold">Claude Code</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Server connected" />
             </div>
 
             {activeSession && (
-              <Badge
-                variant="outline"
-                className={cn("text-[10px]", STATUS_CONFIG[activeSession.status].color)}
-              >
-                {STATUS_CONFIG[activeSession.status].icon}
-                <span className="ml-1">{STATUS_CONFIG[activeSession.status].label}</span>
-              </Badge>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={cn("text-[10px]", STATUS_CONFIG[activeSession.status].color)}
+                >
+                  {STATUS_CONFIG[activeSession.status].icon}
+                  <span className="ml-1">{STATUS_CONFIG[activeSession.status].label}</span>
+                </Badge>
+                {activeSession.status === "running" && <StreamingTimer startedAt={activeSession.startedAt} />}
+              </div>
             )}
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Terminal toggle (bottom panel) */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setTerminalPanelOpen((o) => !o)}
+              title={terminalPanelOpen ? "Hide terminal" : "Show terminal"}
+              className={cn(
+                terminalPanelOpen && "bg-accent text-accent-foreground"
+              )}
+            >
+              <TerminalSquare className="h-4 w-4" />
+            </Button>
+
+            {/* Browser preview toggle (right panel) */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setBrowserPanelOpen((o) => !o)}
+              title={browserPanelOpen ? "Hide browser" : "Preview app"}
+              className={cn(
+                browserPanelOpen && "bg-accent text-accent-foreground"
+              )}
+            >
+              <Globe className="h-4 w-4" />
+            </Button>
+
+            {/* Ops panel toggle (side panel) */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setOpsPanelOpen((o) => !o)}
+              title={opsPanelOpen ? "Hide ops panel" : "Show ops panel"}
+              className={cn(
+                opsPanelOpen && "bg-accent text-accent-foreground"
+              )}
+            >
+              <Terminal className="h-4 w-4" />
+            </Button>
+
             {/* Files panel toggle */}
             {activeSession && (
               <Button
@@ -2312,9 +2491,16 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
 
         {/* Chat + Files panel row */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Chat body */}
+          {/* Main body — chat or integrations */}
           <div className="flex flex-1 flex-col overflow-hidden">
-            {activeSession ? (
+            {activeView === "integrations" ? (
+              <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Plug className="h-5 w-5" /> Integrations
+                </h2>
+                <Integrations />
+              </div>
+            ) : activeSession ? (
               <ChatArea
                 session={activeSession}
                 streamContent={sse.content}
@@ -2326,12 +2512,24 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 agents={sse.agents}
               />
             ) : (
-              <WelcomeScreen
-                onTemplate={handleTemplate}
-                suggestions={suggestions}
-                suggestionsLoading={suggestionsQuery.isLoading}
-                onSuggestion={handleSuggestion}
-              />
+              <>
+                {/* Project Intelligence panel */}
+                {openProjects.length > 0 && (
+                  <ProjectIntelPanel
+                    cwd={openProjects[0]}
+                    onSessionCreated={(sessionId) => {
+                      setActiveId(sessionId);
+                      queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
+                    }}
+                  />
+                )}
+                <WelcomeScreen
+                  onTemplate={handleTemplate}
+                  suggestions={suggestions}
+                  suggestionsLoading={suggestionsQuery.isLoading}
+                  onSuggestion={handleSuggestion}
+                />
+              </>
             )}
 
             {/* Error from create */}
@@ -2379,6 +2577,17 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               suggestionsLoading={suggestionsQuery.isLoading}
               onSuggestion={handleSuggestion}
             />
+
+            {/* Bottom panel — Terminal (per project/conversation) */}
+            {terminalPanelOpen && (
+              <div className="h-[280px] shrink-0 border-t border-border">
+                <TerminalPanel
+                  cwd={activeSession?.cwd || openProjects[0] || ""}
+                  open={terminalPanelOpen}
+                  onClose={() => setTerminalPanelOpen(false)}
+                />
+              </div>
+            )}
           </div>
 
           {/* File changes panel */}
@@ -2391,8 +2600,65 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               onToggle={() => setFilesPanelOpen(false)}
             />
           )}
+
+          {/* Ops Panel (side) */}
+          {opsPanelOpen && (
+            <div className="w-[420px] shrink-0">
+              <OpsPanel
+                cwd={activeSession?.cwd || openProjects[0] || ""}
+                open={opsPanelOpen}
+                onClose={() => setOpsPanelOpen(false)}
+              />
+            </div>
+          )}
+
+          {/* Browser Panel (right side, resizable, per-project) */}
+          {browserPanelOpen && (
+            <BrowserPanel
+              open={browserPanelOpen}
+              onClose={() => { setBrowserPanelOpen(false); setBrowserInitialUrl(null); }}
+              cwd={activeSession?.cwd || openProjects[0] || ""}
+              initialUrl={browserInitialUrl}
+            />
+          )}
         </div>
       </div>
+
+      {/* Project Creator Modal */}
+      <ProjectCreator
+        open={projectCreatorOpen}
+        onClose={() => setProjectCreatorOpen(false)}
+        onProjectCreated={(projectDir, sessionId) => {
+          setOpenProjects((prev) => [...new Set([...prev, projectDir])]);
+          if (sessionId) {
+            setActiveId(sessionId);
+            queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
+          }
+        }}
+      />
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <>
+          <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)} />
+          <div className="fixed z-[100] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs">
+            <div className="rounded-xl border border-border bg-background shadow-2xl p-5 space-y-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">Delete session?</p>
+                <p className="text-xs text-muted-foreground">This conversation will be permanently removed.</p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+                <Button variant="destructive" size="sm" onClick={() => {
+                  deleteMutation.mutate(deleteConfirmId);
+                  if (activeId === deleteConfirmId) setActiveId(null);
+                  setDeleteConfirmId(null);
+                }}>Delete</Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

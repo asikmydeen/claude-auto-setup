@@ -256,3 +256,140 @@ export interface FollowUpSuggestion {
 export const fetchSuggestions = () => api.get<Suggestion[]>("/suggestions");
 export const fetchFollowUpSuggestions = (sessionId: string) =>
   api.get<FollowUpSuggestion[]>(`/suggestions/followup/${sessionId}`);
+
+// --- Project Intelligence ---
+export interface ProjectIntel {
+  hasIntel: boolean;
+  hasClaude: boolean;
+  intel?: string;
+  claudeMd?: string;
+  summary?: {
+    stack?: string;
+    commands?: string[];
+    lastUpdated?: string;
+  };
+}
+
+export const fetchProjectIntel = (cwd?: string) =>
+  api.get<ProjectIntel>(`/projects/intel${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`);
+
+export const initProject = (cwd?: string) =>
+  api.post<{ ok: boolean; output: string }>("/projects/init", { cwd });
+
+// --- Project Creator ---
+export interface CreateProjectResponse {
+  ok: boolean;
+  projectDir: string;
+  sessionId: string | null;
+  session?: ClaudeSession;
+}
+
+export const createProject = (name: string, description: string, basePath?: string) =>
+  api.post<CreateProjectResponse>("/projects/create", { name, description, basePath });
+
+// --- GitHub Integration ---
+export interface GitHubStatus {
+  connected: boolean;
+  username?: string;
+  pat?: string;
+  connectedAt?: string;
+}
+
+export interface GitHubRepo {
+  name: string;
+  fullName: string;
+  url: string;
+  cloneUrl: string;
+  description: string | null;
+  private: boolean;
+  language: string | null;
+  updatedAt: string;
+}
+
+export const fetchGitHubStatus = () => api.get<GitHubStatus>("/integrations/github");
+export const connectGitHub = (pat: string) => api.put<{ connected: boolean; username: string }>("/integrations/github", { pat });
+export const disconnectGitHub = () => api.del<{ ok: boolean }>("/integrations/github");
+export interface GitHubVerifyResult {
+  ok: boolean;
+  error?: string;
+  user?: { login: string; name: string | null; repos: number; since: string };
+  rateLimit?: { limit: number; remaining: number; resetsAt: string } | null;
+  scopes?: string;
+}
+
+export const verifyGitHub = () => api.post<GitHubVerifyResult>("/integrations/github/verify", {});
+export const fetchGitHubRepos = () => api.get<GitHubRepo[]>("/integrations/github/repos");
+export const cloneGitHubRepo = (repoUrl: string, targetPath?: string) =>
+  api.post<{ ok: boolean; path: string }>("/integrations/github/clone", { repoUrl, targetPath });
+
+// --- Supabase Integration ---
+export interface SupabaseStatus {
+  connected: boolean;
+  url?: string;
+  anonKey?: string;
+  projectRef?: string;
+  projectName?: string;
+  orgName?: string;
+  connectedAt?: string;
+}
+
+export interface SupabaseProject {
+  id: string;
+  name: string;
+  organization_id: string;
+  region: string;
+  status: string;
+  created_at: string;
+}
+
+export const fetchSupabaseStatus = () => api.get<SupabaseStatus>("/integrations/supabase");
+export const connectSupabase = (accessToken: string) =>
+  api.put<{ connected: boolean; projects: SupabaseProject[] }>("/integrations/supabase", { accessToken });
+export const selectSupabaseProject = (projectRef: string) =>
+  api.post<{ ok: boolean; url: string; projectName: string; orgName: string; hasAnonKey: boolean; hasServiceKey: boolean }>("/integrations/supabase/select-project", { projectRef });
+export const fetchSupabaseProjects = () => api.get<SupabaseProject[]>("/integrations/supabase/projects");
+export const disconnectSupabase = () => api.del<{ ok: boolean }>("/integrations/supabase");
+export const testSupabaseConnection = () => api.post<{ ok: boolean; status: number; error?: string }>("/integrations/supabase/test", {});
+
+// --- AWS Integration ---
+export interface AwsStatus {
+  profiles: string[];
+  activeProfile: string;
+  adaAccount?: string;
+  adaRole?: string;
+  hasAda: boolean;
+  hasAwsCli: boolean;
+}
+
+export const fetchAwsStatus = () => api.get<AwsStatus>("/integrations/aws");
+export const setAwsProfile = (profile: string, adaAccount?: string, adaRole?: string) =>
+  api.put<{ ok: boolean }>("/integrations/aws/profile", { profile, adaAccount, adaRole });
+export const refreshAwsCredentials = (account?: string, role?: string, profile?: string) =>
+  api.post<{ ok: boolean; output: string; profile: string }>("/integrations/aws/refresh-credentials", { account, role, profile });
+export const runAwsCommand = (args: string[]) =>
+  api.post<{ ok: boolean; output: string }>("/integrations/aws/exec", { command: "aws", args });
+
+export interface AwsVerifyResult {
+  ok: boolean;
+  error?: string;
+  expired?: boolean;
+  account?: string;
+  arn?: string;
+  userId?: string;
+  profile?: string;
+  region?: string;
+}
+
+export const verifyAws = () => api.post<AwsVerifyResult>("/integrations/aws/verify", {});
+
+// --- Ops Panel ---
+export interface OpsRunResponse {
+  ok: boolean;
+  id: string;
+  pid: number;
+}
+
+export const runOpsCommand = (command: string, args: string[], cwd?: string) =>
+  api.post<OpsRunResponse>("/ops/run", { command, args, cwd });
+export const stopOpsProcess = (id: string) =>
+  api.post<{ ok: boolean }>(`/ops/stop/${id}`, {});

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Settings2, Boxes, Shield, X } from "lucide-react";
+import { Settings2, Boxes, Shield, Plug, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Settings } from "@/pages/Settings";
 import { Providers } from "@/pages/Providers";
 import { Rules } from "@/pages/Rules";
+import { Integrations } from "@/pages/Integrations";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -15,6 +16,7 @@ const tabs = [
   { id: "settings", label: "Settings", icon: Settings2 },
   { id: "providers", label: "Providers", icon: Boxes },
   { id: "rules", label: "Rules", icon: Shield },
+  { id: "integrations", label: "Integrations", icon: Plug },
 ] as const;
 
 type TabId = typeof tabs[number]["id"];
@@ -69,6 +71,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
           {activeTab === "settings" && <Settings />}
           {activeTab === "providers" && <Providers />}
           {activeTab === "rules" && <Rules />}
+          {activeTab === "integrations" && <Integrations />}
         </div>
       </div>
     </>

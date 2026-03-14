@@ -19,6 +19,39 @@ const CLAUDE_DIR = join(HOME, ".claude");
 const AGENTS_DIR = join(CLAUDE_DIR, "agents");
 const SCRATCH_DIR = join(CLAUDE_DIR, "scratch");
 const SETTINGS_PATH = join(CLAUDE_DIR, "settings.json");
+const INTEGRATIONS_PATH = join(CLAUDE_DIR, "integrations.json");
+
+// --- Integrations storage (secure, local-only) ---
+interface IntegrationsConfig {
+  github?: { pat: string; username?: string; connectedAt?: string };
+  supabase?: {
+    accessToken: string;
+    url: string;
+    anonKey: string;
+    serviceRoleKey?: string;
+    projectRef?: string;
+    projectName?: string;
+    orgName?: string;
+    connectedAt?: string;
+  };
+  aws?: { activeProfile?: string; adaAccount?: string; adaRole?: string };
+}
+
+function loadIntegrations(): IntegrationsConfig {
+  try {
+    if (existsSync(INTEGRATIONS_PATH)) return JSON.parse(readFileSync(INTEGRATIONS_PATH, "utf-8"));
+  } catch {}
+  return {};
+}
+
+function saveIntegrations(config: IntegrationsConfig): void {
+  writeFileSync(INTEGRATIONS_PATH, JSON.stringify(config, null, 2), { mode: 0o600 });
+}
+
+function maskSecret(s: string): string {
+  if (s.length <= 8) return "****";
+  return s.slice(0, 4) + "****" + s.slice(-4);
+}
 
 function findProjectRoot(): string {
   const candidates = [
@@ -673,6 +706,34 @@ interface ClaudeSession {
 const claudeSessions = new Map<string, ClaudeSession>();
 const sseClients = new Map<string, Set<express.Response>>();
 
+// Session persistence — save completed sessions to disk
+const SESSIONS_FILE = join(SCRATCH_DIR, "sessions.json");
+
+function persistSessions() {
+  try {
+    if (!existsSync(SCRATCH_DIR)) mkdirSync(SCRATCH_DIR, { recursive: true });
+    const toSave = [...claudeSessions.values()]
+      .filter(s => s.status !== "running") // Only persist completed sessions
+      .map(({ process, ...s }) => s)
+      .slice(-50); // Keep last 50 sessions
+    writeFileSync(SESSIONS_FILE, JSON.stringify(toSave), { mode: 0o600 });
+  } catch {}
+}
+
+function loadPersistedSessions() {
+  try {
+    if (existsSync(SESSIONS_FILE)) {
+      const data = JSON.parse(readFileSync(SESSIONS_FILE, "utf-8")) as ClaudeSession[];
+      for (const s of data) {
+        if (!claudeSessions.has(s.id)) claudeSessions.set(s.id, s);
+      }
+    }
+  } catch {}
+}
+
+// Load persisted sessions on startup
+loadPersistedSessions();
+
 function detectFileChanges(cwd: string): string[] {
   try {
     const staged = execFileSync("git", ["diff", "--name-only", "--cached"], {
@@ -789,7 +850,10 @@ app.post("/api/claude/sessions", (req, res) => {
         sseClients.delete(id);
       }
 
-      // Clean up after 1 hour
+      // Persist to disk
+      persistSessions();
+
+      // Clean up from memory after 1 hour (stays on disk)
       setTimeout(() => claudeSessions.delete(id), 3600000);
     });
 
@@ -1393,6 +1457,29 @@ app.get("/api/suggestions", (req, res) => {
       });
     }
 
+    // Project intelligence suggestions
+    if (!existsSync(join(cwd, ".claude/rules/project-intel.md"))) {
+      suggestions.push({
+        id: "generate-intel",
+        label: "Generate project intelligence",
+        prompt: "Analyze this codebase and generate a comprehensive project-intel.md file at .claude/rules/project-intel.md. Include: stack, architecture, directory map, API surface, build/test commands, known gotchas.",
+        icon: "brain",
+        priority: 20,
+        category: "general",
+      });
+    }
+
+    if (!existsSync(join(cwd, ".claude/CLAUDE.md"))) {
+      suggestions.push({
+        id: "init-project",
+        label: "Initialize AI config",
+        prompt: "Set up this project for AI-assisted development. Create .claude/CLAUDE.md with project-specific instructions, key commands, and conventions.",
+        icon: "sparkles",
+        priority: 18,
+        category: "general",
+      });
+    }
+
     // Always available
     suggestions.push({
       id: "explain-codebase",
@@ -1518,8 +1605,871 @@ app.get("/api/filesystem/browse", (req, res) => {
 });
 
 // ============================================================
+// PROJECT INTELLIGENCE
+// ============================================================
+
+app.get("/api/projects/intel", (req, res) => {
+  const cwd = (req.query.cwd as string) || activeProject;
+  const intelPath = join(cwd, ".claude/rules/project-intel.md");
+  const claudeMdPath = join(cwd, ".claude/CLAUDE.md");
+
+  const result: {
+    hasIntel: boolean;
+    hasClaude: boolean;
+    intel?: string;
+    claudeMd?: string;
+    summary?: { stack?: string; commands?: string[]; lastUpdated?: string };
+  } = {
+    hasIntel: existsSync(intelPath),
+    hasClaude: existsSync(claudeMdPath),
+  };
+
+  if (result.hasIntel) {
+    try {
+      const content = readFileSync(intelPath, "utf-8");
+      result.intel = content;
+      // Parse quick summary
+      const stackMatch = content.match(/## Stack\n([\s\S]*?)(?=\n## )/);
+      const commandsMatch = content.match(/## Build\/Test\/Lint Commands\n([\s\S]*?)(?=\n## )/);
+      const dateMatch = content.match(/Last updated[:\s]*(\d{4}-\d{2}-\d{2})/);
+      result.summary = {
+        stack: stackMatch?.[1]?.trim().slice(0, 500),
+        commands: commandsMatch?.[1]?.match(/- .+/g)?.slice(0, 10)?.map(c => c.replace(/^- /, "")) || [],
+        lastUpdated: dateMatch?.[1],
+      };
+    } catch {}
+  }
+
+  if (result.hasClaude) {
+    try { result.claudeMd = readFileSync(claudeMdPath, "utf-8").slice(0, 2000); } catch {}
+  }
+
+  res.json(result);
+});
+
+app.post("/api/projects/init", (req, res) => {
+  const cwd = (req.body.cwd as string) || activeProject;
+  const initScript = join(PROJECT_ROOT, "project-init.sh");
+
+  if (!existsSync(initScript)) {
+    return res.status(404).json({ error: "project-init.sh not found" });
+  }
+
+  try {
+    const output = execFileSync("bash", [initScript], {
+      cwd,
+      encoding: "utf-8",
+      timeout: 30000,
+      env: { ...process.env, HOME: HOME },
+    });
+    res.json({ ok: true, output });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Init failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ============================================================
+// PROJECT CREATOR
+// ============================================================
+
+app.post("/api/projects/create", (req, res) => {
+  const { name, description, basePath } = req.body;
+  if (!name || !description) {
+    return res.status(400).json({ error: "Name and description are required" });
+  }
+
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+  const parentDir = resolve(basePath || join(HOME, "projects"));
+  // Ensure parent is under home directory
+  if (!parentDir.startsWith(HOME) && !parentDir.startsWith("/tmp")) {
+    return res.status(400).json({ error: "Project path must be under home directory" });
+  }
+  const projectDir = join(parentDir, safeName);
+
+  // Create directory
+  if (!existsSync(parentDir)) mkdirSync(parentDir, { recursive: true });
+  if (!existsSync(projectDir)) mkdirSync(projectDir, { recursive: true });
+
+  // Initialize git
+  try {
+    execFileSync("git", ["init"], { cwd: projectDir, timeout: 5000 });
+  } catch {}
+
+  // Set as active project
+  activeProject = projectDir;
+  if (!userProjects.some((p) => p.path === projectDir)) {
+    userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
+  }
+
+  // Launch Claude session to build the project
+  try {
+    const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
+    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch. Create the appropriate files, set up the project structure, install dependencies, and implement the core functionality. Use modern best practices.`;
+
+    const id = randomUUID().slice(0, 12);
+    const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose"];
+    const env = { ...process.env };
+    const envR = env as Record<string, string>;
+    envR.CLAUDECODE = "";
+    envR.CLAUDE_CODE_ENTRYPOINT = "";
+
+    // Inject integrations context
+    const integrations = loadIntegrations();
+    if (integrations.supabase?.url) {
+      envR.SUPABASE_URL = integrations.supabase.url;
+      envR.SUPABASE_ANON_KEY = integrations.supabase.anonKey;
+    }
+
+    const child = spawn(claudePath, args, {
+      env,
+      cwd: projectDir,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    const session: ClaudeSession = {
+      id,
+      prompt: buildPrompt,
+      status: "running",
+      messages: [{ role: "user", content: buildPrompt, timestamp: new Date().toISOString() }],
+      output: [],
+      exitCode: null,
+      startedAt: new Date().toISOString(),
+      pid: child.pid,
+      cwd: projectDir,
+      process: child,
+    };
+
+    claudeSessions.set(id, session);
+    wireStreamJson(child, session, id);
+
+    child.on("close", (code) => {
+      session.status = code === 0 ? "done" : "error";
+      session.exitCode = code;
+      session.endedAt = new Date().toISOString();
+      session.messages.push({ role: "assistant", content: session.output.join(""), timestamp: new Date().toISOString() });
+      delete session.process;
+      if (code === 0) session.filesChanged = detectFileChanges(session.cwd);
+      const clients = sseClients.get(id);
+      if (clients) {
+        for (const client of clients) {
+          client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
+          client.end();
+        }
+        sseClients.delete(id);
+      }
+      setTimeout(() => claudeSessions.delete(id), 3600000);
+    });
+
+    const { process: _, ...safe } = session;
+    res.status(201).json({ ok: true, projectDir, sessionId: id, session: safe });
+  } catch {
+    // Project created but no Claude session — still success
+    res.status(201).json({ ok: true, projectDir, sessionId: null });
+  }
+});
+
+// ============================================================
+// INTEGRATIONS — GITHUB
+// ============================================================
+
+app.get("/api/integrations/github", (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.github?.pat) {
+    return res.json({ connected: false });
+  }
+  res.json({
+    connected: true,
+    username: config.github.username,
+    pat: maskSecret(config.github.pat),
+    connectedAt: config.github.connectedAt,
+  });
+});
+
+app.put("/api/integrations/github", async (req, res) => {
+  const { pat } = req.body;
+  if (!pat || typeof pat !== "string") {
+    return res.status(400).json({ error: "PAT is required" });
+  }
+
+  // Validate PAT by calling GitHub API
+  try {
+    const resp = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${pat.trim()}`, "User-Agent": "claude-auto-setup" },
+    });
+    if (!resp.ok) return res.status(401).json({ error: "Invalid PAT — GitHub returned " + resp.status });
+
+    const user = (await resp.json()) as { login: string };
+    const config = loadIntegrations();
+    config.github = { pat: pat.trim(), username: user.login, connectedAt: new Date().toISOString() };
+    saveIntegrations(config);
+
+    res.json({ connected: true, username: user.login });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Connection failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+app.delete("/api/integrations/github", (_req, res) => {
+  const config = loadIntegrations();
+  delete config.github;
+  saveIntegrations(config);
+  res.json({ ok: true });
+});
+
+app.post("/api/integrations/github/verify", async (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.github?.pat) return res.json({ ok: false, error: "Not connected" });
+
+  try {
+    const resp = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${config.github.pat}`, "User-Agent": "claude-auto-setup" },
+    });
+    if (!resp.ok) return res.json({ ok: false, error: `GitHub API returned ${resp.status}` });
+
+    const user = (await resp.json()) as { login: string; name: string | null; public_repos: number; created_at: string };
+    // Also check rate limit
+    const rateResp = await fetch("https://api.github.com/rate_limit", {
+      headers: { Authorization: `Bearer ${config.github.pat}`, "User-Agent": "claude-auto-setup" },
+    });
+    const rate = rateResp.ok ? (await rateResp.json()) as { rate: { limit: number; remaining: number; reset: number } } : null;
+
+    res.json({
+      ok: true,
+      user: { login: user.login, name: user.name, repos: user.public_repos, since: user.created_at },
+      rateLimit: rate ? { limit: rate.rate.limit, remaining: rate.rate.remaining, resetsAt: new Date(rate.rate.reset * 1000).toISOString() } : null,
+      scopes: resp.headers.get("x-oauth-scopes") || "unknown",
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Verification failed";
+    res.json({ ok: false, error: msg });
+  }
+});
+
+app.get("/api/integrations/github/repos", async (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.github?.pat) return res.status(401).json({ error: "GitHub not connected" });
+
+  try {
+    const resp = await fetch("https://api.github.com/user/repos?sort=updated&per_page=30", {
+      headers: { Authorization: `Bearer ${config.github.pat}`, "User-Agent": "claude-auto-setup" },
+    });
+    if (!resp.ok) return res.status(resp.status).json({ error: "GitHub API error" });
+
+    const repos = (await resp.json()) as Array<{ name: string; full_name: string; html_url: string; clone_url: string; description: string | null; private: boolean; language: string | null; updated_at: string }>;
+    res.json(repos.map(r => ({
+      name: r.name,
+      fullName: r.full_name,
+      url: r.html_url,
+      cloneUrl: r.clone_url,
+      description: r.description,
+      private: r.private,
+      language: r.language,
+      updatedAt: r.updated_at,
+    })));
+  } catch {
+    res.status(500).json({ error: "Failed to fetch repos" });
+  }
+});
+
+app.post("/api/integrations/github/clone", (req, res) => {
+  const { repoUrl, targetPath } = req.body;
+  const config = loadIntegrations();
+  if (!config.github?.pat) return res.status(401).json({ error: "GitHub not connected" });
+  if (!repoUrl) return res.status(400).json({ error: "repoUrl is required" });
+
+  // Validate URL format — only allow github.com HTTPS URLs
+  const ghUrlPattern = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\.git)?$/;
+  if (!ghUrlPattern.test(repoUrl)) {
+    return res.status(400).json({ error: "Invalid GitHub repository URL. Only https://github.com/ URLs are allowed." });
+  }
+
+  const rawDest = targetPath || join(HOME, "projects", repoUrl.split("/").pop()?.replace(".git", "") || "repo");
+  const dest = resolve(rawDest);
+  // Prevent path traversal — must be under home or /tmp
+  if (!dest.startsWith(HOME) && !dest.startsWith("/tmp")) {
+    return res.status(400).json({ error: "Target path must be under home directory" });
+  }
+
+  try {
+    // Use git credential helper via env to avoid embedding PAT in the URL
+    const cloneEnv = {
+      ...process.env,
+      GIT_ASKPASS: "echo",
+      GIT_TERMINAL_PROMPT: "0",
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+      GIT_CONFIG_VALUE_0: `Authorization: Bearer ${config.github.pat}`,
+    };
+    execFileSync("git", ["clone", repoUrl, dest], { encoding: "utf-8", timeout: 120000, env: cloneEnv });
+
+    // Add as project
+    activeProject = dest;
+    if (!userProjects.some((p) => p.path === dest)) {
+      userProjects.push({ path: dest, name: dest.split("/").pop() || "repo", addedAt: new Date().toISOString() });
+    }
+
+    res.json({ ok: true, path: dest });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Clone failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ============================================================
+// INTEGRATIONS — SUPABASE
+// ============================================================
+
+// Status — returns connected state + project info
+app.get("/api/integrations/supabase", (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.supabase?.accessToken) return res.json({ connected: false });
+
+  res.json({
+    connected: true,
+    url: config.supabase.url,
+    anonKey: maskSecret(config.supabase.anonKey),
+    projectRef: config.supabase.projectRef,
+    projectName: config.supabase.projectName,
+    orgName: config.supabase.orgName,
+    connectedAt: config.supabase.connectedAt,
+  });
+});
+
+// Sign in with access token — validates and fetches projects
+app.put("/api/integrations/supabase", async (req, res) => {
+  const { accessToken } = req.body;
+  if (!accessToken || typeof accessToken !== "string") {
+    return res.status(400).json({ error: "Access token is required" });
+  }
+
+  const sbApi = "https://api.supabase.com";
+  const headers = { Authorization: `Bearer ${accessToken.trim()}`, "Content-Type": "application/json" };
+
+  try {
+    // Validate token by listing projects
+    const resp = await fetch(`${sbApi}/v1/projects`, { headers });
+    if (!resp.ok) return res.status(401).json({ error: `Invalid token — Supabase returned ${resp.status}` });
+
+    const projects = (await resp.json()) as Array<{
+      id: string; name: string; organization_id: string;
+      region: string; status: string; created_at: string;
+    }>;
+
+    // Save token, return project list for user to pick
+    const config = loadIntegrations();
+    config.supabase = {
+      accessToken: accessToken.trim(),
+      url: "", anonKey: "",
+      connectedAt: new Date().toISOString(),
+    };
+    saveIntegrations(config);
+
+    res.json({ connected: true, projects });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Connection failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// Select a project — fetches API keys and stores them
+app.post("/api/integrations/supabase/select-project", async (req, res) => {
+  const { projectRef } = req.body;
+  if (!projectRef) return res.status(400).json({ error: "projectRef is required" });
+
+  const config = loadIntegrations();
+  if (!config.supabase?.accessToken) return res.status(401).json({ error: "Not authenticated" });
+
+  const sbApi = "https://api.supabase.com";
+  const headers = { Authorization: `Bearer ${config.supabase.accessToken}`, "Content-Type": "application/json" };
+
+  try {
+    // Fetch API keys for this project
+    const keysResp = await fetch(`${sbApi}/v1/projects/${projectRef}/api-keys`, { headers });
+    if (!keysResp.ok) return res.status(keysResp.status).json({ error: `Failed to fetch keys: ${keysResp.status}` });
+
+    const keys = (await keysResp.json()) as Array<{ name: string; api_key: string }>;
+    const anonKey = keys.find(k => k.name === "anon")?.api_key || "";
+    const serviceKey = keys.find(k => k.name === "service_role")?.api_key || "";
+
+    // Fetch project details for the URL
+    const projResp = await fetch(`${sbApi}/v1/projects/${projectRef}`, { headers });
+    const proj = projResp.ok ? (await projResp.json()) as { name: string; region: string; organization_id: string } : null;
+
+    // Fetch org name
+    let orgName = "";
+    if (proj?.organization_id) {
+      try {
+        const orgResp = await fetch(`${sbApi}/v1/organizations`, { headers });
+        if (orgResp.ok) {
+          const orgs = (await orgResp.json()) as Array<{ id: string; name: string }>;
+          orgName = orgs.find(o => o.id === proj.organization_id)?.name || "";
+        }
+      } catch {}
+    }
+
+    const url = `https://${projectRef}.supabase.co`;
+
+    config.supabase = {
+      ...config.supabase,
+      url,
+      anonKey,
+      serviceRoleKey: serviceKey,
+      projectRef,
+      projectName: proj?.name || projectRef,
+      orgName,
+    };
+    saveIntegrations(config);
+
+    res.json({ ok: true, url, projectName: proj?.name, orgName, hasAnonKey: !!anonKey, hasServiceKey: !!serviceKey });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to select project";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// List projects (for authenticated users)
+app.get("/api/integrations/supabase/projects", async (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.supabase?.accessToken) return res.status(401).json({ error: "Not authenticated" });
+
+  const headers = { Authorization: `Bearer ${config.supabase.accessToken}`, "Content-Type": "application/json" };
+  try {
+    const resp = await fetch("https://api.supabase.com/v1/projects", { headers });
+    if (!resp.ok) return res.status(resp.status).json({ error: "Failed to fetch projects" });
+    const projects = await resp.json();
+    res.json(projects);
+  } catch {
+    res.status(500).json({ error: "Failed to list projects" });
+  }
+});
+
+app.delete("/api/integrations/supabase", (_req, res) => {
+  const config = loadIntegrations();
+  delete config.supabase;
+  saveIntegrations(config);
+  res.json({ ok: true });
+});
+
+// Test connection to the selected project
+app.post("/api/integrations/supabase/test", async (_req, res) => {
+  const config = loadIntegrations();
+  if (!config.supabase?.url || !config.supabase?.anonKey) return res.status(400).json({ error: "No project selected" });
+
+  try {
+    const resp = await fetch(`${config.supabase.url.replace(/\/$/, "")}/rest/v1/`, {
+      headers: { apikey: config.supabase.anonKey, Authorization: `Bearer ${config.supabase.anonKey}` },
+    });
+    res.json({ ok: resp.ok, status: resp.status });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Connection test failed";
+    res.json({ ok: false, error: msg });
+  }
+});
+
+// ============================================================
+// INTEGRATIONS — AWS
+// ============================================================
+
+app.get("/api/integrations/aws", (_req, res) => {
+  const config = loadIntegrations();
+  const profiles: string[] = [];
+
+  // Parse ~/.aws/credentials for profile names
+  const credsPath = join(HOME, ".aws/credentials");
+  const configPath = join(HOME, ".aws/config");
+
+  try {
+    if (existsSync(credsPath)) {
+      const content = readFileSync(credsPath, "utf-8");
+      const matches = content.match(/\[([^\]]+)\]/g);
+      if (matches) profiles.push(...matches.map(m => m.replace(/[[\]]/g, "")));
+    }
+    if (existsSync(configPath)) {
+      const content = readFileSync(configPath, "utf-8");
+      const matches = content.match(/\[profile ([^\]]+)\]/g);
+      if (matches) profiles.push(...matches.map(m => m.replace(/\[profile |\]/g, "")));
+    }
+  } catch {}
+
+  // Deduplicate
+  const uniqueProfiles = [...new Set(profiles)];
+
+  // Check for ada CLI
+  let hasAda = false;
+  try { execFileSync("which", ["ada"], { encoding: "utf-8" }); hasAda = true; } catch {}
+
+  // Check for aws CLI
+  let hasAwsCli = false;
+  try { execFileSync("which", ["aws"], { encoding: "utf-8" }); hasAwsCli = true; } catch {}
+
+  res.json({
+    profiles: uniqueProfiles,
+    activeProfile: config.aws?.activeProfile || "default",
+    adaAccount: config.aws?.adaAccount,
+    adaRole: config.aws?.adaRole,
+    hasAda,
+    hasAwsCli,
+  });
+});
+
+app.put("/api/integrations/aws/profile", (req, res) => {
+  const { profile, adaAccount, adaRole } = req.body;
+  const config = loadIntegrations();
+  config.aws = {
+    activeProfile: profile || config.aws?.activeProfile,
+    adaAccount: adaAccount || config.aws?.adaAccount,
+    adaRole: adaRole || config.aws?.adaRole,
+  };
+  saveIntegrations(config);
+  res.json({ ok: true, ...config.aws });
+});
+
+app.post("/api/integrations/aws/refresh-credentials", (req, res) => {
+  const config = loadIntegrations();
+  const { account, role, profile } = req.body;
+
+  const adaAccount = account || config.aws?.adaAccount;
+  const adaRole = role || config.aws?.adaRole || "Admin";
+  const adaProfile = profile || config.aws?.activeProfile || "default";
+
+  if (!adaAccount) return res.status(400).json({ error: "AWS account ID is required" });
+
+  try {
+    const output = execFileSync("ada", [
+      "credentials", "update",
+      "--account", adaAccount,
+      "--role", adaRole,
+      "--once",
+      "--profile", adaProfile,
+    ], { encoding: "utf-8", timeout: 30000 });
+
+    // Save the account/role for future refreshes
+    config.aws = { ...config.aws, activeProfile: adaProfile, adaAccount, adaRole };
+    saveIntegrations(config);
+
+    res.json({ ok: true, output: output.trim(), profile: adaProfile });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "ada credentials update failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+app.post("/api/integrations/aws/verify", (_req, res) => {
+  const config = loadIntegrations();
+  const profile = config.aws?.activeProfile || "default";
+
+  try {
+    // Check if aws CLI exists
+    execFileSync("which", ["aws"], { encoding: "utf-8" });
+  } catch {
+    return res.json({ ok: false, error: "AWS CLI not installed" });
+  }
+
+  try {
+    const output = execFileSync("aws", ["sts", "get-caller-identity", "--profile", profile, "--output", "json"], {
+      encoding: "utf-8",
+      timeout: 15000,
+      env: { ...process.env, AWS_PROFILE: profile },
+    });
+    const identity = JSON.parse(output) as { Account: string; Arn: string; UserId: string };
+
+    // Also check what region is configured
+    let region = "unknown";
+    try {
+      region = execFileSync("aws", ["configure", "get", "region", "--profile", profile], {
+        encoding: "utf-8", timeout: 5000,
+      }).trim() || "unknown";
+    } catch {}
+
+    res.json({
+      ok: true,
+      account: identity.Account,
+      arn: identity.Arn,
+      userId: identity.UserId,
+      profile,
+      region,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "AWS verification failed";
+    // Check for common errors
+    if (msg.includes("ExpiredToken") || msg.includes("expired")) {
+      return res.json({ ok: false, error: "Credentials expired — refresh with ada", expired: true });
+    }
+    if (msg.includes("could not be found") || msg.includes("NoCredentialProviders")) {
+      return res.json({ ok: false, error: `No credentials for profile "${profile}"` });
+    }
+    res.json({ ok: false, error: msg.slice(0, 300) });
+  }
+});
+
+app.post("/api/integrations/aws/exec", (req, res) => {
+  const { command, args: cmdArgs = [] } = req.body;
+  if (!command) return res.status(400).json({ error: "command is required" });
+
+  const config = loadIntegrations();
+  const profile = config.aws?.activeProfile || "default";
+
+  // Only allow aws CLI commands for safety
+  if (command !== "aws") return res.status(400).json({ error: "Only 'aws' commands are allowed" });
+
+  // Validate args - no shell injection
+  // Strict arg validation — only allow safe characters (alphanumeric, hyphens, dots, slashes, colons, equals, underscores)
+  const SAFE_ARG = /^[a-zA-Z0-9_\-.:=/,@*\s]+$/;
+  const safeArgs = (cmdArgs as string[]).filter(a => typeof a === "string" && SAFE_ARG.test(a));
+
+  try {
+    const output = execFileSync("aws", [...safeArgs, "--profile", profile, "--output", "json"], {
+      encoding: "utf-8",
+      timeout: 30000,
+      env: { ...process.env, AWS_PROFILE: profile },
+    });
+    res.json({ ok: true, output: output.trim() });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "AWS command failed";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ============================================================
+// OPS PANEL — Shell execution with streaming
+// ============================================================
+
+const opsProcesses = new Map<string, { process: ReturnType<typeof spawn>; output: string[]; status: string; exitCode: number | null }>();
+
+app.post("/api/ops/run", (req, res) => {
+  const { command, args: cmdArgs = [], cwd: opsCwd } = req.body;
+  if (!command || typeof command !== "string") return res.status(400).json({ error: "command is required" });
+
+  // Allowlist of safe commands
+  const ALLOWED_CMDS = ["aws", "npm", "npx", "node", "bun", "make", "git", "docker", "cdk", "sam", "terraform", "kubectl"];
+  if (!ALLOWED_CMDS.includes(command)) {
+    return res.status(400).json({ error: `Command "${command}" is not allowed. Allowed: ${ALLOWED_CMDS.join(", ")}` });
+  }
+
+  const config = loadIntegrations();
+  const env = { ...process.env };
+  if (config.aws?.activeProfile) {
+    (env as Record<string, string>).AWS_PROFILE = config.aws.activeProfile;
+  }
+  if (config.supabase?.url) {
+    (env as Record<string, string>).SUPABASE_URL = config.supabase.url;
+    (env as Record<string, string>).SUPABASE_ANON_KEY = config.supabase.anonKey;
+  }
+
+  const id = randomUUID().slice(0, 12);
+  // spawn() doesn't use shell, but validate args for defense in depth
+  const safeArgs = (cmdArgs as string[]).filter(a => typeof a === "string" && a.length < 1000);
+
+  try {
+    const child = spawn(command, safeArgs, {
+      env,
+      cwd: opsCwd || activeProject,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    const opsEntry = { process: child, output: [] as string[], status: "running", exitCode: null as number | null };
+    opsProcesses.set(id, opsEntry);
+
+    child.stdout?.on("data", (data: Buffer) => opsEntry.output.push(data.toString()));
+    child.stderr?.on("data", (data: Buffer) => opsEntry.output.push(data.toString()));
+    child.on("close", (code) => {
+      opsEntry.status = code === 0 ? "done" : "error";
+      opsEntry.exitCode = code;
+      // Clean up after 30 min
+      setTimeout(() => opsProcesses.delete(id), 1800000);
+    });
+
+    res.status(201).json({ ok: true, id, pid: child.pid });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to run command";
+    res.status(500).json({ error: msg });
+  }
+});
+
+app.get("/api/ops/stream/:id", (req, res) => {
+  const entry = opsProcesses.get(req.params.id);
+  if (!entry) return res.status(404).json({ error: "Process not found" });
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+
+  // Send existing output
+  if (entry.output.length > 0) {
+    res.write(`data: ${JSON.stringify({ type: "output", content: entry.output.join("") })}\n\n`);
+  }
+
+  if (entry.status !== "running") {
+    res.write(`data: ${JSON.stringify({ type: "done", exitCode: entry.exitCode })}\n\n`);
+    return res.end();
+  }
+
+  // Stream new output
+  const interval = setInterval(() => {
+    if (entry.output.length > 0) {
+      res.write(`data: ${JSON.stringify({ type: "output", content: entry.output.join("") })}\n\n`);
+    }
+    if (entry.status !== "running") {
+      res.write(`data: ${JSON.stringify({ type: "done", exitCode: entry.exitCode })}\n\n`);
+      clearInterval(interval);
+      res.end();
+    }
+  }, 500);
+
+  req.on("close", () => clearInterval(interval));
+});
+
+app.post("/api/ops/stop/:id", (req, res) => {
+  const entry = opsProcesses.get(req.params.id);
+  if (!entry) return res.status(404).json({ error: "Process not found" });
+  try { entry.process.kill("SIGTERM"); } catch {}
+  res.json({ ok: true });
+});
+
+// ============================================================
+// EMBEDDED BROWSER — full rewriting proxy for iframe embedding
+// ============================================================
+
+// Proxy all requests: /api/browser/proxy?url=<encoded-url>
+// Strips X-Frame-Options, CSP frame-ancestors, rewrites links to go through proxy
+app.get("/api/browser/proxy", async (req, res) => {
+  const targetUrl = req.query.url as string;
+  if (!targetUrl) return res.status(400).send("url parameter required");
+
+  let parsed: URL;
+  try {
+    parsed = new URL(targetUrl);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return res.status(400).send("Only HTTP/HTTPS URLs");
+    }
+  } catch {
+    return res.status(400).send("Invalid URL");
+  }
+
+  try {
+    const resp = await fetch(targetUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+        "Accept": req.headers.accept || "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "identity",
+        "Referer": targetUrl,
+      },
+      redirect: "follow",
+    });
+
+    const contentType = resp.headers.get("content-type") || "application/octet-stream";
+    res.setHeader("Content-Type", contentType);
+    // Cache proxied assets for performance
+    if (!contentType.includes("text/html")) {
+      res.setHeader("Cache-Control", "public, max-age=3600");
+    }
+
+    // Explicitly DO NOT forward: x-frame-options, content-security-policy
+    // Forward safe headers only
+    for (const h of ["content-language", "last-modified", "etag"]) {
+      const val = resp.headers.get(h);
+      if (val) res.setHeader(h, val);
+    }
+
+    if (contentType.includes("text/html")) {
+      let html = await resp.text();
+      const origin = `${parsed.protocol}//${parsed.host}`;
+      const proxyBase = "/api/browser/proxy?url=";
+
+      // 1. Inject <base> for relative URL resolution
+      if (!html.includes("<base ")) {
+        html = html.replace(/<head([^>]*)>/i, `<head$1><base href="${origin}${parsed.pathname.replace(/\/[^/]*$/, "/")}">` );
+      }
+
+      // 2. Inject script to intercept link clicks and form submits, routing them through proxy
+      const interceptScript = `
+<script data-proxy-inject>
+(function() {
+  const PROXY = "${proxyBase}";
+  function proxyUrl(url) {
+    if (!url || url.startsWith("javascript:") || url.startsWith("#") || url.startsWith("data:") || url.startsWith("blob:")) return url;
+    try {
+      const abs = new URL(url, document.baseURI).href;
+      if (abs.startsWith("${origin}") || abs.startsWith("http")) {
+        return PROXY + encodeURIComponent(abs);
+      }
+    } catch {}
+    return url;
+  }
+  // Intercept clicks on links
+  document.addEventListener("click", function(e) {
+    const a = e.target.closest("a[href]");
+    if (a && a.href && !a.href.startsWith("javascript:") && a.target !== "_blank") {
+      e.preventDefault();
+      const dest = proxyUrl(a.getAttribute("href"));
+      // Notify parent about navigation
+      window.parent.postMessage({ type: "proxy-navigate", url: new URL(a.getAttribute("href"), document.baseURI).href }, "*");
+      window.location.href = dest;
+    }
+  }, true);
+  // Intercept form submissions
+  document.addEventListener("submit", function(e) {
+    const form = e.target;
+    if (form.action) {
+      form.action = proxyUrl(form.action);
+    }
+  }, true);
+  // Report current URL to parent
+  window.parent.postMessage({ type: "proxy-loaded", url: "${targetUrl}", title: document.title }, "*");
+  // Watch for title changes
+  new MutationObserver(function() {
+    window.parent.postMessage({ type: "proxy-title", title: document.title }, "*");
+  }).observe(document.querySelector("title") || document.head, { childList: true, characterData: true, subtree: true });
+})();
+</script>`;
+      html = html.replace(/<\/body>/i, interceptScript + "</body>");
+
+      res.send(html);
+    } else {
+      // Binary — pipe through
+      const buffer = await resp.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Proxy error";
+    res.status(502).send(`<html><body><h3>Failed to load</h3><p>${msg}</p><p>${targetUrl}</p></body></html>`);
+  }
+});
+
+// Also allow localhost/127.0.0.1 for viewing local dev servers
+app.get("/api/browser/local", (req, res) => {
+  const port = parseInt(req.query.port as string, 10);
+  if (!port || port < 1000 || port > 65535) return res.status(400).json({ error: "Invalid port" });
+  // Redirect to the local server — this works because same-origin iframes are allowed
+  res.redirect(`http://localhost:${port}${req.query.path || "/"}`);
+});
+
+// ============================================================
 // HEALTH
 // ============================================================
+
+// Open URL in system default browser (macOS: `open`)
+app.post("/api/browser/open-external", (req, res) => {
+  const { url } = req.body;
+  if (!url || typeof url !== "string") return res.status(400).json({ error: "url required" });
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return res.status(400).json({ error: "Only HTTP/HTTPS URLs" });
+    }
+    execFileSync("open", [url], { timeout: 5000 });
+    res.json({ ok: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to open URL";
+    res.status(500).json({ error: msg });
+  }
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({
