@@ -71,16 +71,28 @@ export function OpsPanel({ cwd, open, onClose }: OpsPanelProps) {
       const es = new EventSource(`/api/ops/stream/${data.id}`);
       sseSourcesRef.current.set(data.id, es);
 
+      // Batch SSE updates to avoid excessive re-renders
+      let pendingOutput = "";
+      let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
       es.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         if (msg.type === "output") {
-          setProcesses(prev => prev.map(p =>
-            p.id === data.id ? { ...p, output: msg.content } : p
-          ));
+          pendingOutput = msg.content;
+          if (!flushTimer) {
+            flushTimer = setTimeout(() => {
+              const output = pendingOutput;
+              setProcesses(prev => prev.map(p =>
+                p.id === data.id ? { ...p, output } : p
+              ));
+              flushTimer = null;
+            }, 50);
+          }
         }
         if (msg.type === "done") {
+          if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
           setProcesses(prev => prev.map(p =>
-            p.id === data.id ? { ...p, status: msg.exitCode === 0 ? "done" : "error", exitCode: msg.exitCode } : p
+            p.id === data.id ? { ...p, output: pendingOutput || p.output, status: msg.exitCode === 0 ? "done" : "error", exitCode: msg.exitCode } : p
           ));
           es.close();
           sseSourcesRef.current.delete(data.id);

@@ -2492,4 +2492,34 @@ app.listen(PORT, "127.0.0.1", () => {
   console.log(`API server running on http://127.0.0.1:${PORT}`);
 });
 
+// --- Graceful shutdown: kill child processes ---
+function cleanupChildProcesses() {
+  console.log("Cleaning up child processes...");
+  for (const sess of claudeSessions.values()) {
+    if (sess.process) {
+      try { sess.process.kill("SIGTERM"); } catch {}
+    }
+  }
+  for (const entry of opsProcesses.values()) {
+    if (entry.process) {
+      try { entry.process.kill("SIGTERM"); } catch {}
+    }
+  }
+  persistSessions();
+}
+
+process.on("SIGTERM", () => { cleanupChildProcesses(); process.exit(0); });
+process.on("SIGINT", () => { cleanupChildProcesses(); process.exit(0); });
+
+// --- SSE heartbeat: detect dead clients every 30s ---
+setInterval(() => {
+  for (const [id, clients] of sseClients.entries()) {
+    for (const client of clients) {
+      try { client.write(":heartbeat\n\n"); }
+      catch { clients.delete(client); }
+    }
+    if (clients.size === 0) sseClients.delete(id);
+  }
+}, 30_000);
+
 export { app };

@@ -125,6 +125,13 @@ interface AgentActivity {
 }
 
 // ---------------------------------------------------------------------------
+// Platform detection
+// ---------------------------------------------------------------------------
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
+const MOD = isMac ? "⌘" : "Ctrl+";
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
@@ -1003,9 +1010,9 @@ function WelcomeScreen({ onTemplate, suggestions, suggestionsLoading, onSuggesti
 
       {/* Keyboard hints */}
       <div className="mt-6 flex items-center gap-4 text-[10px] text-muted-foreground/50">
-        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘N</kbd> New chat</span>
-        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘K</kbd> Search</span>
-        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">⌘Enter</kbd> Send</span>
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">{MOD}N</kbd> New chat</span>
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">{MOD}K</kbd> Search</span>
+        <span><kbd className="rounded border border-border px-1 py-0.5 text-[9px]">{MOD}Enter</kbd> Send</span>
       </div>
     </div>
   );
@@ -1714,7 +1721,7 @@ function PromptInput({
         </div>
         <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
           <span>
-            {statusHint || (disabled ? "Session running -- waiting for response" : "Enter for new line, Cmd+Enter to send")}
+            {statusHint || (disabled ? "Session running -- waiting for response" : `Enter for new line, ${MOD}Enter to send`)}
           </span>
           {value.length > 500 && (
             <span className="tabular-nums">{value.length} chars</span>
@@ -1726,6 +1733,17 @@ function PromptInput({
 }
 
 // ---------------------------------------------------------------------------
+// Document visibility hook — pause polling when tab hidden
+function useDocumentVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const handler = () => setVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, []);
+  return visible;
+}
+
 // Streaming timer — shows elapsed time during generation
 function StreamingTimer({ startedAt }: { startedAt: string }) {
   const [elapsed, setElapsed] = useState(0);
@@ -1754,6 +1772,7 @@ function useSSE(sessionId: string | null) {
   const [exitCode, setExitCode] = useState<number | null>(null);
   const [tools, setTools] = useState<ToolActivity[]>([]);
   const [agents, setAgents] = useState<AgentActivity[]>([]);
+  const [streamError, setStreamError] = useState<string | null>(null);
   const sourceRef = useRef<EventSource | null>(null);
   // Track the generation so we can reconnect for follow-ups
   const [generation, setGeneration] = useState(0);
@@ -1820,7 +1839,8 @@ function useSSE(sessionId: string | null) {
     };
 
     es.onerror = () => {
-      // Connection lost -- mark done so UI doesn't hang
+      // Connection lost -- mark done with error message
+      setStreamError("Connection lost — response may be incomplete");
       setDone(true);
       es.close();
     };
@@ -1831,7 +1851,7 @@ function useSSE(sessionId: string | null) {
     };
   }, [sessionId, generation]);
 
-  return { content, done, exitCode, tools, agents, reconnect };
+  return { content, done, exitCode, tools, agents, reconnect, streamError };
 }
 
 // ---------------------------------------------------------------------------
@@ -1909,6 +1929,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     return () => window.removeEventListener("open-in-browser", handleOpenInBrowser);
   }, []);
 
+  const isTabVisible = useDocumentVisible();
+
   // --------------- Keyboard shortcuts ---------------
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -1946,7 +1968,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const sessionsQuery = useQuery<ClaudeSession[]>({
     queryKey: ["claude-sessions"],
     queryFn: fetchClaudeSessions,
-    refetchInterval: 10_000,
+    refetchInterval: isTabVisible ? 10_000 : false,
   });
 
   const sessions = sessionsQuery.data ?? [];
@@ -2236,7 +2258,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     inputDisabledMessage = "Sending follow-up...";
   } else if (canFollowUp) {
     inputPlaceholder = "Continue the conversation...";
-    inputStatusHint = "Cmd+Enter to send follow-up";
+    inputStatusHint = `${MOD}Enter to send follow-up`;
   }
 
   // --------------- Render ---------------
@@ -2308,13 +2330,13 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             type="text"
             value={sessionSearch}
             onChange={(e) => setSessionSearch(e.target.value)}
-            placeholder="Search sessions... (⌘K)"
+            placeholder={`Search sessions... (${MOD}K)`}
             data-session-search
             className="w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />
           <div className="flex items-center justify-between mt-1 px-1 text-[9px] text-muted-foreground/60">
-            <span>⌘N new</span>
-            <span>⌘K search</span>
+            <span>{MOD}N new</span>
+            <span>{MOD}K search</span>
             <span>Esc close</span>
           </div>
         </div>
@@ -2390,6 +2412,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               variant="ghost"
               size="icon-sm"
               className="md:hidden"
+              aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}
               onClick={() => setMobileSidebarOpen((o) => !o)}
             >
               {mobileSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -2401,11 +2424,19 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Server connected" />
             </div>
 
+            {/* Breadcrumb: project > session */}
             {activeSession && (
               <div className="flex items-center gap-1.5">
+                {activeSession.cwd && (
+                  <>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{activeSession.cwd.split("/").pop()}</span>
+                    <span className="text-[10px] text-muted-foreground">/</span>
+                  </>
+                )}
                 <Badge
                   variant="outline"
                   className={cn("text-[10px]", STATUS_CONFIG[activeSession.status].color)}
+                  aria-live="polite"
                 >
                   {STATUS_CONFIG[activeSession.status].icon}
                   <span className="ml-1">{STATUS_CONFIG[activeSession.status].label}</span>
@@ -2422,6 +2453,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               size="icon-sm"
               onClick={() => setTerminalPanelOpen((o) => !o)}
               title={terminalPanelOpen ? "Hide terminal" : "Show terminal"}
+              aria-label={terminalPanelOpen ? "Hide terminal" : "Show terminal"}
               className={cn(
                 terminalPanelOpen && "bg-accent text-accent-foreground"
               )}
@@ -2435,6 +2467,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               size="icon-sm"
               onClick={() => setBrowserPanelOpen((o) => !o)}
               title={browserPanelOpen ? "Hide browser" : "Preview app"}
+              aria-label={browserPanelOpen ? "Hide browser" : "Preview app"}
               className={cn(
                 browserPanelOpen && "bg-accent text-accent-foreground"
               )}
@@ -2543,6 +2576,19 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 onRetry={() => createMutation.reset()}
                 onDismiss={() => createMutation.reset()}
               />
+            )}
+
+            {/* SSE connection error */}
+            {sse.streamError && (
+              <div className="mx-auto max-w-3xl px-6 py-2">
+                <div className="flex items-center gap-2 rounded-lg border border-yellow-600/30 bg-yellow-50 dark:bg-yellow-950/20 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-200">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{sse.streamError}</span>
+                  <Button variant="ghost" size="sm" className="ml-auto h-6 text-[10px]" onClick={() => sse.reconnect()}>
+                    Retry
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Error from follow-up */}
