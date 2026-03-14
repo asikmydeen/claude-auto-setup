@@ -714,12 +714,18 @@ function persistSessions() {
   try {
     if (!existsSync(SCRATCH_DIR)) mkdirSync(SCRATCH_DIR, { recursive: true });
     const toSave = [...claudeSessions.values()]
-      .filter(s => s.status !== "running") // Only persist completed sessions
-      .map(({ process, ...s }) => s)
-      .slice(-50); // Keep last 50 sessions
+      .map(({ process, ...s }) => ({
+        ...s,
+        // If still running at persist time, mark as interrupted
+        status: s.status === "running" ? "error" as const : s.status,
+      }))
+      .slice(-100); // Keep last 100 sessions
     writeFileSync(SESSIONS_FILE, JSON.stringify(toSave), { mode: 0o600 });
   } catch {}
 }
+
+// Auto-persist every 30 seconds so sessions survive crashes
+setInterval(persistSessions, 30_000);
 
 function loadPersistedSessions() {
   try {
@@ -823,6 +829,7 @@ app.post("/api/claude/sessions", (req, res) => {
 
     claudeSessions.set(id, session);
     wireStreamJson(child, session, id);
+    persistSessions(); // Persist immediately so session survives crash
 
     // On close
     child.on("close", (code) => {
@@ -855,7 +862,8 @@ app.post("/api/claude/sessions", (req, res) => {
       persistSessions();
 
       // Clean up from memory after 1 hour (stays on disk)
-      setTimeout(() => claudeSessions.delete(id), 3600000);
+      // Keep in memory for 2h, persist handles disk storage
+      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
     });
 
     const { process: _, ...safe } = session;
@@ -992,6 +1000,7 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
         }
         sseClients.delete(session.id);
       }
+      persistSessions();
     });
 
     const { process: _, ...safe } = session;
@@ -1209,8 +1218,9 @@ app.post("/api/claude/launch", (req, res) => {
         }
         sseClients.delete(id);
       }
-
-      setTimeout(() => claudeSessions.delete(id), 3600000);
+      persistSessions();
+      // Keep in memory for 2h, persist handles disk storage
+      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
     });
 
     res.json({ pid: child.pid || 0, status: "launched", sessionId: id });
@@ -1814,7 +1824,9 @@ app.post("/api/projects/create", (req, res) => {
         }
         sseClients.delete(id);
       }
-      setTimeout(() => claudeSessions.delete(id), 3600000);
+      persistSessions();
+      // Keep in memory for 2h, persist handles disk storage
+      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
     });
 
     const { process: _, ...safe } = session;
