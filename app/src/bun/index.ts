@@ -25,7 +25,7 @@ async function main() {
   // Set up native application menu with Edit menu (required for Cmd+C/V/X to work in WKWebView)
   ApplicationMenu.setApplicationMenu([
     {
-      label: "Claude Auto Setup",
+      label: "Sidekick",
       submenu: [
         { role: "about" },
         { type: "divider" },
@@ -70,7 +70,7 @@ async function main() {
 
   // Main application window
   const win = new BrowserWindow({
-    title: "Claude Auto Setup",
+    title: "Sidekick",
     url: UI_URL,
     frame: {
       width: 1400,
@@ -83,7 +83,7 @@ async function main() {
   // System tray
   try {
     const tray = new Tray({
-      title: "Claude Auto Setup",
+      title: "Sidekick",
       template: true,
       width: 22,
       height: 22,
@@ -109,7 +109,7 @@ async function main() {
     console.log("System tray not available");
   }
 
-  console.log(`Claude Auto Setup running — ${UI_URL}`);
+  console.log(`Sidekick running — ${UI_URL}`);
 }
 
 main();

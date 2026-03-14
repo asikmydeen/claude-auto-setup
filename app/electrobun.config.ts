@@ -2,8 +2,8 @@ import type { ElectrobunConfig } from "electrobun";
 
 export default {
   app: {
-    name: "Claude Auto Setup",
-    identifier: "dev.claude.auto-setup",
+    name: "Sidekick",
+    identifier: "dev.sidekick.app",
     version: "1.0.0",
   },
   build: {

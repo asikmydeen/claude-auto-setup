@@ -2418,7 +2418,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
         <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">Claude Auto Setup</span>
+            <span className="text-sm font-semibold">Sidekick</span>
           </div>
           <div className="flex items-center gap-1">
             <Button

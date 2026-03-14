@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Claude Auto Setup — Desktop App Installer
+# Sidekick — Desktop App Installer
 #
 # Installs the native macOS Electrobun desktop app.
 #
@@ -20,8 +20,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP_DIR="$SCRIPT_DIR"
-APP_NAME="Claude Auto Setup"
-BUNDLE_ID="dev.claude.auto-setup"
+APP_NAME="Sidekick"
+BUNDLE_ID="dev.sidekick.app"
 BUILD_DIR="$APP_DIR/build"
 INSTALL_DIR="/Applications"
 
@@ -192,9 +192,9 @@ dev_mode() {
 
 main() {
   echo -e "${BOLD}${CYAN}"
-  echo "  ╔══════════════════════════════════════╗"
-  echo "  ║   Claude Auto Setup — Desktop App    ║"
-  echo "  ╚══════════════════════════════════════╝"
+  echo "  ╔═══════════════════════════════╗"
+  echo "  ║     Sidekick — Installer     ║"
+  echo "  ╚═══════════════════════════════╝"
   echo -e "${NC}"
 
   local mode="install"
