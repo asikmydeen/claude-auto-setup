@@ -58,6 +58,11 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
   const [repoChoice, setRepoChoice] = useState<RepoChoice>("none");
   const [repoPrivate, setRepoPrivate] = useState(true);
 
+  // Environment variables
+  const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([]);
+  const [newEnvKey, setNewEnvKey] = useState("");
+  const [newEnvValue, setNewEnvValue] = useState("");
+
   // Fetch integration statuses
   const github = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus, enabled: open });
   const supabase = useQuery({ queryKey: ["supabase-status"], queryFn: fetchSupabaseStatus, enabled: open });
@@ -74,7 +79,25 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
   }, [name, newSupabaseName]);
 
   const createMut = useMutation({
-    mutationFn: () => createProject(name.trim(), buildPrompt(), basePath.trim() || undefined),
+    mutationFn: () => {
+      const envObj: Record<string, string> = {};
+      for (const { key, value } of envVars) { if (key.trim()) envObj[key.trim()] = value; }
+
+      const sbOverride = backend === "supabase" && selectedSupabaseProject
+        ? { projectRef: selectedSupabaseProject, url: `https://${selectedSupabaseProject}.supabase.co` }
+        : undefined;
+
+      const awsProf = backend === "aws" && aws.data?.activeProfile ? aws.data.activeProfile : undefined;
+
+      return createProject(
+        name.trim(),
+        buildPrompt(),
+        basePath.trim() || undefined,
+        Object.keys(envObj).length > 0 ? envObj : undefined,
+        sbOverride,
+        awsProf,
+      );
+    },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["projects"] });
       onProjectCreated?.(data.projectDir, data.sessionId);
@@ -103,6 +126,12 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
       parts.push(`\n\nUse AWS as the backend. The AWS CLI is configured with the active profile. Use AWS services (DynamoDB, Lambda, S3, etc.) as appropriate. Set up CDK or SAM for infrastructure. Use the AWS SDK.`);
     }
 
+    // Environment variables instructions
+    if (envVars.length > 0) {
+      const varList = envVars.filter(v => v.key.trim()).map(v => `${v.key.trim()}="${v.value}"`).join("\n");
+      parts.push(`\n\nThe following environment variables are configured and available at runtime:\n\`\`\`\n${varList}\n\`\`\`\nUse these variables in your code (e.g. process.env.${envVars[0]?.key || "VAR_NAME"}). Create a .env.example file documenting them. Do NOT hardcode these values — always read from environment.`);
+    }
+
     // GitHub instructions
     if (repoChoice === "new") {
       parts.push(`\n\nAfter building the project, initialize a git repo, create an initial commit, then create a new GitHub repository named "${name}" (${repoPrivate ? "private" : "public"}) and push to it. Use: gh repo create ${name} --${repoPrivate ? "private" : "public"} --source=. --remote=origin --push`);
@@ -120,6 +149,9 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
     setNewSupabaseName("");
     setSupabaseMode("select");
     setRepoChoice("none");
+    setEnvVars([]);
+    setNewEnvKey("");
+    setNewEnvValue("");
   }
 
   if (!open) return null;
@@ -304,6 +336,81 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
             </div>
 
             {/* GitHub repo */}
+            {/* Environment Variables */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-1.5">
+                Environment Variables
+                <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+              </label>
+
+              {envVars.length > 0 && (
+                <div className="space-y-1">
+                  {envVars.map((v, idx) => (
+                    <div key={idx} className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={v.key}
+                        onChange={(e) => setEnvVars(prev => prev.map((ev, i) => i === idx ? { ...ev, key: e.target.value.toUpperCase() } : ev))}
+                        className="w-[110px] rounded border border-input bg-background px-2 py-1 text-[10px] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <span className="text-[10px] text-muted-foreground">=</span>
+                      <input
+                        type="text"
+                        value={v.value}
+                        onChange={(e) => setEnvVars(prev => prev.map((ev, i) => i === idx ? { ...ev, value: e.target.value } : ev))}
+                        className="flex-1 rounded border border-input bg-background px-2 py-1 text-[10px] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <button type="button" onClick={() => setEnvVars(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-muted-foreground hover:text-destructive p-0.5">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={newEnvKey}
+                  onChange={(e) => setNewEnvKey(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newEnvKey.trim()) {
+                      setEnvVars(prev => [...prev, { key: newEnvKey.trim(), value: newEnvValue }]);
+                      setNewEnvKey(""); setNewEnvValue("");
+                    }
+                  }}
+                  placeholder="API_KEY"
+                  className="w-[110px] rounded border border-input bg-background px-2 py-1 text-[10px] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <span className="text-[10px] text-muted-foreground">=</span>
+                <input
+                  type="text"
+                  value={newEnvValue}
+                  onChange={(e) => setNewEnvValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newEnvKey.trim()) {
+                      setEnvVars(prev => [...prev, { key: newEnvKey.trim(), value: newEnvValue }]);
+                      setNewEnvKey(""); setNewEnvValue("");
+                    }
+                  }}
+                  placeholder="value"
+                  className="flex-1 rounded border border-input bg-background px-2 py-1 text-[10px] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <Button variant="outline" size="sm" className="h-6 px-1.5"
+                  disabled={!newEnvKey.trim()}
+                  onClick={() => { setEnvVars(prev => [...prev, { key: newEnvKey.trim(), value: newEnvValue }]); setNewEnvKey(""); setNewEnvValue(""); }}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+
+              {envVars.length > 0 && (
+                <p className="text-[9px] text-muted-foreground">
+                  Claude will use these as process.env variables. Saved to project config.
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">GitHub Repository</label>
               <div className="grid grid-cols-3 gap-2">
@@ -388,6 +495,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               {backend !== "none" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{backend}</Badge>}
               {repoChoice === "new" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">github</Badge>}
+              {envVars.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{envVars.length} env</Badge>}
               <span>Claude builds & opens automatically</span>
             </div>
             <div className="flex gap-2">

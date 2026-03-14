@@ -312,8 +312,15 @@ export interface CreateProjectResponse {
   session?: ClaudeSession;
 }
 
-export const createProject = (name: string, description: string, basePath?: string) =>
-  api.post<CreateProjectResponse>("/projects/create", { name, description, basePath });
+export const createProject = (
+  name: string,
+  description: string,
+  basePath?: string,
+  envVars?: Record<string, string>,
+  supabaseOverride?: { projectRef?: string; url?: string; anonKey?: string },
+  awsProfile?: string,
+) =>
+  api.post<CreateProjectResponse>("/projects/create", { name, description, basePath, envVars, supabaseOverride, awsProfile });
 
 // --- GitHub Integration ---
 export interface GitHubStatus {

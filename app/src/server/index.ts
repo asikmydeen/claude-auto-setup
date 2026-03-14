@@ -1731,7 +1731,7 @@ app.post("/api/projects/init", (req, res) => {
 // ============================================================
 
 app.post("/api/projects/create", (req, res) => {
-  const { name, description, basePath } = req.body;
+  const { name, description, basePath, envVars, supabaseOverride, awsProfile } = req.body;
   if (!name || !description) {
     return res.status(400).json({ error: "Name and description are required" });
   }
@@ -1752,6 +1752,21 @@ app.post("/api/projects/create", (req, res) => {
   try {
     execFileSync("git", ["init"], { cwd: projectDir, timeout: 5000 });
   } catch {}
+
+  // Save per-project env config if provided
+  const projectEnvConfig: ProjectEnvConfig = {};
+  if (envVars && typeof envVars === "object" && Object.keys(envVars).length > 0) {
+    projectEnvConfig.env = envVars;
+  }
+  if (supabaseOverride && typeof supabaseOverride === "object") {
+    projectEnvConfig.supabase = supabaseOverride;
+  }
+  if (awsProfile && typeof awsProfile === "string") {
+    projectEnvConfig.aws = { profile: awsProfile };
+  }
+  if (Object.keys(projectEnvConfig).length > 0) {
+    saveProjectEnv(projectDir, projectEnvConfig);
+  }
 
   // Set as active project
   activeProject = projectDir;
