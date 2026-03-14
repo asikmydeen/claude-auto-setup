@@ -1,5 +1,5 @@
 # Universal AI Agent Setup — Makefile
-.PHONY: install update self-update uninstall dry-run test lint clean version doctor help
+.PHONY: install update self-update uninstall dry-run test lint clean version doctor help app app-dev app-build app-uninstall
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -43,3 +43,17 @@ version: ## Show version
 
 doctor: ## Check installation health
 	./install.sh --doctor
+
+# --- Desktop App ---
+
+app: ## Build & install desktop app to /Applications
+	./app/install.sh
+
+app-dev: ## Run desktop app in dev mode
+	./app/install.sh --dev
+
+app-build: ## Build desktop app only (no install)
+	./app/install.sh --build
+
+app-uninstall: ## Remove desktop app from /Applications
+	./app/install.sh --uninstall
