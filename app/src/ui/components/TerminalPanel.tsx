@@ -180,34 +180,37 @@ export function TerminalPanel({ cwd, open, onClose }: TerminalPanelProps) {
         const es = new EventSource(`/api/ops/stream/${data.id}`);
         sseRef.current.set(data.id, es);
 
+        // Batch SSE updates (50ms flush) to avoid excessive re-renders
+        let pendingOutput = "";
+        let flushTimer: ReturnType<typeof setTimeout> | null = null;
+        const sessionId = activeSession.id;
+
         es.onmessage = (event) => {
           const msg = JSON.parse(event.data);
           if (msg.type === "output") {
-            setSessions((prev) =>
-              prev.map((s) =>
-                s.id === activeSession.id
-                  ? {
-                      ...s,
-                      history: s.history.map((h, i) =>
-                        i === s.history.length - 1 ? { ...h, output: msg.content } : h
-                      ),
-                    }
-                  : s
-              )
-            );
+            pendingOutput = msg.content;
+            if (!flushTimer) {
+              flushTimer = setTimeout(() => {
+                const output = pendingOutput;
+                setSessions((prev) =>
+                  prev.map((s) =>
+                    s.id === sessionId
+                      ? { ...s, history: s.history.map((h, i) => i === s.history.length - 1 ? { ...h, output } : h) }
+                      : s
+                  )
+                );
+                flushTimer = null;
+              }, 50);
+            }
           }
           if (msg.type === "done") {
+            if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
             setSessions((prev) =>
               prev.map((s) =>
-                s.id === activeSession.id
-                  ? {
-                      ...s,
-                      history: s.history.map((h, i) =>
-                        i === s.history.length - 1
-                          ? { ...h, status: msg.exitCode === 0 ? "done" as const : "error" as const, exitCode: msg.exitCode }
-                          : h
-                      ),
-                    }
+                s.id === sessionId
+                  ? { ...s, history: s.history.map((h, i) => i === s.history.length - 1
+                      ? { ...h, output: pendingOutput || h.output, status: msg.exitCode === 0 ? "done" as const : "error" as const, exitCode: msg.exitCode }
+                      : h) }
                   : s
               )
             );

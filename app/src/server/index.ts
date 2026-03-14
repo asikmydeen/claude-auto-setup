@@ -650,7 +650,8 @@ function wireStreamJson(
         }
 
         if (evt.type === "text" && evt.content) {
-          session.output.push(evt.content);
+          // Cap output buffer at 50,000 chunks to prevent memory leaks on long sessions
+          if (session.output.length < 50_000) session.output.push(evt.content);
           broadcastSSE(sessionId, { type: "chunk", content: evt.content });
         } else if (evt.type === "tool_use") {
           broadcastSSE(sessionId, {
@@ -681,7 +682,7 @@ function wireStreamJson(
   child.stderr?.on("data", (data: Buffer) => {
     const chunk = data.toString();
     if (chunk.includes("Error") || chunk.includes("error")) {
-      session.output.push(chunk);
+      if (session.output.length < 50_000) session.output.push(chunk);
       broadcastSSE(sessionId, { type: "chunk", content: chunk });
     }
   });
@@ -1318,8 +1319,18 @@ app.get("/api/git/diff", (req, res) => {
 // SMART SUGGESTIONS (context-aware)
 // ============================================================
 
+// Suggestions cache (10s TTL) to avoid blocking git calls on every request
+const suggestionsCache = new Map<string, { data: unknown; timestamp: number }>();
+const SUGGESTIONS_TTL = 10_000;
+
 app.get("/api/suggestions", (req, res) => {
   const cwd = (req.query.cwd as string) || activeProject;
+
+  // Check cache
+  const cached = suggestionsCache.get(cwd);
+  if (cached && Date.now() - cached.timestamp < SUGGESTIONS_TTL) {
+    return res.json(cached.data);
+  }
   const suggestions: Array<{
     id: string;
     label: string;
@@ -1501,6 +1512,8 @@ app.get("/api/suggestions", (req, res) => {
   // Sort by priority descending
   suggestions.sort((a, b) => b.priority - a.priority);
 
+  // Cache
+  suggestionsCache.set(cwd, { data: suggestions, timestamp: Date.now() });
   res.json(suggestions);
 });
 

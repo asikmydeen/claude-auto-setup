@@ -16,8 +16,11 @@
 **Core Technologies:**
 - **Electrobun** - Native desktop app framework (Bun + system WebView)
 - **React 19 + Vite + Tailwind v4 + shadcn/ui** - Desktop app UI
-- **Express** - API server (25+ endpoints, embedded in Electrobun main process)
+- **Express** - API server (40+ endpoints, ~2,500 lines, embedded in Electrobun main process)
 - **SSE (Server-Sent Events)** - Real-time Claude output streaming to UI
+- **Toast notifications** - Non-blocking UI feedback system
+- **Link interception (WKWebView)** - External links open in system browser, local links stay in-app
+- **Session persistence (JSON file-based)** - Completed sessions saved to `~/.claude/scratch/sessions.json`
 - **stream-json** - Claude CLI streaming format for progressive tool/agent visibility
 - **MCP (Model Context Protocol)** - Plugin integration
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
@@ -201,6 +204,24 @@ claude-code-setup/
 │   ├── cursor/
 │   └── ampcode/
 │
+│
+├── app/                               # Electrobun desktop app
+│   └── src/
+│       ├── server/index.ts            # Express API (2500+ lines, 40+ endpoints)
+│       └── ui/
+│           ├── pages/
+│           │   ├── Claude.tsx         # Main chat UI (2400+ lines)
+│           │   └── Integrations.tsx   # GitHub + Supabase + AWS config
+│           ├── components/
+│           │   ├── ProjectIntel.tsx    # Intel panel
+│           │   ├── ProjectCreator.tsx  # Lovable-style creator with backend/repo options
+│           │   ├── OpsPanel.tsx        # Terminal-like ops
+│           │   ├── BrowserPanel.tsx    # Embedded browser (local dev servers)
+│           │   ├── TerminalPanel.tsx   # Integrated terminal
+│           │   └── Toast.tsx          # Toast notification system
+│           └── context/
+│               └── LinkContext.tsx     # External link interception for WKWebView
+│
 ├── dashboard/                      # Real-time monitoring dashboard
 │   ├── server.js                   # Express + SSE (431 lines)
 │   ├── package.json                # express ^4.21, chokidar ^4.0
@@ -268,6 +289,46 @@ claude-code-setup/
 | POST | `/api/sessions/:id/steering` | Inject steering command |
 | GET | `/api/sessions/:id/commands` | Get pending steering commands |
 
+### Desktop App HTTP API (port 3201)
+
+**Integrations:**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/integrations/github` | Get GitHub integration config |
+| PUT | `/api/integrations/github` | Save GitHub integration config |
+| DELETE | `/api/integrations/github` | Remove GitHub integration |
+| GET | `/api/integrations/supabase` | Get Supabase config (Management API flow) |
+| PUT | `/api/integrations/supabase` | Save Supabase config |
+| DELETE | `/api/integrations/supabase` | Remove Supabase integration |
+| GET | `/api/integrations/aws` | Get AWS integration config |
+| PUT | `/api/integrations/aws` | Save AWS integration config |
+| DELETE | `/api/integrations/aws` | Remove AWS integration |
+
+**Ops Panel:**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/ops/run` | Execute an ops command |
+| GET | `/api/ops/stream/:id` | SSE stream for ops output |
+| POST | `/api/ops/stop/:id` | Kill a running ops process |
+
+**Browser Proxy:**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/browser/proxy` | Proxy localhost URLs for WKWebView |
+| POST | `/api/browser/open-external` | Open URL in system browser |
+| GET | `/api/browser/local` | List local dev server ports |
+
+**Project Intel:**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/projects/intel` | Read project intelligence file |
+| POST | `/api/projects/init` | Initialize project (run project-init.sh) |
+| POST | `/api/projects/create` | Create new project (Lovable-style creator) |
+
 ---
 
 ## Settings Structure (Claude Code)
@@ -298,6 +359,8 @@ claude-code-setup/
   }
 }
 ```
+
+**Integrations storage:** `~/.claude/integrations.json` — persists GitHub, Supabase, and AWS integration configs.
 
 ---
 
@@ -335,6 +398,12 @@ claude-code-setup/
 16. **OpenViking optional** - All features degrade gracefully when OpenViking is not installed; never block workflows
 17. **OpenViking HTTP mode** - Use HTTP transport (port 1933) for multi-agent; stdio causes contention with concurrent agents
 18. **Intel template L0/L1/L2** - New intel template uses tiered loading; L0 for prompts, L1 for planning, L2 on demand
+19. **Supabase Management API** - Uses Management API access tokens, not project keys directly
+20. **Browser panel localhost only** - Only works with localhost URLs; external sites open in system browser
+21. **Session persistence** - Saves last 50 completed sessions to `~/.claude/scratch/sessions.json`
+22. **SIGTERM handler** - Kills orphaned Claude processes on shutdown
+23. **SSE heartbeat** - Every 30s to detect dead clients
+24. **Platform-detect MOD key** - MOD = Cmd on Mac, Ctrl+ elsewhere
 
 ---
 
@@ -374,6 +443,8 @@ claude-code-setup/
 - **6** native agents (Claude Code, incl. pua-enforcer)
 - **5** main shell scripts (1,883 lines total)
 - **14** enabled plugins
+- **40+** desktop app API endpoints (~2,500 line server)
+- **8+** desktop app UI pages/components (Integrations, ProjectIntel, OpsPanel, BrowserPanel, etc.)
 
 ### Providers on This Machine
 

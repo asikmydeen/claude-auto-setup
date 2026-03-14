@@ -805,7 +805,15 @@ function SessionItem({ session, isActive, onClick, onDelete }: SessionItemProps)
           {truncateAtWord(session.prompt, 40)}
         </p>
         <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span>{relativeTime(session.startedAt)}</span>
+          <span className={cn(
+            // Recency coloring: green (<2h), yellow (2h-1w), gray (>1w)
+            (() => {
+              const age = Date.now() - new Date(session.startedAt).getTime();
+              if (age < 2 * 60 * 60 * 1000) return "text-green-500";
+              if (age < 7 * 24 * 60 * 60 * 1000) return "text-yellow-500";
+              return "text-muted-foreground/60";
+            })()
+          )}>{relativeTime(session.startedAt)}</span>
           {totalMessages > 1 && (
             <Badge variant="outline" className="px-1 py-0 text-[9px] leading-none">
               {totalMessages} msgs
@@ -1393,30 +1401,21 @@ function ChatArea({ session, streamContent, isStreaming, pendingMessages, follow
     scrollToBottom();
   }, [session.messages, streamContent, pendingMessages, tools, agents, scrollToBottom]);
 
-  // Build conversation entries from session messages
-  const conversation: ConversationEntry[] = [];
-
-  if (session.messages.length > 0) {
-    for (const msg of session.messages) {
-      conversation.push({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-      });
+  // Build conversation entries — memoized to avoid re-parsing markdown for unchanged messages
+  const conversation = useMemo(() => {
+    const result: ConversationEntry[] = [];
+    if (session.messages.length > 0) {
+      for (const msg of session.messages) {
+        result.push({ role: msg.role, content: msg.content, timestamp: msg.timestamp });
+      }
+    } else {
+      result.push({ role: "user", content: session.prompt });
+      const outputText = session.output.join("\n");
+      if (outputText) result.push({ role: "assistant", content: outputText });
     }
-  } else {
-    // Fallback: original prompt + output
-    conversation.push({ role: "user", content: session.prompt });
-    const outputText = session.output.join("\n");
-    if (outputText) {
-      conversation.push({ role: "assistant", content: outputText });
-    }
-  }
-
-  // Add any pending optimistic messages
-  for (const pending of pendingMessages) {
-    conversation.push(pending);
-  }
+    for (const pending of pendingMessages) result.push(pending);
+    return result;
+  }, [session.messages, session.output, session.prompt, pendingMessages]);
 
   // Determine if we should show streaming content
   // Stream content appends to the last assistant bubble or creates a new one
@@ -1905,6 +1904,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const [activeView, setActiveView] = useState<"chat" | "integrations">("chat");
   const [sessionSearch, setSessionSearch] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [softDeletedIds, setSoftDeletedIds] = useState<Set<string>>(new Set());
+  const [undoAction, setUndoAction] = useState<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
   const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
   /** When the user clicks "+" on a specific project, store the cwd for the next new session */
   const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
@@ -2356,7 +2357,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <ProjectGroup
               key={projectPath}
               projectPath={projectPath}
-              sessions={(sessionsByProject[projectPath] || []).filter(s => !sessionSearch || s.prompt.toLowerCase().includes(sessionSearch.toLowerCase()))}
+              sessions={(sessionsByProject[projectPath] || []).filter(s =>
+                !softDeletedIds.has(s.id) && (!sessionSearch || s.prompt.toLowerCase().includes(sessionSearch.toLowerCase()))
+              )}
               activeSessionId={activeId}
               isCollapsed={collapsedProjects.has(projectPath)}
               onToggle={() => toggleProjectCollapse(projectPath)}
@@ -2376,6 +2379,27 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             />
           ))}
         </div>
+
+        {/* Undo delete bar */}
+        {undoAction && (
+          <div className="border-t border-border px-2 py-2">
+            <div className="flex items-center justify-between rounded-md border border-yellow-600/30 bg-yellow-50 dark:bg-yellow-950/20 px-3 py-1.5 text-xs">
+              <span className="text-yellow-800 dark:text-yellow-200">Session deleted</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px] text-yellow-700 dark:text-yellow-300"
+                onClick={() => {
+                  clearTimeout(undoAction.timer);
+                  setSoftDeletedIds(prev => { const next = new Set(prev); next.delete(undoAction.id); return next; });
+                  setUndoAction(null);
+                }}
+              >
+                Undo
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Tool dock — bottom of sidebar */}
         <div className="border-t border-border px-2 py-2">
@@ -2696,9 +2720,18 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
                 <Button variant="destructive" size="sm" onClick={() => {
-                  deleteMutation.mutate(deleteConfirmId);
-                  if (activeId === deleteConfirmId) setActiveId(null);
+                  const idToDelete = deleteConfirmId;
+                  if (activeId === idToDelete) setActiveId(null);
                   setDeleteConfirmId(null);
+                  // Soft delete: hide from UI, delete after 3s (allows undo)
+                  setSoftDeletedIds(prev => new Set([...prev, idToDelete]));
+                  const undoTimer = setTimeout(() => {
+                    deleteMutation.mutate(idToDelete);
+                    setSoftDeletedIds(prev => { const next = new Set(prev); next.delete(idToDelete); return next; });
+                  }, 3000);
+                  // Show undo toast (inline at bottom of sidebar)
+                  setUndoAction({ id: idToDelete, timer: undoTimer });
+                  setTimeout(() => setUndoAction(null), 3500);
                 }}>Delete</Button>
               </div>
             </div>
