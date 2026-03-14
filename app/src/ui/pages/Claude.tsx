@@ -1906,6 +1906,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [softDeletedIds, setSoftDeletedIds] = useState<Set<string>>(new Set());
   const [undoAction, setUndoAction] = useState<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
+  /** Which project the user last interacted with — drives suggestions, intel, and new session cwd */
+  const [activeProjectPath, setActiveProjectPath] = useState<string | null>(null);
   const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
   /** When the user clicks "+" on a specific project, store the cwd for the next new session */
   const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
@@ -1945,7 +1947,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       // Cmd+N — new chat in active project
       if (meta && e.key === "n" && !e.shiftKey) {
         e.preventDefault();
-        if (openProjects.length > 0) handleNewChatInProject(openProjects[0]);
+        if (currentProjectCwd) handleNewChatInProject(currentProjectCwd);
       }
       // Escape — clear search, close panels, deselect session
       if (e.key === "Escape") {
@@ -2005,9 +2007,10 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   });
 
   // Smart suggestions -- refetch when project changes or session completes
-  const suggestionsQuery = useQuery<Suggestion[]>({
-    queryKey: ["suggestions"],
-    queryFn: fetchSuggestions,
+  const suggestionsProjectCwd = activeProjectPath || activeSession?.cwd || openProjects[0] || "";
+  const suggestionsQuery = useQuery({
+    queryKey: ["suggestions", suggestionsProjectCwd],
+    queryFn: (): Promise<Suggestion[]> => fetchSuggestions(suggestionsProjectCwd),
   });
 
   const suggestions = suggestionsQuery.data ?? [];
@@ -2103,13 +2106,14 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const isInputDisabled =
     createMutation.isPending || followUpMutation.isPending || isSessionRunning;
 
+  /** The project the user is currently focused on */
+  const currentProjectCwd = activeProjectPath || activeSession?.cwd || openProjects[0] || projectsQuery.data?.active || "";
+
   /** Resolve which project cwd to use for new sessions */
   const getActiveProjectCwd = useCallback((): string => {
     if (newChatProjectCwd) return newChatProjectCwd;
-    if (activeSession?.cwd) return activeSession.cwd;
-    if (openProjects.length > 0) return openProjects[0];
-    return projectsQuery.data?.active ?? "";
-  }, [newChatProjectCwd, activeSession?.cwd, openProjects, projectsQuery.data?.active]);
+    return currentProjectCwd;
+  }, [newChatProjectCwd, currentProjectCwd]);
 
   const handleSend = useCallback(() => {
     const text = prompt.trim();
@@ -2362,13 +2366,14 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               )}
               activeSessionId={activeId}
               isCollapsed={collapsedProjects.has(projectPath)}
-              onToggle={() => toggleProjectCollapse(projectPath)}
-              onNewChat={handleNewChatInProject}
+              onToggle={() => { toggleProjectCollapse(projectPath); setActiveProjectPath(projectPath); }}
+              onNewChat={(path) => { setActiveProjectPath(path); handleNewChatInProject(path); }}
               onSelectSession={(id) => {
                 setActiveId(id);
                 setPendingMessages([]);
                 setMobileSidebarOpen(false);
                 setActiveView("chat");
+                setActiveProjectPath(projectPath);
               }}
               onDeleteSession={(id) => setDeleteConfirmId(id)}
               onClose={() =>
@@ -2571,9 +2576,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             ) : (
               <>
                 {/* Project Intelligence panel */}
-                {openProjects.length > 0 && (
+                {currentProjectCwd && (
                   <ProjectIntelPanel
-                    cwd={openProjects[0]}
+                    cwd={currentProjectCwd}
                     onSessionCreated={(sessionId) => {
                       setActiveId(sessionId);
                       queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
@@ -2652,7 +2657,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             {terminalPanelOpen && (
               <div className="h-[280px] shrink-0 border-t border-border">
                 <TerminalPanel
-                  cwd={activeSession?.cwd || openProjects[0] || ""}
+                  cwd={currentProjectCwd}
                   open={terminalPanelOpen}
                   onClose={() => setTerminalPanelOpen(false)}
                 />
@@ -2675,7 +2680,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           {opsPanelOpen && (
             <div className="w-[420px] shrink-0">
               <OpsPanel
-                cwd={activeSession?.cwd || openProjects[0] || ""}
+                cwd={currentProjectCwd}
                 open={opsPanelOpen}
                 onClose={() => setOpsPanelOpen(false)}
               />
@@ -2687,7 +2692,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <BrowserPanel
               open={browserPanelOpen}
               onClose={() => { setBrowserPanelOpen(false); setBrowserInitialUrl(null); }}
-              cwd={activeSession?.cwd || openProjects[0] || ""}
+              cwd={currentProjectCwd}
               initialUrl={browserInitialUrl}
             />
           )}
@@ -2700,9 +2705,13 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
         onClose={() => setProjectCreatorOpen(false)}
         onProjectCreated={(projectDir, sessionId) => {
           setOpenProjects((prev) => [...new Set([...prev, projectDir])]);
+          setActiveProjectPath(projectDir);
+          setActiveView("chat");
           if (sessionId) {
             setActiveId(sessionId);
+            // Force immediate refetch + retry after short delay (session may take a moment to appear)
             queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 2000);
           }
         }}
       />

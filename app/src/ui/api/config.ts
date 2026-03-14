@@ -253,7 +253,8 @@ export interface FollowUpSuggestion {
   icon: string;
 }
 
-export const fetchSuggestions = () => api.get<Suggestion[]>("/suggestions");
+export const fetchSuggestions = (cwd?: string) =>
+  api.get<Suggestion[]>(`/suggestions${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`);
 export const fetchFollowUpSuggestions = (sessionId: string) =>
   api.get<FollowUpSuggestion[]>(`/suggestions/followup/${sessionId}`);
 
