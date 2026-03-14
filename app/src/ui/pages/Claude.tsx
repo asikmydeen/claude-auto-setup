@@ -48,6 +48,9 @@ import {
   ClipboardCheck,
   RotateCcw,
   FolderPlus,
+  Sun,
+  Moon,
+  Settings2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +79,7 @@ import {
 import { cn, relativeTime } from "@/lib/utils";
 import { api } from "@/api/client";
 import { FolderBrowser } from "@/components/FolderBrowser";
+import { useTheme } from "@/context/ThemeContext";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -845,7 +849,7 @@ function ProjectGroup({
   const changeCount = (git?.staged ?? 0) + (git?.modified ?? 0);
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="animate-fade-in-up border-b border-border/50 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
       {/* Project header */}
       <button
         type="button"
@@ -858,22 +862,20 @@ function ProjectGroup({
           <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
         )}
         <FolderOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-        <span className="truncate flex-1 text-left">{projectName}</span>
+        <span className="flex-1 text-left">{projectName}</span>
 
-        {/* New chat in this project */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onNewChat(projectPath);
-          }}
-          className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-accent transition-opacity"
+        {/* Always-visible new chat button */}
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onNewChat(projectPath); }}
           title="New chat in this project"
+          className="h-5 w-5 flex-shrink-0"
         >
           <Plus className="h-3 w-3" />
-        </button>
+        </Button>
 
-        {/* Close project */}
+        {/* Close project — hover only */}
         <button
           type="button"
           onClick={(e) => {
@@ -904,9 +906,14 @@ function ProjectGroup({
       {!isCollapsed && (
         <div className="pl-4 pr-1 space-y-0.5">
           {sessions.length === 0 ? (
-            <p className="px-2 py-2 text-[10px] text-muted-foreground italic">
-              No sessions yet
-            </p>
+            <button
+              type="button"
+              onClick={() => onNewChat(projectPath)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              <Plus className="h-3 w-3" />
+              <span>Start a new conversation</span>
+            </button>
           ) : (
             sessions.map((s) => (
               <SessionItem
@@ -936,101 +943,44 @@ interface WelcomeScreenProps {
 }
 
 function WelcomeScreen({ onTemplate, suggestions, suggestionsLoading, onSuggestion }: WelcomeScreenProps) {
-  const projectsQuery = useQuery({
-    queryKey: ["projects"],
-    queryFn: fetchProjects,
-  });
-
-  const gitQuery = useQuery<GitStatus>({
-    queryKey: ["git-status"],
-    queryFn: fetchGitStatus,
-  });
-
-  const activeProject = projectsQuery.data?.projects.find(
-    (p) => p.path === projectsQuery.data?.active
-  );
-  const git = gitQuery.data;
-
-  const hasSuggestions = suggestions.length > 0 || suggestionsLoading;
-
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6">
-      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-        <Terminal className="h-8 w-8 text-primary" />
+    <div className="flex flex-1 flex-col items-center justify-center px-6 pb-12">
+      {/* Hero */}
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <Terminal className="h-7 w-7 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold tracking-tight">
+          What would you like to do?
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Each session is a full Claude Code agent with multi-agent support.
+        </p>
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">
-        What would you like to build?
-      </h2>
-      <p className="mt-2 max-w-md text-center text-sm text-muted-foreground">
-        Pick a suggestion below or type your own prompt.
-      </p>
 
-      {/* Dynamic suggestion pills */}
-      {hasSuggestions ? (
-        <div className="mt-6 w-full max-w-lg">
+      {/* Suggestion pills — compact, centered */}
+      <div className="w-full max-w-md">
+        {suggestions.length > 0 || suggestionsLoading ? (
           <SuggestionPills
             suggestions={suggestions}
             isLoading={suggestionsLoading}
             onSelect={onSuggestion}
           />
-        </div>
-      ) : (
-        /* Fallback to static templates if no dynamic suggestions */
-        <div className="mt-8 grid w-full max-w-lg grid-cols-2 gap-3">
-          {TEMPLATES.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              onClick={() => onTemplate(t.prompt, t.placeholder)}
-              className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-accent">
+        ) : (
+          <div className="flex flex-wrap justify-center gap-2">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.label}
+                type="button"
+                onClick={() => onTemplate(t.prompt, t.placeholder)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground hover:scale-105 active:scale-95"
+              >
                 {t.icon}
-              </span>
-              <span className="truncate">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Getting Started section */}
-      <div className="mt-8 w-full max-w-lg rounded-xl border border-border bg-card/50 p-4">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Getting Started
-        </h3>
-        <div className="space-y-2 text-xs text-muted-foreground">
-          {/* Current project */}
-          <div className="flex items-center gap-2">
-            <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-            <span className="font-medium text-foreground">Project:</span>
-            <span className="truncate">
-              {activeProject ? activeProject.path : "No project selected"}
-            </span>
+                {t.label}
+              </button>
+            ))}
           </div>
-
-          {/* Git info */}
-          {git && (
-            <div className="flex items-center gap-2">
-              <GitBranch className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-              <span className="font-medium text-foreground">Git:</span>
-              <span className="truncate">
-                {git.branch}
-                {" - "}
-                {git.clean
-                  ? "working tree clean"
-                  : `${git.staged + git.modified} files changed`}
-              </span>
-            </div>
-          )}
-
-          {/* Tips */}
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-            <span>
-              Use <kbd className="mx-0.5 rounded border border-border bg-muted px-1 py-0.5 font-mono text-[10px]">Cmd+Enter</kbd> to send, or click a suggestion pill.
-            </span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -1841,10 +1791,27 @@ function useSSE(sessionId: string | null) {
 }
 
 // ---------------------------------------------------------------------------
+// Theme Toggle (sidebar utility)
+// ---------------------------------------------------------------------------
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <Button variant="ghost" size="icon-xs" onClick={toggleTheme} title={theme === "dark" ? "Light mode" : "Dark mode"}>
+      {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+    </Button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Claude Page
 // ---------------------------------------------------------------------------
 
-export function Claude() {
+interface ClaudeProps {
+  onOpenSettings?: () => void;
+}
+
+export function Claude({ onOpenSettings }: ClaudeProps) {
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
@@ -2119,6 +2086,11 @@ export function Claude() {
       setPendingMessages([]);
       setNewChatProjectCwd(projectPath);
       setMobileSidebarOpen(false);
+      // Focus the input after state update
+      setTimeout(() => {
+        const textarea = document.querySelector<HTMLTextAreaElement>('textarea[placeholder]');
+        textarea?.focus();
+      }, 100);
     },
     []
   );
@@ -2177,7 +2149,7 @@ export function Claude() {
   // --------------- Render ---------------
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.14))] -m-6 overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       {/* Mobile overlay */}
       {mobileSidebarOpen && (
         <div
@@ -2195,6 +2167,26 @@ export function Claude() {
           mobileSidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"
         )}
       >
+        {/* Sidebar header */}
+        <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Claude Auto Setup</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onOpenSettings}
+              title="Settings"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </Button>
+            {/* Theme toggle */}
+            <ThemeToggle />
+          </div>
+        </div>
+
         {/* Open Project button */}
         <div className="border-b border-border px-2 py-2">
           <Button
@@ -2380,7 +2372,7 @@ export function Claude() {
               disabled={!!isInputDisabled}
               placeholder={inputPlaceholder}
               disabledMessage={inputDisabledMessage}
-              showTemplates={!activeSession}
+              showTemplates={false}
               onTemplate={handleTemplate}
               statusHint={inputStatusHint}
               suggestions={suggestions}

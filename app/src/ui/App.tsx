@@ -1,12 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { SidebarProvider } from "@/context/SidebarContext";
-import { Layout } from "@/components/Layout";
 import { Claude } from "@/pages/Claude";
-import { Settings } from "@/pages/Settings";
-import { Providers } from "@/pages/Providers";
-import { Rules } from "@/pages/Rules";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,21 +14,15 @@ const queryClient = new QueryClient({
 });
 
 export function App() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <SidebarProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route index element={<Claude />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="providers" element={<Providers />} />
-                <Route path="rules" element={<Rules />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </SidebarProvider>
+        <div className="h-screen overflow-hidden">
+          <Claude onOpenSettings={() => setSettingsOpen(true)} />
+          <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </div>
       </ThemeProvider>
     </QueryClientProvider>
   );
