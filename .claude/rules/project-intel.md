@@ -1,8 +1,8 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-13
-> **Purpose**: Universal AI agent orchestration and configuration system
-> **Auto-generated**: Via intel refresh (PUA integration + worktree agent demo)
+> **Last updated**: 2026-03-14
+> **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app
+> **Auto-generated**: Via intel refresh
 
 ---
 
@@ -10,12 +10,16 @@
 
 **Languages:**
 - **Bash 3.2+** (primary) - Shell scripts for installation and orchestration
-- **Node.js 18+** (dashboard only) - Express server for real-time monitoring
+- **TypeScript** (desktop app) - React 19 + Express server for desktop UI
 - **JSON/Markdown** - Configuration, agent definitions, and command specs
 
 **Core Technologies:**
+- **Electrobun** - Native desktop app framework (Bun + system WebView)
+- **React 19 + Vite + Tailwind v4 + shadcn/ui** - Desktop app UI
+- **Express** - API server (25+ endpoints, embedded in Electrobun main process)
+- **SSE (Server-Sent Events)** - Real-time Claude output streaming to UI
+- **stream-json** - Claude CLI streaming format for progressive tool/agent visibility
 - **MCP (Model Context Protocol)** - Plugin integration
-- **Server-Sent Events (SSE)** - Real-time dashboard updates
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
 - **Agent teams** (experimental) - Multi-session parallel agent coordination
 - **Context preservation** - Checkpoint system surviving context compaction
@@ -23,8 +27,6 @@
 - **PUA persistence engine** - Prevents AI from giving up; escalating pressure (L1-L4) on build/test failures
 - **OpenViking integration** (optional) - Context database for persistent memory, semantic search, tiered loading (L0/L1/L2)
 - **Git-based distribution** - Self-updating via `git pull`
-
-**No build tools** - Pure shell script execution (no compilation step)
 
 ---
 

@@ -1,6 +1,6 @@
 # Universal AI Agent Setup
 
-One-command setup for **all** your AI coding agents. Shared rules, shared codebase intelligence, agent-specific adapters.
+One-command setup for **all** your AI coding agents. Shared rules, shared codebase intelligence, agent-specific adapters. Includes a **native desktop app** for managing and chatting with Claude Code agents.
 
 ## Quick Start
 
@@ -8,51 +8,91 @@ One-command setup for **all** your AI coding agents. Shared rules, shared codeba
 git clone git@github.com:asikmydeen/claude-auto-setup.git
 cd claude-auto-setup
 ./install.sh            # auto-detects installed agents and configures them
-./install.sh --version  # check installed version
 ```
 
-That's it. The installer finds which agents you have and configures all of them with shared rules, commands, and optimized settings.
+### Desktop App (Electrobun)
+
+A native macOS app for interacting with Claude Code — like Lovable but for your codebase:
+
+```bash
+cd app
+bun install             # first time only
+bunx electrobun dev     # opens native macOS window
+```
+
+Features:
+- **Chat with Claude** — multi-turn conversations with real-time streaming
+- **Multi-project** — open multiple projects, sessions grouped by project
+- **Agent visibility** — see tool use and sub-agent activity as it happens
+- **Smart suggestions** — context-aware prompts based on git status and project files
+- **Settings UI** — configure models, plugins, permissions, agent definitions
+- **Markdown rendering** — responses with tables, code blocks, headers, links
 
 ## Supported Agents
 
-| Agent | Status | Instructions File | Config Location |
-|---|---|---|---|
-| **Claude Code** (Anthropic) | Full support | `CLAUDE.md` | `~/.claude/` |
-| **Gemini CLI** (Google) | Full support | `GEMINI.md` | `~/.gemini/` |
-| **Kiro CLI** (AWS) | Full support | Steering files | `~/.kiro/` |
-| **Codex CLI** (OpenAI) | Full support | `AGENTS.md` | `~/.codex/` |
-| **Cursor** (Anysphere) | Rules only | `.cursorrules` | `~/.cursor/` |
-| **Amp Code** (Sourcegraph) | Full support | `AGENTS.md` + `.agents/` | `~/.config/agents/` |
+| Agent | Status | Config Location |
+|---|---|---|
+| **Claude Code** (Anthropic) | Full support | `~/.claude/` |
+| **Gemini CLI** (Google) | Full support | `~/.gemini/` |
+| **Kiro CLI** (AWS) | Full support | `~/.kiro/` |
+| **Codex CLI** (OpenAI) | Full support | `~/.codex/` |
+| **Cursor** (Anysphere) | Rules only | `~/.cursor/` |
+| **Amp Code** (Sourcegraph) | Full support | `~/.config/agents/` |
 
 ## What It Does
 
 ### Global Setup (`install.sh`)
 Configures each detected agent with:
-- **52 commands** — 7 roles + 37 specialist subagents + 6 orchestration workflows
-- **6 global rules** — code quality, AWS dev, testing, security, git workflow, orchestration
+- **55 commands** — 7 roles + 37 specialist subagents + 6 orchestration workflows + PUA
+- **9 global rules** — code quality, AWS dev, testing, security, git workflow, orchestration, multi-agent, PUA, context management
 - **14 plugins** — LSP, context7, serena, code-review, security (Claude Code)
-- **5 native agents** — code-reviewer, debugger, test-writer, explorer, security-auditor
+- **6 native agents** — code-reviewer, debugger, test-writer, explorer, security-auditor, pua-enforcer
 - **Optimized settings** — permissions, hooks, deny rules, model config
+
+### Desktop App (`app/`)
+
+A Lovable-style native desktop application built with Electrobun:
+
+```
+┌─────────────────┬──────────────────────────────────┐
+│ Projects        │  Chat with Claude Code           │
+│                 │                                  │
+│ ▼ my-project    │  [User] Build a login page       │
+│   ├─ Session 1  │                                  │
+│   └─ Session 2  │  [Claude] I'll create a login    │
+│                 │  component with...               │
+│ ▼ other-project │  ┌─ 3 tools used ──────────┐    │
+│   └─ Session 3  │  │ ✓ Read  src/App.tsx      │    │
+│                 │  │ ✓ Write src/Login.tsx     │    │
+│ [+ Open Project]│  │ ✓ Bash  npm test         │    │
+│                 │  └──────────────────────────┘    │
+│ ⚙ Settings      │                                  │
+│ 🌙 Theme        │  [Follow-up suggestions...]      │
+├─────────────────┼──────────────────────────────────┤
+│                 │  Ask Claude anything...  [Send]   │
+└─────────────────┴──────────────────────────────────┘
+```
+
+**Tech stack:** Electrobun + React 19 + Vite + Tailwind v4 + shadcn/ui + Express
+
+**Key features:**
+- **Real-time streaming** via SSE (stream-json format) — see responses as they're generated
+- **Tool activity** — collapsible accordions showing Read, Edit, Bash, Grep operations
+- **Agent activity** — see sub-agents (explorer, code-reviewer, test-writer) working
+- **Multi-turn** — follow-up messages use `--continue` for full conversation context
+- **Multi-project** — sessions grouped by project directory, open projects persisted
+- **Smart suggestions** — based on git status, package.json, project structure
+- **Follow-up suggestions** — "Write tests", "Commit changes", "Review what you did"
+- **File change tracking** — see what files Claude modified per session
+- **Folder browser** — native-feeling directory navigator for adding projects
+- **Settings drawer** — model selection, 15 plugin toggles, permissions, env vars, agent model config
+- **Git integration** — branch, status, change count per project
 
 ### Per-Project Setup (`project-init.sh`)
 Run in any project to create shared AI config:
 ```bash
 cd /path/to/your/project
 /path/to/claude-auto-setup/project-init.sh
-```
-
-Creates:
-```
-.ai/                          # Shared across ALL agents
-  rules/                      # Code quality, security, testing, git
-  project-intel.md            # Codebase intelligence (after /init)
-  .intel-changelog            # Change tracking
-
-.claude/CLAUDE.md             # Claude-specific (references .ai/)
-GEMINI.md                     # Gemini-specific (references .ai/)
-AGENTS.md                     # Codex-specific (references .ai/)
-.kiro/steering/               # Kiro-specific (symlinks to .ai/rules/)
-.cursor/rules/                # Cursor-specific (copies from .ai/rules/)
 ```
 
 ### Cross-Provider Dispatch (`dispatch.sh`)
@@ -68,28 +108,34 @@ Routes tasks to the best available AI agent:
 
 ```
 claude-auto-setup/
-  universal/                    # Agent-agnostic (single source of truth)
-    rules/                      # 6 shared rule files
-    commands/                   # 52 command definitions
-    providers.json              # Cross-provider routing config
-    intel-template.md           # Template for project intelligence
-  agents/                       # Agent-specific adapters
-    claude-code/                # Translates universal -> Claude format
-    gemini-cli/                 # Translates universal -> Gemini format
-    kiro-cli/                   # Translates universal -> Kiro format
-    codex-cli/                  # Translates universal -> Codex format
-    cursor/                     # Translates universal -> Cursor format
-    ampcode/                    # Translates universal -> Amp format
-  lib/                          # Shared shell utilities
-    common.sh                   # Colors, logging, helpers
-  tests/                        # Smoke tests
-    run.sh                      # Test runner (24 tests)
-  dashboard/                    # Real-time agent monitoring (optional)
-    server.js                   # Express + SSE on port 3200
-    public/index.html           # Dashboard UI
-  install.sh                    # Global installer
-  project-init.sh               # Per-project initializer
-  dispatch.sh                   # Cross-provider task dispatcher
+  app/                            # Desktop app (Electrobun)
+    src/
+      bun/index.ts                # Main process: BrowserWindow + server
+      server/index.ts             # Express API (25+ endpoints, 1500+ lines)
+      ui/                         # React 19 + Vite + Tailwind v4
+        pages/Claude.tsx          # Chat interface (2400+ lines)
+        pages/Settings.tsx        # Settings editor
+        pages/Providers.tsx       # Provider status
+        pages/Rules.tsx           # Rule viewer
+        components/               # Shared components
+    electrobun.config.ts          # Electrobun build config
+  universal/                      # Agent-agnostic (single source of truth)
+    rules/                        # 9 shared rule files
+    commands/                     # 55 command definitions
+    providers.json                # Cross-provider routing config
+    intel-template.md             # Template for project intelligence
+  agents/                         # Agent-specific adapters
+    claude-code/                  # Claude format + native agents
+    gemini-cli/                   # Gemini format
+    kiro-cli/                     # Kiro format
+    codex-cli/                    # Codex format
+    cursor/                       # Cursor format
+    ampcode/                      # Amp format
+  lib/common.sh                   # Shared shell utilities
+  tests/run.sh                    # Smoke tests (31 tests)
+  install.sh                      # Global installer
+  project-init.sh                 # Per-project initializer
+  dispatch.sh                     # Cross-provider task dispatcher
 ```
 
 ## Key Workflows (Claude Code)
@@ -103,10 +149,11 @@ claude-auto-setup/
 | `/debug <problem>` | Multi-agent investigation and fix |
 | `/quick <task>` | Fast single-file changes (skip full spec) |
 | `/intel-refresh` | Targeted refresh of stale intel sections |
+| `/pua` | Activate PUA persistence engine when stuck |
 
 ## Codebase Intelligence System
 
-The killer feature: **cached codebase knowledge that auto-updates**.
+Cached codebase knowledge that auto-updates:
 
 ```
 /init (first time)
@@ -118,7 +165,6 @@ The killer feature: **cached codebase knowledge that auto-updates**.
   -> Reads cached intel (knows architecture already)
   -> Implements with parallel agents
   -> After completion: auto-patches intel with changes
-  -> Next session has fresh knowledge
 
 /intel-refresh (manual)
   -> Detects which sections are stale
@@ -136,26 +182,24 @@ The killer feature: **cached codebase knowledge that auto-updates**.
 ./install.sh --force                 # Overwrite existing config (backs up first)
 ./install.sh --dry-run               # Preview changes
 ./install.sh --uninstall             # Remove and restore from backup
+./install.sh --doctor                # Health check
 ./install.sh --version               # Show version
 ```
 
 ## Testing
 
 ```bash
-./tests/run.sh                       # Run smoke tests (24 tests)
-shellcheck install.sh dispatch.sh    # Lint shell scripts
+make test                            # Run smoke tests (31 tests)
+make lint                            # Shellcheck (error-level)
+make lint-warn                       # Shellcheck (warning-level)
 ```
 
 ## Platform Support
 
-- Linux (Amazon Linux, Ubuntu, Debian, Fedora)
-- macOS (Intel, Apple Silicon) — Bash 3.2+ compatible
-- Windows (WSL2, Git Bash)
+- **macOS** (Intel, Apple Silicon) — desktop app + CLI
+- **Linux** (Amazon Linux, Ubuntu, Debian, Fedora) — CLI only
+- **Windows** (WSL2, Git Bash) — CLI only
 
-## Roadmap
+## License
 
-See [ANALYSIS.md](ANALYSIS.md) for the full analysis including:
-- Cross-agent orchestration (use multiple AI agents on one task)
-- Additional workflows (/migrate, /onboard, /audit, /estimate)
-- CI/CD integration
-- Team collaboration features
+MIT
