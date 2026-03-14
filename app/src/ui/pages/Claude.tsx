@@ -95,6 +95,7 @@ import { ProjectCreator } from "@/components/ProjectCreator";
 import { OpsPanel } from "@/components/OpsPanel";
 import { BrowserPanel } from "@/components/BrowserPanel";
 import { TerminalPanel } from "@/components/TerminalPanel";
+import { ProjectEnvDrawer } from "@/components/ProjectEnvDrawer";
 import { useTheme } from "@/context/ThemeContext";
 
 // ---------------------------------------------------------------------------
@@ -860,6 +861,7 @@ interface ProjectGroupProps {
   onStartDevServer?: (projectPath: string) => void;
   onOpenTerminal?: (projectPath: string) => void;
   onOpenBrowser?: (projectPath: string) => void;
+  onConfigureEnv?: (projectPath: string) => void;
 }
 
 function ProjectGroup({
@@ -875,6 +877,7 @@ function ProjectGroup({
   onStartDevServer,
   onOpenTerminal,
   onOpenBrowser,
+  onConfigureEnv,
 }: ProjectGroupProps) {
   const projectName = projectPath.split("/").pop() || projectPath;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -977,6 +980,10 @@ function ProjectGroup({
                 <button type="button" onClick={() => { onOpenBrowser?.(projectPath); setMenuOpen(false); }}
                   className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
                   <Globe className="h-3 w-3" /> Preview app
+                </button>
+                <button type="button" onClick={() => { onConfigureEnv?.(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <Settings2 className="h-3 w-3 text-purple-500" /> Configure environment
                 </button>
                 <div className="my-1 border-t border-border" />
                 <button type="button" onClick={() => { revealProject(projectPath); setMenuOpen(false); }}
@@ -2007,6 +2014,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const [activeProjectPath, setActiveProjectPath] = useState<string | null>(null);
   /** Project currently being built by Claude — triggers auto-start dev server when done */
   const [buildingProjectDir, setBuildingProjectDir] = useState<string | null>(null);
+  /** Project env drawer state */
+  const [envDrawerProject, setEnvDrawerProject] = useState<string | null>(null);
   const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
   /** When the user clicks "+" on a specific project, store the cwd for the next new session */
   const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
@@ -2516,6 +2525,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 setActiveProjectPath(path);
                 setBrowserPanelOpen(true);
               }}
+              onConfigureEnv={(path) => setEnvDrawerProject(path)}
             />
           ))}
         </div>
@@ -2853,6 +2863,15 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           }
         }}
       />
+
+      {/* Project Environment Drawer */}
+      {envDrawerProject && (
+        <ProjectEnvDrawer
+          open={!!envDrawerProject}
+          onClose={() => setEnvDrawerProject(null)}
+          projectPath={envDrawerProject}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       {deleteConfirmId && (

@@ -199,6 +199,29 @@ export const deleteProject = (path: string, deleteFiles = false) =>
 export const revealProject = (path: string) =>
   api.post<{ ok: boolean }>("/projects/reveal", { path });
 
+// --- Per-Project Environment ---
+export interface ProjectEnvConfig {
+  env?: Record<string, string>;
+  supabase?: { projectRef?: string; url?: string; anonKey?: string };
+  aws?: { profile?: string };
+}
+
+export interface ProjectEnvResponse {
+  config: ProjectEnvConfig;
+  global: {
+    supabase: { projectRef?: string; projectName?: string; url?: string } | null;
+    aws: { activeProfile: string; profiles: string[] };
+  };
+  hasProjectEnvFile: boolean;
+}
+
+export const fetchProjectEnv = (cwd: string) =>
+  api.get<ProjectEnvResponse>(`/projects/env?cwd=${encodeURIComponent(cwd)}`);
+export const saveProjectEnv = (cwd: string, config: ProjectEnvConfig) =>
+  api.put<{ ok: boolean }>("/projects/env", { cwd, config });
+export const patchProjectEnv = (cwd: string, patch: Partial<{ env: Record<string, string>; supabase: ProjectEnvConfig["supabase"]; aws: ProjectEnvConfig["aws"] }>) =>
+  api.patch<{ ok: boolean; config: ProjectEnvConfig }>("/projects/env", { cwd, ...patch });
+
 // --- Filesystem Browsing ---
 export interface BrowseResult {
   current: string;

@@ -801,12 +801,9 @@ app.post("/api/claude/sessions", (req, res) => {
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose"];
-    const env = { ...process.env };
-    const envR = env as Record<string, string>;
-    envR.CLAUDECODE = "";
-    envR.CLAUDE_CODE_ENTRYPOINT = "";
-
     const sessionCwd = cwd || activeProject;
+    const env = buildProjectEnv(sessionCwd);
+
     const child = spawn(claudePath, args, {
       env,
       cwd: sessionCwd,
@@ -948,10 +945,7 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
     if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
 
     const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--continue"];
-    const env = { ...process.env };
-    const envR = env as Record<string, string>;
-    envR.CLAUDECODE = "";
-    envR.CLAUDE_CODE_ENTRYPOINT = "";
+    const env = buildProjectEnv(session.cwd);
 
     const child = spawn(claudePath, args, {
       env,
@@ -1166,10 +1160,7 @@ app.post("/api/claude/launch", (req, res) => {
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", ...flags];
-    const env = { ...process.env };
-    const envR = env as Record<string, string>;
-    envR.CLAUDECODE = "";
-    envR.CLAUDE_CODE_ENTRYPOINT = "";
+    const env = buildProjectEnv(PROJECT_ROOT);
 
     const child = spawn(claudePath, args, {
       env,
@@ -1775,17 +1766,7 @@ app.post("/api/projects/create", (req, res) => {
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose"];
-    const env = { ...process.env };
-    const envR = env as Record<string, string>;
-    envR.CLAUDECODE = "";
-    envR.CLAUDE_CODE_ENTRYPOINT = "";
-
-    // Inject integrations context
-    const integrations = loadIntegrations();
-    if (integrations.supabase?.url) {
-      envR.SUPABASE_URL = integrations.supabase.url;
-      envR.SUPABASE_ANON_KEY = integrations.supabase.anonKey;
-    }
+    const env = buildProjectEnv(projectDir);
 
     const child = spawn(claudePath, args, {
       env,
@@ -2316,15 +2297,8 @@ app.post("/api/ops/run", (req, res) => {
     return res.status(400).json({ error: `Command "${command}" is not allowed. Allowed: ${ALLOWED_CMDS.join(", ")}` });
   }
 
-  const config = loadIntegrations();
-  const env = { ...process.env };
-  if (config.aws?.activeProfile) {
-    (env as Record<string, string>).AWS_PROFILE = config.aws.activeProfile;
-  }
-  if (config.supabase?.url) {
-    (env as Record<string, string>).SUPABASE_URL = config.supabase.url;
-    (env as Record<string, string>).SUPABASE_ANON_KEY = config.supabase.anonKey;
-  }
+  const projectCwd = opsCwd || activeProject;
+  const env = buildProjectEnv(projectCwd);
 
   const id = randomUUID().slice(0, 12);
   // spawn() doesn't use shell, but validate args for defense in depth
@@ -2400,6 +2374,156 @@ app.post("/api/ops/stop/:id", (req, res) => {
 });
 
 // ============================================================
+// ============================================================
+// PER-PROJECT ENVIRONMENT CONFIGURATION
+// ============================================================
+
+interface ProjectEnvConfig {
+  env?: Record<string, string>;
+  supabase?: { projectRef?: string; url?: string; anonKey?: string };
+  aws?: { profile?: string };
+}
+
+function getProjectEnvPath(projectCwd: string): string {
+  return join(projectCwd, ".claude", "project-env.json");
+}
+
+function loadProjectEnv(projectCwd: string): ProjectEnvConfig {
+  try {
+    const p = getProjectEnvPath(projectCwd);
+    if (existsSync(p)) return JSON.parse(readFileSync(p, "utf-8"));
+  } catch {}
+  return {};
+}
+
+function saveProjectEnv(projectCwd: string, config: ProjectEnvConfig): void {
+  const dir = join(projectCwd, ".claude");
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  writeFileSync(getProjectEnvPath(projectCwd), JSON.stringify(config, null, 2), { mode: 0o600 });
+}
+
+/** Build the merged env for a project: process.env → global integrations → project-specific */
+function buildProjectEnv(projectCwd: string): Record<string, string> {
+  const env = { ...process.env } as Record<string, string>;
+  const globalConfig = loadIntegrations();
+  const projectConfig = loadProjectEnv(projectCwd);
+
+  // Global Supabase (fallback)
+  if (globalConfig.supabase?.url) {
+    env.SUPABASE_URL = globalConfig.supabase.url;
+    env.SUPABASE_ANON_KEY = globalConfig.supabase.anonKey;
+  }
+
+  // Global AWS profile (fallback)
+  if (globalConfig.aws?.activeProfile) {
+    env.AWS_PROFILE = globalConfig.aws.activeProfile;
+  }
+
+  // Project-level Supabase overrides global
+  if (projectConfig.supabase?.url) {
+    env.SUPABASE_URL = projectConfig.supabase.url;
+    env.SUPABASE_ANON_KEY = projectConfig.supabase.anonKey || "";
+  }
+
+  // Project-level AWS profile overrides global
+  if (projectConfig.aws?.profile) {
+    env.AWS_PROFILE = projectConfig.aws.profile;
+  }
+
+  // Project-level custom env vars (highest priority)
+  if (projectConfig.env) {
+    for (const [key, val] of Object.entries(projectConfig.env)) {
+      env[key] = val;
+    }
+  }
+
+  // Always clear these for nested Claude sessions
+  env.CLAUDECODE = "";
+  env.CLAUDE_CODE_ENTRYPOINT = "";
+
+  return env;
+}
+
+// GET project env config
+app.get("/api/projects/env", (req, res) => {
+  const cwd = req.query.cwd as string;
+  if (!cwd) return res.status(400).json({ error: "cwd required" });
+
+  const config = loadProjectEnv(cwd);
+  const globalConfig = loadIntegrations();
+
+  // Also return which global integrations are available for override
+  res.json({
+    config,
+    global: {
+      supabase: globalConfig.supabase ? {
+        projectRef: globalConfig.supabase.projectRef,
+        projectName: globalConfig.supabase.projectName,
+        url: globalConfig.supabase.url,
+      } : null,
+      aws: {
+        activeProfile: globalConfig.aws?.activeProfile || "default",
+        profiles: (() => {
+          const profiles: string[] = [];
+          try {
+            const credsPath = join(HOME, ".aws/credentials");
+            const configPath = join(HOME, ".aws/config");
+            if (existsSync(credsPath)) {
+              const m = readFileSync(credsPath, "utf-8").match(/\[([^\]]+)\]/g);
+              if (m) profiles.push(...m.map(s => s.replace(/[[\]]/g, "")));
+            }
+            if (existsSync(configPath)) {
+              const m = readFileSync(configPath, "utf-8").match(/\[profile ([^\]]+)\]/g);
+              if (m) profiles.push(...m.map(s => s.replace(/\[profile |\]/g, "")));
+            }
+          } catch {}
+          return [...new Set(profiles)];
+        })(),
+      },
+    },
+    hasProjectEnvFile: existsSync(getProjectEnvPath(cwd)),
+  });
+});
+
+// PUT project env config (full replace)
+app.put("/api/projects/env", (req, res) => {
+  const { cwd, config } = req.body;
+  if (!cwd || !config) return res.status(400).json({ error: "cwd and config required" });
+  saveProjectEnv(cwd, config);
+  res.json({ ok: true });
+});
+
+// PATCH project env (merge specific fields)
+app.patch("/api/projects/env", (req, res) => {
+  const { cwd, env: envVars, supabase, aws } = req.body;
+  if (!cwd) return res.status(400).json({ error: "cwd required" });
+
+  const existing = loadProjectEnv(cwd);
+
+  if (envVars !== undefined) existing.env = envVars;
+  if (supabase !== undefined) existing.supabase = supabase;
+  if (aws !== undefined) existing.aws = aws;
+
+  saveProjectEnv(cwd, existing);
+  res.json({ ok: true, config: existing });
+});
+
+// DELETE a specific env var from project
+app.delete("/api/projects/env/var", (req, res) => {
+  const cwd = req.query.cwd as string;
+  const key = req.query.key as string;
+  if (!cwd || !key) return res.status(400).json({ error: "cwd and key required" });
+
+  const config = loadProjectEnv(cwd);
+  if (config.env) {
+    delete config.env[key];
+    if (Object.keys(config.env).length === 0) delete config.env;
+  }
+  saveProjectEnv(cwd, config);
+  res.json({ ok: true });
+});
+
+// ============================================================
 // DEV SERVER MANAGEMENT — start/stop/status for project dev servers
 // ============================================================
 
@@ -2454,7 +2578,7 @@ app.post("/api/dev-server/start", (req, res) => {
     const child = spawn(cmd, args, {
       cwd: projectCwd,
       stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, PORT: String(port), BROWSER: "none" },
+      env: { ...buildProjectEnv(projectCwd), PORT: String(port), BROWSER: "none" },
     });
 
     const entry = { process: child, port, cwd: projectCwd, status: "starting", output: [] as string[] };
