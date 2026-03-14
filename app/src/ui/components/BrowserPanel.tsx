@@ -28,7 +28,8 @@ interface BrowserPanelProps {
 const MIN_WIDTH = 320;
 const MAX_WIDTH = 1200;
 const DEFAULT_WIDTH = 520;
-const COMMON_PORTS = [3000, 3001, 4200, 5173, 5174, 8000, 8080, 8888, 4321, 3201];
+// Exclude 3201 (our own server) from scanning
+const COMMON_PORTS = [3000, 3001, 4200, 5173, 5174, 8000, 8080, 8888, 4321];
 
 const DEVICE_PRESETS = [
   { label: "Desktop", icon: Monitor, width: 0 },
@@ -80,16 +81,16 @@ export function BrowserPanel({ open, onClose, cwd, initialUrl, building }: Brows
     setDetectedPorts(alive);
     setScanning(false);
 
-    // Auto-navigate to first found port if nothing loaded yet
-    if (alive.length > 0 && !currentUrl) {
+    // Auto-navigate to first found port if nothing loaded yet AND not building
+    if (alive.length > 0 && !currentUrl && !building) {
       navigateTo(`http://localhost:${alive[0]}`);
     }
-  }, [currentUrl]);
+  }, [currentUrl, building]);
 
-  // Scan on mount and cwd change
+  // Scan on mount and cwd change (but not while building — wait for dev server)
   useEffect(() => {
-    scanPorts();
-  }, [cwd]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!building) scanPorts();
+  }, [cwd, building]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle initialUrl
   useEffect(() => {

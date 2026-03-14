@@ -2102,7 +2102,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     if (!buildingProjectDir || !activeSession) return;
     if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
       const projectDir = buildingProjectDir;
-      setBuildingProjectDir(null);
+      // Don't clear buildingProjectDir yet — keep building animation until dev server is ready
       setTimeout(async () => {
         try {
           const result = await startDevServer(projectDir);
@@ -2110,6 +2110,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             setBrowserInitialUrl(`http://localhost:${result.port}`);
           }
         } catch {}
+        // Clear building state after dev server attempt (success or fail)
+        setBuildingProjectDir(null);
       }, 2000);
     }
   }, [activeSession?.status, activeSession?.cwd, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
