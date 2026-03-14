@@ -1,4 +1,4 @@
-import { BrowserWindow, Tray } from "electrobun/bun";
+import { BrowserWindow, Tray, ApplicationMenu } from "electrobun/bun";
 
 // Start the Express API server (serves both API + built React UI in production)
 import "../server/index.js";
@@ -21,6 +21,52 @@ async function waitForServer(url: string, maxWait = 10000): Promise<void> {
 
 async function main() {
   await waitForServer(UI_URL);
+
+  // Set up native application menu with Edit menu (required for Cmd+C/V/X to work in WKWebView)
+  ApplicationMenu.setApplicationMenu([
+    {
+      label: "Claude Auto Setup",
+      submenu: [
+        { role: "about" },
+        { type: "divider" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "showAll" },
+        { type: "divider" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "divider" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "pasteAndMatchStyle" },
+        { role: "delete" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "View",
+      submenu: [
+        { role: "toggleFullScreen" },
+      ],
+    },
+    {
+      label: "Window",
+      submenu: [
+        { role: "minimize" },
+        { role: "zoom" },
+        { role: "close" },
+        { type: "divider" },
+        { role: "bringAllToFront" },
+      ],
+    },
+  ]);
 
   // Main application window
   const win = new BrowserWindow({
