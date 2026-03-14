@@ -1099,6 +1099,49 @@ app.put("/api/projects/active", (req, res) => {
   res.json({ ok: true, active: activeProject });
 });
 
+// Delete project — removes from list, optionally deletes files
+app.delete("/api/projects", (req, res) => {
+  const projectPath = req.query.path as string;
+  const deleteFiles = req.query.deleteFiles === "true";
+  if (!projectPath) return res.status(400).json({ error: "path is required" });
+
+  // Remove from manual projects list
+  const idx = userProjects.findIndex((p) => p.path === projectPath);
+  if (idx >= 0) userProjects.splice(idx, 1);
+
+  // Stop any dev server running for this project
+  const devServer = devServers.get(projectPath);
+  if (devServer) {
+    try { devServer.process.kill("SIGTERM"); } catch {}
+    devServers.delete(projectPath);
+  }
+
+  // Delete files if requested
+  if (deleteFiles) {
+    const absPath = resolve(projectPath);
+    // Safety: only delete under home directory
+    if (absPath.startsWith(HOME) && absPath !== HOME) {
+      try {
+        execFileSync("rm", ["-rf", absPath], { timeout: 30000 });
+      } catch {}
+    }
+  }
+
+  res.json({ ok: true, deleted: deleteFiles });
+});
+
+// Open project in system Finder/file manager
+app.post("/api/projects/reveal", (req, res) => {
+  const { path: projectPath } = req.body;
+  if (!projectPath) return res.status(400).json({ error: "path required" });
+  try {
+    execFileSync("open", [projectPath], { timeout: 5000 });
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: "Failed to reveal in Finder" });
+  }
+});
+
 // Backwards-compatible launch endpoint (creates a session, returns { pid, status })
 app.post("/api/claude/launch", (req, res) => {
   const { prompt, flags = [] } = req.body;

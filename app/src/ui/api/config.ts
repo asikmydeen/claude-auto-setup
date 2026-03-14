@@ -194,6 +194,10 @@ export const addProject = (path: string) =>
 
 export const setActiveProject = (path: string) =>
   api.put<{ ok: boolean; active: string }>("/projects/active", { path });
+export const deleteProject = (path: string, deleteFiles = false) =>
+  api.del<{ ok: boolean; deleted: boolean }>(`/projects?path=${encodeURIComponent(path)}&deleteFiles=${deleteFiles}`);
+export const revealProject = (path: string) =>
+  api.post<{ ok: boolean }>("/projects/reveal", { path });
 
 // --- Filesystem Browsing ---
 export interface BrowseResult {

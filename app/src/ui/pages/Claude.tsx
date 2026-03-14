@@ -54,6 +54,10 @@ import {
   Plug,
   Globe,
   TerminalSquare,
+  MoreHorizontal,
+  FolderSearch,
+  Clipboard,
+  Play as PlayIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +77,8 @@ import {
   fetchSuggestions,
   fetchFollowUpSuggestions,
   startDevServer,
+  deleteProject,
+  revealProject,
   type ClaudeSession,
   type InstallResponse,
   type FileChangesResponse,
@@ -851,6 +857,9 @@ interface ProjectGroupProps {
   onSelectSession: (id: string) => void;
   onDeleteSession: (id: string) => void;
   onClose: () => void;
+  onStartDevServer?: (projectPath: string) => void;
+  onOpenTerminal?: (projectPath: string) => void;
+  onOpenBrowser?: (projectPath: string) => void;
 }
 
 function ProjectGroup({
@@ -863,8 +872,14 @@ function ProjectGroup({
   onSelectSession,
   onDeleteSession,
   onClose,
+  onStartDevServer,
+  onOpenTerminal,
+  onOpenBrowser,
 }: ProjectGroupProps) {
   const projectName = projectPath.split("/").pop() || projectPath;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const gitQuery = useQuery<GitStatus>({
     queryKey: ["git-status", projectPath],
@@ -876,52 +891,133 @@ function ProjectGroup({
   const git = gitQuery.data;
   const changeCount = (git?.staged ?? 0) + (git?.modified ?? 0);
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const handleDeleteProject = async (deleteFiles: boolean) => {
+    try {
+      await deleteProject(projectPath, deleteFiles);
+    } catch {}
+    onClose();
+    setConfirmDelete(false);
+    setMenuOpen(false);
+  };
+
   return (
     <div className="animate-fade-in-up border-b border-border/50 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
       {/* Project header */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-accent transition-colors group"
-      >
-        {isCollapsed ? (
-          <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-        ) : (
-          <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-        )}
-        <FolderOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-        <span className="flex-1 text-left truncate">{projectName}</span>
-        {sessions.length > 0 && (
-          <span className="text-[9px] text-muted-foreground tabular-nums">{sessions.length}</span>
-        )}
-        {sessions.some(s => s.status === "running") && (
-          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-        )}
-
-        {/* Always-visible new chat button */}
-        <Button
-          size="icon-xs"
-          variant="ghost"
-          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onNewChat(projectPath); }}
-          title="New chat in this project"
-          className="h-5 w-5 flex-shrink-0"
-        >
-          <Plus className="h-3 w-3" />
-        </Button>
-
-        {/* Close project — hover only */}
+      <div className="relative">
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-          title="Close project"
+          onClick={onToggle}
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-accent transition-colors group"
         >
-          <X className="h-3 w-3" />
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+          )}
+          <FolderOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+          <span className="flex-1 text-left truncate">{projectName}</span>
+          {sessions.length > 0 && (
+            <span className="text-[9px] text-muted-foreground tabular-nums">{sessions.length}</span>
+          )}
+          {sessions.some(s => s.status === "running") && (
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+          )}
+
+          {/* New chat */}
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            onClick={(e: React.MouseEvent) => { e.stopPropagation(); onNewChat(projectPath); }}
+            title="New chat"
+            aria-label="New chat in this project"
+            className="h-5 w-5 flex-shrink-0"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+
+          {/* Context menu trigger */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
+            className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-accent transition-opacity"
+            title="Project options"
+            aria-label="Project options menu"
+          >
+            <MoreHorizontal className="h-3 w-3" />
+          </button>
         </button>
-      </button>
+
+        {/* Context dropdown menu */}
+        {menuOpen && (
+          <div ref={menuRef} className="absolute right-1 top-full z-50 mt-1 w-48 rounded-lg border border-border bg-popover shadow-lg py-1 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+            {!confirmDelete ? (
+              <>
+                <button type="button" onClick={() => { onNewChat(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <Plus className="h-3 w-3" /> New conversation
+                </button>
+                <button type="button" onClick={() => { onStartDevServer?.(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <PlayIcon className="h-3 w-3 text-green-500" /> Start dev server
+                </button>
+                <button type="button" onClick={() => { onOpenTerminal?.(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <TerminalSquare className="h-3 w-3" /> Open terminal
+                </button>
+                <button type="button" onClick={() => { onOpenBrowser?.(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <Globe className="h-3 w-3" /> Preview app
+                </button>
+                <div className="my-1 border-t border-border" />
+                <button type="button" onClick={() => { revealProject(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <FolderSearch className="h-3 w-3" /> Reveal in Finder
+                </button>
+                <button type="button" onClick={() => { navigator.clipboard.writeText(projectPath); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <Clipboard className="h-3 w-3" /> Copy path
+                </button>
+                <div className="my-1 border-t border-border" />
+                <button type="button" onClick={() => { onClose(); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-accent transition-colors">
+                  <X className="h-3 w-3" /> Remove from sidebar
+                </button>
+                <button type="button" onClick={() => setConfirmDelete(true)}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 text-destructive transition-colors">
+                  <Trash2 className="h-3 w-3" /> Delete project...
+                </button>
+              </>
+            ) : (
+              /* Delete confirmation inline */
+              <div className="px-3 py-2 space-y-2">
+                <p className="font-medium text-destructive">Delete &quot;{projectName}&quot;?</p>
+                <button type="button" onClick={() => handleDeleteProject(false)}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-accent transition-colors">
+                  <X className="h-3 w-3" /> Remove from sidebar only
+                </button>
+                <button type="button" onClick={() => handleDeleteProject(true)}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-destructive/10 text-destructive transition-colors">
+                  <Trash2 className="h-3 w-3" /> Delete all files permanently
+                </button>
+                <button type="button" onClick={() => { setConfirmDelete(false); setMenuOpen(false); }}
+                  className="flex w-full items-center justify-center rounded px-2 py-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Git status line */}
       {!isCollapsed && git && (
@@ -2401,6 +2497,23 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                   prev.filter((p) => p !== projectPath)
                 )
               }
+              onStartDevServer={async (path) => {
+                try {
+                  const result = await startDevServer(path);
+                  if (result.ok && result.port) {
+                    setBrowserInitialUrl(`http://localhost:${result.port}`);
+                    setBrowserPanelOpen(true);
+                  }
+                } catch {}
+              }}
+              onOpenTerminal={(path) => {
+                setActiveProjectPath(path);
+                setTerminalPanelOpen(true);
+              }}
+              onOpenBrowser={(path) => {
+                setActiveProjectPath(path);
+                setBrowserPanelOpen(true);
+              }}
             />
           ))}
         </div>
