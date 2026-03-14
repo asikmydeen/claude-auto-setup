@@ -47,6 +47,7 @@ import {
   Copy,
   ClipboardCheck,
   RotateCcw,
+  FolderPlus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ import {
   type FollowUpSuggestion,
 } from "@/api/config";
 import { cn, relativeTime } from "@/lib/utils";
+import { api } from "@/api/client";
 import { FolderBrowser } from "@/components/FolderBrowser";
 
 // ---------------------------------------------------------------------------
@@ -800,6 +802,125 @@ function SessionItem({ session, isActive, onClick, onDelete }: SessionItemProps)
         <Trash2 className="h-3 w-3" />
       </button>
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Project Group (sidebar section per open project)
+// ---------------------------------------------------------------------------
+
+interface ProjectGroupProps {
+  projectPath: string;
+  sessions: ClaudeSession[];
+  activeSessionId: string | null;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  onNewChat: (projectPath: string) => void;
+  onSelectSession: (id: string) => void;
+  onDeleteSession: (id: string) => void;
+  onClose: () => void;
+}
+
+function ProjectGroup({
+  projectPath,
+  sessions,
+  activeSessionId,
+  isCollapsed,
+  onToggle,
+  onNewChat,
+  onSelectSession,
+  onDeleteSession,
+  onClose,
+}: ProjectGroupProps) {
+  const projectName = projectPath.split("/").pop() || projectPath;
+
+  const gitQuery = useQuery<GitStatus>({
+    queryKey: ["git-status", projectPath],
+    queryFn: () =>
+      api.get<GitStatus>(`/git/status?cwd=${encodeURIComponent(projectPath)}`),
+    refetchInterval: 30_000,
+  });
+
+  const git = gitQuery.data;
+  const changeCount = (git?.staged ?? 0) + (git?.modified ?? 0);
+
+  return (
+    <div className="animate-fade-in-up">
+      {/* Project header */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-accent transition-colors group"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+        ) : (
+          <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+        )}
+        <FolderOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+        <span className="truncate flex-1 text-left">{projectName}</span>
+
+        {/* New chat in this project */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNewChat(projectPath);
+          }}
+          className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-accent transition-opacity"
+          title="New chat in this project"
+        >
+          <Plus className="h-3 w-3" />
+        </button>
+
+        {/* Close project */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+          title="Close project"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </button>
+
+      {/* Git status line */}
+      {!isCollapsed && git && (
+        <div className="flex items-center gap-2 px-7 pb-1 text-[10px] text-muted-foreground">
+          <span className="font-mono">{git.branch}</span>
+          <span>&middot;</span>
+          {git.clean ? (
+            <span className="text-green-500">clean</span>
+          ) : (
+            <span className="text-yellow-500">{changeCount} changes</span>
+          )}
+        </div>
+      )}
+
+      {/* Sessions in this project */}
+      {!isCollapsed && (
+        <div className="pl-4 pr-1 space-y-0.5">
+          {sessions.length === 0 ? (
+            <p className="px-2 py-2 text-[10px] text-muted-foreground italic">
+              No sessions yet
+            </p>
+          ) : (
+            sessions.map((s) => (
+              <SessionItem
+                key={s.id}
+                session={s}
+                isActive={s.id === activeSessionId}
+                onClick={() => onSelectSession(s.id)}
+                onDelete={() => onDeleteSession(s.id)}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1732,7 +1853,35 @@ export function Claude() {
   /** Optimistic user messages added before the server responds */
   const [pendingMessages, setPendingMessages] = useState<ConversationEntry[]>([]);
 
+  // -- Multi-project sidebar state --
+  const [openProjects, setOpenProjects] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("openProjects");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(
+    new Set()
+  );
+  const [folderBrowserOpen, setFolderBrowserOpen] = useState(false);
+  /** When the user clicks "+" on a specific project, store the cwd for the next new session */
+  const [newChatProjectCwd, setNewChatProjectCwd] = useState<string | null>(
+    null
+  );
+
+  // Persist openProjects to localStorage
+  useEffect(() => {
+    localStorage.setItem("openProjects", JSON.stringify(openProjects));
+  }, [openProjects]);
+
   // --------------- Data fetching ---------------
+
+  const projectsQuery = useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+  });
 
   const sessionsQuery = useQuery<ClaudeSession[]>({
     queryKey: ["claude-sessions"],
@@ -1742,6 +1891,27 @@ export function Claude() {
 
   const sessions = sessionsQuery.data ?? [];
   const activeSession = sessions.find((s) => s.id === activeId) ?? null;
+
+  // Auto-open the active project from the API on first load when no projects are open
+  useEffect(() => {
+    if (openProjects.length === 0 && projectsQuery.data?.active) {
+      setOpenProjects([projectsQuery.data.active]);
+    }
+  }, [projectsQuery.data?.active]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Group sessions by their cwd, falling back to first open project
+  const sessionsByProject = useMemo(() => {
+    const grouped: Record<string, ClaudeSession[]> = {};
+    for (const project of openProjects) {
+      grouped[project] = [];
+    }
+    for (const session of sessions) {
+      const key = session.cwd || openProjects[0] || "";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(session);
+    }
+    return grouped;
+  }, [sessions, openProjects]);
 
   // File changes
   const fileChangesQuery = useQuery<FileChangesResponse>({
@@ -1793,13 +1963,18 @@ export function Claude() {
 
   // --------------- Mutations ---------------
 
-  const createMutation = useMutation<ClaudeSession, Error, string>({
-    mutationFn: (p: string) => createClaudeSession(p),
+  const createMutation = useMutation<
+    ClaudeSession,
+    Error,
+    { prompt: string; cwd?: string }
+  >({
+    mutationFn: ({ prompt: p, cwd }) => createClaudeSession(p, cwd),
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
       setActiveId(session.id);
       setPrompt("");
       setPendingMessages([]);
+      setNewChatProjectCwd(null);
       setMobileSidebarOpen(false);
     },
   });
@@ -1845,6 +2020,14 @@ export function Claude() {
   const isInputDisabled =
     createMutation.isPending || followUpMutation.isPending || isSessionRunning;
 
+  /** Resolve which project cwd to use for new sessions */
+  const getActiveProjectCwd = useCallback((): string => {
+    if (newChatProjectCwd) return newChatProjectCwd;
+    if (activeSession?.cwd) return activeSession.cwd;
+    if (openProjects.length > 0) return openProjects[0];
+    return projectsQuery.data?.active ?? "";
+  }, [newChatProjectCwd, activeSession?.cwd, openProjects, projectsQuery.data?.active]);
+
   const handleSend = useCallback(() => {
     const text = prompt.trim();
     if (!text || isInputDisabled) return;
@@ -1857,8 +2040,9 @@ export function Claude() {
       ]);
       followUpMutation.mutate({ sessionId: activeSession.id, prompt: text });
     } else if (!activeSession) {
-      // New session
-      createMutation.mutate(text);
+      // New session -- use the resolved project cwd
+      const cwd = getActiveProjectCwd();
+      createMutation.mutate({ prompt: text, cwd: cwd || undefined });
     }
   }, [
     prompt,
@@ -1867,6 +2051,7 @@ export function Claude() {
     activeSession,
     followUpMutation,
     createMutation,
+    getActiveProjectCwd,
   ]);
 
   const handleTemplate = useCallback(
@@ -1876,10 +2061,11 @@ export function Claude() {
         return;
       }
       if (templatePrompt) {
-        createMutation.mutate(templatePrompt);
+        const cwd = getActiveProjectCwd();
+        createMutation.mutate({ prompt: templatePrompt, cwd: cwd || undefined });
       }
     },
-    [createMutation]
+    [createMutation, getActiveProjectCwd]
   );
 
   const handleSuggestion = useCallback(
@@ -1897,11 +2083,12 @@ export function Claude() {
           ]);
           followUpMutation.mutate({ sessionId: activeSession.id, prompt: suggestion.prompt });
         } else if (!activeSession) {
-          createMutation.mutate(suggestion.prompt);
+          const cwd = getActiveProjectCwd();
+          createMutation.mutate({ prompt: suggestion.prompt, cwd: cwd || undefined });
         }
       }
     },
-    [canFollowUp, activeSession, followUpMutation, createMutation]
+    [canFollowUp, activeSession, followUpMutation, createMutation, getActiveProjectCwd]
   );
 
   const handleFollowUpSuggestion = useCallback(
@@ -1920,7 +2107,42 @@ export function Claude() {
     setActiveId(null);
     setPrompt("");
     setPendingMessages([]);
+    setNewChatProjectCwd(null);
     setMobileSidebarOpen(false);
+  }, []);
+
+  /** Start a new chat pinned to a specific project */
+  const handleNewChatInProject = useCallback(
+    (projectPath: string) => {
+      setActiveId(null);
+      setPrompt("");
+      setPendingMessages([]);
+      setNewChatProjectCwd(projectPath);
+      setMobileSidebarOpen(false);
+    },
+    []
+  );
+
+  /** Open a project folder and add it to the sidebar */
+  const handleOpenProject = useCallback(
+    (path: string) => {
+      addProject(path);
+      setOpenProjects((prev) =>
+        prev.includes(path) ? prev : [...prev, path]
+      );
+      setFolderBrowserOpen(false);
+    },
+    []
+  );
+
+  /** Toggle collapse state for a project group */
+  const toggleProjectCollapse = useCallback((path: string) => {
+    setCollapsedProjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
   }, []);
 
   // Cmd+N keyboard shortcut for new chat
@@ -1973,57 +2195,60 @@ export function Claude() {
           mobileSidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"
         )}
       >
-        {/* Project selector */}
+        {/* Open Project button */}
         <div className="border-b border-border px-2 py-2">
-          <ProjectSelector
-            onProjectChange={() => {
-              queryClient.invalidateQueries({ queryKey: ["suggestions"] });
-              queryClient.invalidateQueries({ queryKey: ["git-status"] });
-            }}
-          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={() => setFolderBrowserOpen(true)}
+          >
+            <FolderPlus className="h-4 w-4" />
+            Open Project
+          </Button>
         </div>
 
-        {/* Git status bar */}
-        <div className="border-b border-border">
-          <GitStatusBar />
-        </div>
-
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between border-b border-border px-3 py-3">
-          <span className="text-sm font-semibold text-foreground">Sessions</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] text-muted-foreground">Cmd+N</span>
-            <Button size="icon-xs" variant="ghost" onClick={handleNewChat} title="New chat (Cmd+N)">
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Session list */}
-        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-          {sessions.length === 0 && (
+        {/* Project groups */}
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
+          {openProjects.length === 0 && (
             <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="text-xs font-medium text-muted-foreground">No conversations yet</p>
-              <p className="text-[10px] text-muted-foreground/70">Start by typing a prompt below</p>
+              <FolderOpen className="h-8 w-8 text-muted-foreground" />
+              <p className="text-xs font-medium text-muted-foreground">No projects open</p>
+              <p className="text-[10px] text-muted-foreground/70">
+                Click &quot;Open Project&quot; to get started
+              </p>
             </div>
           )}
-          {sessions.map((s) => (
-            <SessionItem
-              key={s.id}
-              session={s}
-              isActive={s.id === activeId}
-              onClick={() => {
-                setActiveId(s.id);
+          {openProjects.map((projectPath) => (
+            <ProjectGroup
+              key={projectPath}
+              projectPath={projectPath}
+              sessions={sessionsByProject[projectPath] || []}
+              activeSessionId={activeId}
+              isCollapsed={collapsedProjects.has(projectPath)}
+              onToggle={() => toggleProjectCollapse(projectPath)}
+              onNewChat={handleNewChatInProject}
+              onSelectSession={(id) => {
+                setActiveId(id);
                 setPendingMessages([]);
                 setMobileSidebarOpen(false);
               }}
-              onDelete={(id) => deleteMutation.mutate(id)}
+              onDeleteSession={(id) => deleteMutation.mutate(id)}
+              onClose={() =>
+                setOpenProjects((prev) =>
+                  prev.filter((p) => p !== projectPath)
+                )
+              }
             />
           ))}
         </div>
+
+        {/* FolderBrowser dialog */}
+        <FolderBrowser
+          open={folderBrowserOpen}
+          onClose={() => setFolderBrowserOpen(false)}
+          onSelect={handleOpenProject}
+        />
 
       </aside>
 

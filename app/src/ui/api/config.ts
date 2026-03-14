@@ -69,6 +69,7 @@ export interface ClaudeSession {
   endedAt?: string;
   pid?: number;
   filesChanged?: string[];
+  cwd?: string;
 }
 
 export interface FileChangesResponse {
