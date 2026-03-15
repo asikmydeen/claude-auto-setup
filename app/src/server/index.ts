@@ -1846,35 +1846,30 @@ function autoPickTemplate(description: string): CuratedTemplate {
   const { templates } = loadCurated();
   const desc = description.toLowerCase();
 
-  // Keyword → style/tag matching
+  // Keyword → style matching
   const isLanding = /landing|marketing|saas|homepage|portfolio|agency|pricing|hero/i.test(desc);
   const isDark = /dark|night|neon|gradient|cyber|gaming/i.test(desc);
   const isMaterial = /material|google|android|mui/i.test(desc);
-  const isSoft = /soft|glass|blur|glassmorphism|rounded|gentle/i.test(desc);
-  const isModern = /modern|ai|shadcn|minimal|clean.*modern|dashboard.*ai/i.test(desc);
+  const isClean = /clean|classic|simple|minimal|corporate|professional/i.test(desc);
 
-  // Framework preference from description
+  // Framework preference from description (check specific before general)
+  const wantsNuxt = /\bnuxt\b/i.test(desc);
   const wantsNext = /next\.?js|next\s|react.*ssr|server.*component/i.test(desc);
-  const wantsVue = /\bvue\b|vuetify|nuxt/i.test(desc);
+  const wantsVue = /\bvue\b|vuetify/i.test(desc);
   const wantsAngular = /angular|ng\b/i.test(desc);
-  const wantsHtml = /html|static|simple|no.*framework|vanilla/i.test(desc);
+  const wantsHtml = /\bhtml\b|static.*site|no.*framework|vanilla/i.test(desc);
+  const wantsReact = /\breact\b/i.test(desc);
 
-  // Filter by style
+  // Step 1: Filter by framework preference (most specific signal)
   let candidates = templates;
-  if (isLanding) candidates = templates.filter((t) => t.tags.includes("landing") || t.tags.includes("marketing"));
-  else if (isDark) candidates = templates.filter((t) => t.style === "dark");
-  else if (isSoft) candidates = templates.filter((t) => t.style === "soft");
-  else if (isMaterial) candidates = templates.filter((t) => t.style === "material");
-  else if (isModern) candidates = templates.filter((t) => t.style === "modern");
-
-  if (candidates.length === 0) candidates = templates;
-
-  // Filter by framework preference
-  if (wantsNext) {
+  if (wantsNuxt) {
+    const nuxtTemplates = candidates.filter((t) => t.framework === "Nuxt");
+    if (nuxtTemplates.length > 0) candidates = nuxtTemplates;
+  } else if (wantsNext) {
     const nextTemplates = candidates.filter((t) => t.framework === "Next.js");
     if (nextTemplates.length > 0) candidates = nextTemplates;
   } else if (wantsVue) {
-    const vueTemplates = candidates.filter((t) => t.framework === "Vue" || t.framework === "Nuxt");
+    const vueTemplates = candidates.filter((t) => t.framework === "Vue");
     if (vueTemplates.length > 0) candidates = vueTemplates;
   } else if (wantsAngular) {
     const angTemplates = candidates.filter((t) => t.framework === "Angular");
@@ -1882,14 +1877,35 @@ function autoPickTemplate(description: string): CuratedTemplate {
   } else if (wantsHtml) {
     const htmlTemplates = candidates.filter((t) => t.framework === "HTML");
     if (htmlTemplates.length > 0) candidates = htmlTemplates;
-  } else {
-    // Default: prefer Next.js (modern, SSR) > React > others
-    const nextFirst = candidates.filter((t) => t.framework === "Next.js");
-    if (nextFirst.length > 0) candidates = nextFirst;
-    else {
-      const reactFirst = candidates.filter((t) => t.framework === "React");
-      if (reactFirst.length > 0) candidates = reactFirst;
-    }
+  } else if (wantsReact) {
+    const reactTemplates = candidates.filter((t) => t.framework === "React");
+    if (reactTemplates.length > 0) candidates = reactTemplates;
+  }
+
+  // Step 2: Filter by style within the framework candidates
+  if (isLanding) {
+    const landing = candidates.filter((t) => t.tags.includes("landing") || t.tags.includes("marketing"));
+    if (landing.length > 0) candidates = landing;
+  } else if (isDark) {
+    const dark = candidates.filter((t) => t.style === "dark");
+    if (dark.length > 0) candidates = dark;
+  } else if (isMaterial) {
+    const mat = candidates.filter((t) => t.style === "material");
+    if (mat.length > 0) candidates = mat;
+  } else if (isClean) {
+    const clean = candidates.filter((t) => t.style === "clean");
+    if (clean.length > 0) candidates = clean;
+  }
+
+  // Step 3: If no framework/style matched, default to dashboard (not landing page)
+  if (candidates.length === templates.length) {
+    // No filters applied — pick a good default dashboard
+    // Prefer Material Tailwind (Next.js, modern) as the general-purpose default
+    const dashboards = templates.filter((t) => t.tags.includes("dashboard") && !t.tags.includes("landing"));
+    if (dashboards.length > 0) candidates = dashboards;
+    // Within dashboards, prefer material style (most versatile)
+    const materialDash = candidates.filter((t) => t.style === "material");
+    if (materialDash.length > 0) candidates = materialDash;
   }
 
   // Return first match (they're already ordered by quality in curated.json)
