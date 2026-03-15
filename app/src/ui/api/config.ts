@@ -342,9 +342,9 @@ export interface CreateFromTemplateResponse {
 }
 
 export const createFromTemplate = (
-  templateId: string,
   name: string,
   description: string,
+  templateId?: string,
   basePath?: string,
 ) =>
   api.post<CreateFromTemplateResponse>("/projects/create-from-template", { templateId, name, description, basePath });

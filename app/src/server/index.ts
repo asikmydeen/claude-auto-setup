@@ -1841,15 +1841,73 @@ app.get("/api/templates", (_req, res) => {
   res.json(grouped);
 });
 
+// Auto-pick the best template based on user description
+function autoPickTemplate(description: string): CuratedTemplate {
+  const { templates } = loadCurated();
+  const desc = description.toLowerCase();
+
+  // Keyword → style/tag matching
+  const isLanding = /landing|marketing|saas|homepage|portfolio|agency|pricing|hero/i.test(desc);
+  const isDark = /dark|night|neon|gradient|cyber|gaming/i.test(desc);
+  const isMaterial = /material|google|android|mui/i.test(desc);
+  const isSoft = /soft|glass|blur|glassmorphism|rounded|gentle/i.test(desc);
+  const isModern = /modern|ai|shadcn|minimal|clean.*modern|dashboard.*ai/i.test(desc);
+
+  // Framework preference from description
+  const wantsNext = /next\.?js|next\s|react.*ssr|server.*component/i.test(desc);
+  const wantsVue = /\bvue\b|vuetify|nuxt/i.test(desc);
+  const wantsAngular = /angular|ng\b/i.test(desc);
+  const wantsHtml = /html|static|simple|no.*framework|vanilla/i.test(desc);
+
+  // Filter by style
+  let candidates = templates;
+  if (isLanding) candidates = templates.filter((t) => t.tags.includes("landing") || t.tags.includes("marketing"));
+  else if (isDark) candidates = templates.filter((t) => t.style === "dark");
+  else if (isSoft) candidates = templates.filter((t) => t.style === "soft");
+  else if (isMaterial) candidates = templates.filter((t) => t.style === "material");
+  else if (isModern) candidates = templates.filter((t) => t.style === "modern");
+
+  if (candidates.length === 0) candidates = templates;
+
+  // Filter by framework preference
+  if (wantsNext) {
+    const nextTemplates = candidates.filter((t) => t.framework === "Next.js");
+    if (nextTemplates.length > 0) candidates = nextTemplates;
+  } else if (wantsVue) {
+    const vueTemplates = candidates.filter((t) => t.framework === "Vue" || t.framework === "Nuxt");
+    if (vueTemplates.length > 0) candidates = vueTemplates;
+  } else if (wantsAngular) {
+    const angTemplates = candidates.filter((t) => t.framework === "Angular");
+    if (angTemplates.length > 0) candidates = angTemplates;
+  } else if (wantsHtml) {
+    const htmlTemplates = candidates.filter((t) => t.framework === "HTML");
+    if (htmlTemplates.length > 0) candidates = htmlTemplates;
+  } else {
+    // Default: prefer Next.js (modern, SSR) > React > others
+    const nextFirst = candidates.filter((t) => t.framework === "Next.js");
+    if (nextFirst.length > 0) candidates = nextFirst;
+    else {
+      const reactFirst = candidates.filter((t) => t.framework === "React");
+      if (reactFirst.length > 0) candidates = reactFirst;
+    }
+  }
+
+  // Return first match (they're already ordered by quality in curated.json)
+  return candidates[0] || templates[0];
+}
+
 // POST /api/projects/create-from-template — copy template + always spawn Claude to customize
+// templateId is optional — if omitted, auto-picks based on description
 app.post("/api/projects/create-from-template", (req, res) => {
   const { templateId, name, description, basePath } = req.body;
-  if (!templateId || !name || !description) {
-    return res.status(400).json({ error: "templateId, name, and description are required" });
+  if (!name || !description) {
+    return res.status(400).json({ error: "name and description are required" });
   }
 
   const { templates } = loadCurated();
-  const template = templates.find((t) => t.id === templateId);
+  const template = templateId
+    ? templates.find((t) => t.id === templateId)
+    : autoPickTemplate(description);
   if (!template) return res.status(404).json({ error: "Template not found" });
 
   const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();

@@ -20,13 +20,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   createProject,
   createFromTemplate,
-  fetchTemplates,
   fetchGitHubStatus,
   fetchSupabaseStatus,
   fetchSupabaseProjects,
   fetchAwsStatus,
   fetchRuntimes,
-  type TemplateInfo,
 } from "@/api/config";
 import { cn } from "@/lib/utils";
 
@@ -38,26 +36,14 @@ interface ProjectCreatorProps {
   defaultBasePath?: string;
 }
 
-type CreationMode = "template" | "scratch";
 type BackendChoice = "none" | "supabase" | "aws";
 type RepoChoice = "none" | "new" | "existing";
-
-// Friendly category display order
-const CATEGORY_ORDER = [
-  "react", "nextjs", "vue", "angular", "svelte", "nuxtjs",
-  "html-css-js", "react-node", "react-laravel", "vue-laravel", "nuxt-laravel",
-  "laravel", "django", "flutter", "react-native", "shopify",
-];
 
 export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelected, defaultBasePath }: ProjectCreatorProps) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePath, setBasePath] = useState(defaultBasePath || "");
-  const [mode, setMode] = useState<CreationMode>("template");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [templateSearch, setTemplateSearch] = useState("");
   const [selectedRuntime, setSelectedRuntime] = useState("native");
 
   // Backend & repo choices
@@ -74,8 +60,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
   const [newEnvKey, setNewEnvKey] = useState("");
   const [newEnvValue, setNewEnvValue] = useState("");
 
-  // Fetch templates, integration statuses, available runtimes
-  const templatesQuery = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates, enabled: open });
+  // Fetch integration statuses, available runtimes
   const github = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus, enabled: open });
   const supabase = useQuery({ queryKey: ["supabase-status"], queryFn: fetchSupabaseStatus, enabled: open });
   const aws = useQuery({ queryKey: ["aws-status"], queryFn: fetchAwsStatus, enabled: open });
@@ -91,13 +76,13 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
     if (name && !newSupabaseName) setNewSupabaseName(name.replace(/[^a-zA-Z0-9-]/g, "-"));
   }, [name, newSupabaseName]);
 
-  // Template-based creation (copy template + Claude customizes)
+  // Template-based creation (auto-picks best template, Claude customizes)
   const templateMut = useMutation({
     mutationFn: () =>
       createFromTemplate(
-        selectedTemplateId!,
         name.trim(),
         description.trim(),
+        undefined, // auto-pick template
         basePath.trim() || undefined,
       ),
     onSuccess: (data) => {
@@ -109,7 +94,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
     },
   });
 
-  // From-scratch creation (Claude-powered)
+  // From-scratch creation (Claude-powered, no template)
   const createMut = useMutation({
     mutationFn: () => {
       const envObj: Record<string, string> = {};
@@ -170,35 +155,14 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
   const isError = templateMut.isError || createMut.isError;
   const errorMessage = (templateMut.error as Error)?.message || (createMut.error as Error)?.message || "Failed to create project";
 
+  // Smart create: use template (auto-picked) by default, scratch only if explicitly chosen
   function handleCreate() {
-    if (mode === "template" && selectedTemplateId) {
-      templateMut.mutate();
-    } else {
-      createMut.mutate();
-    }
+    templateMut.mutate();
   }
-
-  // Filtered templates for the browser
-  const allCategories = templatesQuery.data || [];
-  const sortedCategories = [...allCategories].sort((a, b) => {
-    const ai = CATEGORY_ORDER.indexOf(a.id);
-    const bi = CATEGORY_ORDER.indexOf(b.id);
-    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-  });
-  const currentCategory = activeCategory || sortedCategories[0]?.id || "";
-  const currentTemplates = sortedCategories.find((c) => c.id === currentCategory)?.templates || [];
-  const filteredTemplates = templateSearch
-    ? currentTemplates.filter((t) => t.label.toLowerCase().includes(templateSearch.toLowerCase()))
-    : currentTemplates;
-  const selectedTemplate = allCategories.flatMap((c) => c.templates).find((t) => t.id === selectedTemplateId);
 
   function resetForm() {
     setName("");
     setDescription("");
-    setSelectedTemplateId(null);
-    setActiveCategory(null);
-    setTemplateSearch("");
-    setMode("template");
     setBackend("none");
     setSelectedSupabaseProject(null);
     setNewSupabaseName("");
@@ -250,119 +214,21 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
               />
             </div>
 
-            {/* Mode toggle: Template vs From Scratch */}
-            <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
-              <button
-                type="button"
-                onClick={() => { setMode("template"); setSelectedTemplateId(null); }}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                  mode === "template" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                From Template
-              </button>
-              <button
-                type="button"
-                onClick={() => { setMode("scratch"); setSelectedTemplateId(null); }}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                  mode === "scratch" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                From Scratch
-              </button>
-            </div>
-
-            {/* Template browser (template mode) */}
-            {mode === "template" && (
-              <div className="space-y-2">
-                {/* Category tabs */}
-                <div className="flex gap-1 overflow-x-auto pb-1">
-                  {sortedCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => { setActiveCategory(cat.id); setTemplateSearch(""); }}
-                      className={cn(
-                        "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors whitespace-nowrap",
-                        (currentCategory === cat.id)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {cat.label} ({cat.templates.length})
-                    </button>
-                  ))}
-                </div>
-
-                {/* Search */}
-                <input
-                  type="text"
-                  value={templateSearch}
-                  onChange={(e) => setTemplateSearch(e.target.value)}
-                  placeholder="Search templates..."
-                  className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-
-                {/* Template grid */}
-                <div className="grid grid-cols-2 gap-1.5 max-h-[180px] overflow-y-auto">
-                  {templatesQuery.isLoading && (
-                    <div className="col-span-2 flex items-center justify-center py-4">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                  {filteredTemplates.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setSelectedTemplateId(t.id)}
-                      className={cn(
-                        "flex flex-col gap-0.5 rounded-md border p-2 text-left transition-colors",
-                        selectedTemplateId === t.id
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-accent"
-                      )}
-                    >
-                      <span className="text-[11px] font-medium truncate w-full">{t.label}</span>
-                      <span className="text-[9px] text-muted-foreground truncate w-full">{t.desc}</span>
-                      <span className="text-[8px] px-1 py-0 rounded bg-muted text-muted-foreground w-fit">{t.framework}</span>
-                    </button>
-                  ))}
-                  {!templatesQuery.isLoading && filteredTemplates.length === 0 && (
-                    <p className="col-span-2 text-xs text-muted-foreground py-3 text-center">No templates found</p>
-                  )}
-                </div>
-
-                {/* Selected template info */}
-                {selectedTemplate && (
-                  <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 space-y-0.5">
-                    <p className="text-xs font-medium">{selectedTemplate.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{selectedTemplate.desc}</p>
-                    <div className="flex gap-1.5 pt-0.5">
-                      <span className="text-[9px] px-1.5 py-0 rounded bg-primary/10 text-primary font-medium">{selectedTemplate.framework}</span>
-                      <span className="text-[9px] px-1.5 py-0 rounded bg-muted text-muted-foreground">{selectedTemplate.uiLib}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Describe idea (both modes — optional for template, required for scratch) */}
+            {/* Describe your app — this drives everything */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
-                <Lightbulb className="h-3.5 w-3.5" />
-                {mode === "template" ? "What should Claude build with this design?" : "Describe your idea"}
+                <Lightbulb className="h-3.5 w-3.5" /> Describe your app
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={mode === "template"
-                  ? "Describe your app — Claude will build it using this design template as the base..."
-                  : "A task management app with real-time sync, user authentication, and a clean minimal UI..."}
+                placeholder="A task management app with kanban boards, user auth, and a clean dark dashboard..."
                 rows={3}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               />
+              <p className="text-[10px] text-muted-foreground">
+                Claude will auto-pick the best design template and customize it to match your idea.
+              </p>
             </div>
 
             {/* Backend selection */}
@@ -669,22 +535,21 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-border px-6 py-4 shrink-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              {mode === "template" && selectedTemplate && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{selectedTemplate.category}</Badge>}
               {selectedRuntime !== "native" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{selectedRuntime}</Badge>}
               {backend !== "none" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{backend}</Badge>}
               {repoChoice === "new" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">github</Badge>}
               {envVars.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{envVars.length} env</Badge>}
-              <span>{mode === "template" ? "Claude customizes this design for you" : "Claude builds from scratch"}</span>
+              <span>Best design template auto-selected</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
               <Button
                 size="sm"
-                disabled={!name.trim() || !description.trim() || (mode === "template" && !selectedTemplateId) || isPending}
+                disabled={!name.trim() || !description.trim() || isPending}
                 onClick={handleCreate}
               >
                 {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
-                {mode === "template" ? "Create from Template" : "Create & Build"}
+                Create & Build
               </Button>
             </div>
           </div>
