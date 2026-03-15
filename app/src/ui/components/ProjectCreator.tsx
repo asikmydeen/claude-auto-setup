@@ -19,11 +19,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   createProject,
+  createFromTemplate,
+  fetchTemplates,
   fetchGitHubStatus,
   fetchSupabaseStatus,
   fetchSupabaseProjects,
   fetchAwsStatus,
   fetchRuntimes,
+  type TemplateInfo,
 } from "@/api/config";
 import { cn } from "@/lib/utils";
 
@@ -35,23 +38,26 @@ interface ProjectCreatorProps {
   defaultBasePath?: string;
 }
 
-const TEMPLATES = [
-  { id: "web", label: "Web App", emoji: "🌐", desc: "React + TypeScript + Vite" },
-  { id: "api", label: "REST API", emoji: "🔌", desc: "Express/Fastify + TypeScript" },
-  { id: "fullstack", label: "Full Stack", emoji: "📚", desc: "React + API + DB" },
-  { id: "cli", label: "CLI Tool", emoji: "⌨️", desc: "Node.js CLI" },
-  { id: "custom", label: "Custom", emoji: "✨", desc: "Your own idea" },
-];
-
+type CreationMode = "template" | "scratch";
 type BackendChoice = "none" | "supabase" | "aws";
 type RepoChoice = "none" | "new" | "existing";
+
+// Friendly category display order
+const CATEGORY_ORDER = [
+  "react", "nextjs", "vue", "angular", "svelte", "nuxtjs",
+  "html-css-js", "react-node", "react-laravel", "vue-laravel", "nuxt-laravel",
+  "laravel", "django", "flutter", "react-native", "shopify",
+];
 
 export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelected, defaultBasePath }: ProjectCreatorProps) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePath, setBasePath] = useState(defaultBasePath || "");
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [mode, setMode] = useState<CreationMode>("template");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [templateSearch, setTemplateSearch] = useState("");
   const [selectedRuntime, setSelectedRuntime] = useState("native");
 
   // Backend & repo choices
@@ -68,7 +74,8 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
   const [newEnvKey, setNewEnvKey] = useState("");
   const [newEnvValue, setNewEnvValue] = useState("");
 
-  // Fetch integration statuses + available runtimes
+  // Fetch templates, integration statuses, available runtimes
+  const templatesQuery = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates, enabled: open });
   const github = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus, enabled: open });
   const supabase = useQuery({ queryKey: ["supabase-status"], queryFn: fetchSupabaseStatus, enabled: open });
   const aws = useQuery({ queryKey: ["aws-status"], queryFn: fetchAwsStatus, enabled: open });
@@ -84,6 +91,25 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
     if (name && !newSupabaseName) setNewSupabaseName(name.replace(/[^a-zA-Z0-9-]/g, "-"));
   }, [name, newSupabaseName]);
 
+  // Template-based creation (fast path)
+  const templateMut = useMutation({
+    mutationFn: () =>
+      createFromTemplate(
+        selectedTemplateId!,
+        name.trim(),
+        basePath.trim() || undefined,
+        description.trim() || undefined,
+      ),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      onRuntimeSelected?.(selectedRuntime);
+      onProjectCreated?.(data.projectDir, data.sessionId);
+      onClose();
+      resetForm();
+    },
+  });
+
+  // From-scratch creation (Claude-powered)
   const createMut = useMutation({
     mutationFn: () => {
       const envObj: Record<string, string> = {};
@@ -115,42 +141,64 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
 
   function buildPrompt(): string {
     const parts: string[] = [];
-    const template = TEMPLATES.find(t => t.id === selectedTemplate);
-    if (template && template.id !== "custom") {
-      parts.push(`Create a ${template.label} project (${template.desc}).`);
-    }
     parts.push(description);
 
-    // Backend instructions
     if (backend === "supabase") {
       if (supabaseMode === "select" && selectedSupabaseProject) {
-        const proj = sbProjects.data?.find(p => p.id === selectedSupabaseProject);
-        parts.push(`\n\nUse Supabase as the backend. The Supabase project "${proj?.name || selectedSupabaseProject}" is already configured — the SUPABASE_URL and SUPABASE_ANON_KEY environment variables are set. Create the database schema, set up auth if needed, and wire the Supabase client.`);
+        const proj = sbProjects.data?.find((p: { id: string }) => p.id === selectedSupabaseProject);
+        parts.push(`\n\nUse Supabase as the backend. The Supabase project "${proj?.name || selectedSupabaseProject}" is already configured.`);
       } else if (supabaseMode === "new") {
-        parts.push(`\n\nUse Supabase as the backend. Set up a new Supabase project integration. Create a .env file with SUPABASE_URL and SUPABASE_ANON_KEY placeholders. Set up the Supabase client, create database migrations/schema, and configure auth if applicable.`);
+        parts.push(`\n\nUse Supabase as the backend. Set up .env with SUPABASE_URL and SUPABASE_ANON_KEY placeholders.`);
       }
     } else if (backend === "aws") {
-      parts.push(`\n\nUse AWS as the backend. The AWS CLI is configured with the active profile. Use AWS services (DynamoDB, Lambda, S3, etc.) as appropriate. Set up CDK or SAM for infrastructure. Use the AWS SDK.`);
+      parts.push(`\n\nUse AWS as the backend with the active CLI profile.`);
     }
 
-    // Environment variables instructions
     if (envVars.length > 0) {
       const varList = envVars.filter(v => v.key.trim()).map(v => `${v.key.trim()}="${v.value}"`).join("\n");
-      parts.push(`\n\nThe following environment variables are configured and available at runtime:\n\`\`\`\n${varList}\n\`\`\`\nUse these variables in your code (e.g. process.env.${envVars[0]?.key || "VAR_NAME"}). Create a .env.example file documenting them. Do NOT hardcode these values — always read from environment.`);
+      parts.push(`\n\nEnvironment variables available:\n\`\`\`\n${varList}\n\`\`\``);
     }
 
-    // GitHub instructions
     if (repoChoice === "new") {
-      parts.push(`\n\nAfter building the project, initialize a git repo, create an initial commit, then create a new GitHub repository named "${name}" (${repoPrivate ? "private" : "public"}) and push to it. Use: gh repo create ${name} --${repoPrivate ? "private" : "public"} --source=. --remote=origin --push`);
+      parts.push(`\n\nCreate a GitHub repo "${name}" (${repoPrivate ? "private" : "public"}) and push.`);
     }
 
     return parts.join("\n");
   }
 
+  const isPending = templateMut.isPending || createMut.isPending;
+  const isError = templateMut.isError || createMut.isError;
+  const errorMessage = (templateMut.error as Error)?.message || (createMut.error as Error)?.message || "Failed to create project";
+
+  function handleCreate() {
+    if (mode === "template" && selectedTemplateId) {
+      templateMut.mutate();
+    } else {
+      createMut.mutate();
+    }
+  }
+
+  // Filtered templates for the browser
+  const allCategories = templatesQuery.data || [];
+  const sortedCategories = [...allCategories].sort((a, b) => {
+    const ai = CATEGORY_ORDER.indexOf(a.id);
+    const bi = CATEGORY_ORDER.indexOf(b.id);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  const currentCategory = activeCategory || sortedCategories[0]?.id || "";
+  const currentTemplates = sortedCategories.find((c) => c.id === currentCategory)?.templates || [];
+  const filteredTemplates = templateSearch
+    ? currentTemplates.filter((t) => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+    : currentTemplates;
+  const selectedTemplate = allCategories.flatMap((c) => c.templates).find((t) => t.id === selectedTemplateId);
+
   function resetForm() {
     setName("");
     setDescription("");
-    setSelectedTemplate(null);
+    setSelectedTemplateId(null);
+    setActiveCategory(null);
+    setTemplateSearch("");
+    setMode("template");
     setBackend("none");
     setSelectedSupabaseProject(null);
     setNewSupabaseName("");
@@ -202,39 +250,116 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
               />
             </div>
 
-            {/* Template */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Template</label>
-              <div className="grid grid-cols-5 gap-2">
-                {TEMPLATES.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setSelectedTemplate(t.id)}
-                    className={cn(
-                      "flex flex-col items-center gap-1 rounded-lg border p-2.5 text-center transition-colors",
-                      selectedTemplate === t.id
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
-                    )}
-                  >
-                    <span className="text-lg">{t.emoji}</span>
-                    <span className="text-[10px] font-medium leading-tight">{t.label}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Mode toggle: Template vs From Scratch */}
+            <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+              <button
+                type="button"
+                onClick={() => { setMode("template"); setSelectedTemplateId(null); }}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                  mode === "template" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                From Template
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode("scratch"); setSelectedTemplateId(null); }}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                  mode === "scratch" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                From Scratch
+              </button>
             </div>
 
-            {/* Describe idea */}
+            {/* Template browser (template mode) */}
+            {mode === "template" && (
+              <div className="space-y-2">
+                {/* Category tabs */}
+                <div className="flex gap-1 overflow-x-auto pb-1">
+                  {sortedCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => { setActiveCategory(cat.id); setTemplateSearch(""); }}
+                      className={cn(
+                        "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors whitespace-nowrap",
+                        (currentCategory === cat.id)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {cat.label} ({cat.templates.length})
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search */}
+                <input
+                  type="text"
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  placeholder="Search templates..."
+                  className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+
+                {/* Template grid */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-[180px] overflow-y-auto">
+                  {templatesQuery.isLoading && (
+                    <div className="col-span-2 flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  {filteredTemplates.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSelectedTemplateId(t.id)}
+                      className={cn(
+                        "flex flex-col gap-0.5 rounded-md border p-2 text-left transition-colors",
+                        selectedTemplateId === t.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:bg-accent"
+                      )}
+                    >
+                      <span className="text-[11px] font-medium truncate w-full">{t.name}</span>
+                      <div className="flex gap-1">
+                        {t.scripts.slice(0, 2).map((s) => (
+                          <span key={s} className="text-[8px] px-1 py-0 rounded bg-muted text-muted-foreground">{s}</span>
+                        ))}
+                      </div>
+                    </button>
+                  ))}
+                  {!templatesQuery.isLoading && filteredTemplates.length === 0 && (
+                    <p className="col-span-2 text-xs text-muted-foreground py-3 text-center">No templates found</p>
+                  )}
+                </div>
+
+                {/* Selected template info */}
+                {selectedTemplate && (
+                  <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
+                    <p className="text-xs font-medium">{selectedTemplate.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{selectedTemplate.category} · {selectedTemplate.scripts.join(", ") || "no scripts"}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Describe idea (both modes — optional for template, required for scratch) */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
-                <Lightbulb className="h-3.5 w-3.5" /> Describe your idea
+                <Lightbulb className="h-3.5 w-3.5" />
+                {mode === "template" ? "Customize (optional)" : "Describe your idea"}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="A task management app with real-time sync, user authentication, and a clean minimal UI..."
-                rows={3}
+                placeholder={mode === "template"
+                  ? "Optionally describe changes to the template — Claude will customize it for you..."
+                  : "A task management app with real-time sync, user authentication, and a clean minimal UI..."}
+                rows={mode === "template" ? 2 : 3}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               />
             </div>
@@ -543,28 +668,29 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-border px-6 py-4 shrink-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {mode === "template" && selectedTemplate && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{selectedTemplate.category}</Badge>}
               {selectedRuntime !== "native" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{selectedRuntime}</Badge>}
               {backend !== "none" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{backend}</Badge>}
               {repoChoice === "new" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">github</Badge>}
               {envVars.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{envVars.length} env</Badge>}
-              <span>Claude builds & opens automatically</span>
+              <span>{mode === "template" ? "Copy template & start instantly" : "Claude builds from scratch"}</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
               <Button
                 size="sm"
-                disabled={!name.trim() || !description.trim() || createMut.isPending}
-                onClick={() => createMut.mutate()}
+                disabled={!name.trim() || (mode === "scratch" && !description.trim()) || (mode === "template" && !selectedTemplateId) || isPending}
+                onClick={handleCreate}
               >
-                {createMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
-                Create & Build
+                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
+                {mode === "template" ? "Create from Template" : "Create & Build"}
               </Button>
             </div>
           </div>
 
-          {createMut.isError && (
+          {isError && (
             <div className="px-6 pb-4">
-              <p className="text-xs text-destructive">{(createMut.error as Error)?.message || "Failed to create project"}</p>
+              <p className="text-xs text-destructive">{errorMessage}</p>
             </div>
           )}
         </div>

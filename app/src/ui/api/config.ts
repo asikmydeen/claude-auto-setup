@@ -309,7 +309,45 @@ export const fetchProjectIntel = (cwd?: string) =>
 export const initProject = (cwd?: string) =>
   api.post<{ ok: boolean; output: string }>("/projects/init", { cwd });
 
-// --- Project Creator ---
+// --- Templates ---
+export interface TemplateInfo {
+  category: string;
+  id: string;
+  name: string;
+  path: string;
+  scripts: string[];
+  hasPackageJson: boolean;
+  hasIndex: boolean;
+}
+
+export interface TemplateCategory {
+  id: string;
+  label: string;
+  icon: string;
+  templates: TemplateInfo[];
+}
+
+export const fetchTemplates = () => api.get<TemplateCategory[]>("/templates");
+
+export interface CreateFromTemplateResponse {
+  ok: boolean;
+  projectDir: string;
+  type: string;
+  template: { id: string; name: string; category: string };
+  scripts: string[];
+  installCmd: string;
+  sessionId: string | null;
+}
+
+export const createFromTemplate = (
+  templateId: string,
+  name: string,
+  basePath?: string,
+  description?: string,
+) =>
+  api.post<CreateFromTemplateResponse>("/projects/create-from-template", { templateId, name, basePath, description });
+
+// --- Project Creator (from scratch) ---
 export interface CreateProjectResponse {
   ok: boolean;
   projectDir: string;

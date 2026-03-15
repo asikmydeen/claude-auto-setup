@@ -2872,13 +2872,33 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           setOpenProjects((prev) => [...new Set([...prev, projectDir])]);
           setActiveProjectPath(projectDir);
           setActiveView("chat");
-          // Open browser panel immediately with "building" state
-          setBuildingProjectDir(projectDir);
-          setBrowserPanelOpen(true);
+
           if (sessionId) {
+            // From-scratch or template with customization: show building animation
+            setBuildingProjectDir(projectDir);
+            setBrowserPanelOpen(true);
             setActiveId(sessionId);
             queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 2000);
+          } else {
+            // Template-based (no Claude session): install deps + start dev server immediately
+            setBrowserPanelOpen(true);
+            (async () => {
+              try {
+                const { type } = await fetchProjectType(projectDir);
+                if (type === "cli") {
+                  setTerminalPanelOpen(true);
+                  setBrowserPanelOpen(false);
+                } else {
+                  const runtime = preferredRuntime !== "native" ? preferredRuntime : undefined;
+                  const result = await startDevServer(projectDir, runtime);
+                  if (result.ok && result.port) {
+                    setBrowserInitialUrl(`http://localhost:${result.port}`);
+                  }
+                  if (type === "backend") setTerminalPanelOpen(true);
+                }
+              } catch {}
+            })();
           }
         }}
         onRuntimeSelected={setPreferredRuntime}

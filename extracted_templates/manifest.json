@@ -1,0 +1,1479 @@
+[
+  {
+    "category": "angular",
+    "id": "argon-dashboard-pro-angular-v1.5.1",
+    "name": "argon-dashboard-pro-angular",
+    "path": "angular/argon-dashboard-pro-angular-v1.5.1/argon-dashboard-pro-angular-v1.5.1",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "argon-design-system-pro-angular-v1.4.0",
+    "name": "argon-design-system-pro-angular",
+    "path": "angular/argon-design-system-pro-angular-v1.4.0/argon-design-system-pro-angular-v1.4.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "black-dashboard-pro-angular-v1.3.0",
+    "name": "black-dashboard-pro-angular",
+    "path": "angular/black-dashboard-pro-angular-v1.3.0/black-dashboard-pro-angular-v1.3.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "blk-design-system-pro-angular-v1.3.0",
+    "name": "blk-design-system-pro-angular",
+    "path": "angular/blk-design-system-pro-angular-v1.3.0/blk-design-system-pro-angular-v1.3.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "creativetimofficial-light-bootstrap-dashboard-pro-angular2-ee83eea3dd000d7c97f2104205d8cecdd46cc949",
+    "name": "light-booststrap-dashboard-pro-angular",
+    "path": "angular/creativetimofficial-light-bootstrap-dashboard-pro-angular2-ee83eea3dd000d7c97f2104205d8cecdd46cc949/creativetimofficial-light-bootstrap-dashboard-pro-angular2-ee83eea3dd000d7c97f2104205d8cecdd46cc949",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "material-dashboard-pro-angular-v2.9.0",
+    "name": "material-dashboard-pro-angular",
+    "path": "angular/material-dashboard-pro-angular-v2.9.0/material-dashboard-pro-angular-v2.9.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "now-ui-dashboard-pro-angular-v1.4.0",
+    "name": "now-ui-dashboard-pro-angular",
+    "path": "angular/now-ui-dashboard-pro-angular-v1.4.0/now-ui-dashboard-pro-angular-v1.4.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "now-ui-kit-pro-angular-v1.6.0",
+    "name": "now-ui-kit-pro-angular",
+    "path": "angular/now-ui-kit-pro-angular-v1.6.0/now-ui-kit-pro-angular-v1.6.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "paper-dashboard-pro-angular-v1.7.0",
+    "name": "paper-dashboard-pro-angular",
+    "path": "angular/paper-dashboard-pro-angular-v1.7.0/paper-dashboard-pro-angular-v1.7.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "angular",
+    "id": "paper-kit-2-pro-angular-v1.8.0",
+    "name": "paper-kit-2-pro-angular",
+    "path": "angular/paper-kit-2-pro-angular-v1.8.0/paper-kit-2-pro-angular-v1.8.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "django",
+    "id": "django-black-dashboard-pro-v1.0.5",
+    "name": "priv-flask-black-dashboard-pro",
+    "path": "django/django-black-dashboard-pro-v1.0.5/priv-django-black-dashboard-pro-main",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "django",
+    "id": "django-soft-ui-dashboard-pro-v1.0.23",
+    "name": "appseed-generic",
+    "path": "django/django-soft-ui-dashboard-pro-v1.0.23/priv-django-soft-ui-dashboard-pro-master",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "django",
+    "id": "material-dashboard-pro-django-v1.0.1",
+    "name": "material-dashboard-pro-django",
+    "path": "django/material-dashboard-pro-django-v1.0.1/material-dashboard-pro-django-main",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "email-templates",
+    "id": "mailto-pro-v1.0.0",
+    "name": "mailto-pro-v1.0.0",
+    "path": "email-templates/mailto-pro-v1.0.0/mailto-pro-v1.0.0",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "figma-design",
+    "id": "Horizon_AI_Boilerplate_-_shadcn_ui_(PRO)",
+    "name": "Horizon_AI_Boilerplate_-_shadcn_ui_(PRO)",
+    "path": "figma-design/Horizon_AI_Boilerplate_-_shadcn_ui_(PRO)/images",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "flutter",
+    "id": "argon-pro-flutter-v1.0.1",
+    "name": "argon-pro-flutter-v1.0.1",
+    "path": "flutter/argon-pro-flutter-v1.0.1/argon-pro-flutter-v1.0.1",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "flutter",
+    "id": "creativetimofficial-now-ui-pro-flutter-5a920f9687bdf0bdb04d6be2f3b7fba71b3f7663",
+    "name": "creativetimofficial-now-ui-pro-flutter-5a920f9687bdf0bdb04d6be2f3b7fba71b3f7663",
+    "path": "flutter/creativetimofficial-now-ui-pro-flutter-5a920f9687bdf0bdb04d6be2f3b7fba71b3f7663/creativetimofficial-now-ui-pro-flutter-5a920f9687bdf0bdb04d6be2f3b7fba71b3f7663",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "argon-dashboard-pro-tailwind-html-v1.0.0",
+    "name": "argon-dashboard-pro-tailwind",
+    "path": "html-css-js/argon-dashboard-pro-tailwind-html-v1.0.0/argon-dashboard-pro-tailwind-html-v1.0.0",
+    "scripts": [
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "argon-dashboard-pro-v1.2.1",
+    "name": "@creative-tim-official/argon-dashboard-pro",
+    "path": "html-css-js/argon-dashboard-pro-v1.2.1/argon-dashboard-pro-v1.2.1",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "corporate-ui-dashboard-pro-html-v1.0.0",
+    "name": "corporate-ui-dashboard-pro",
+    "path": "html-css-js/corporate-ui-dashboard-pro-html-v1.0.0/corporate-ui-dashboard-pro-html-v1.0.0",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "creativetimofficial-argon-dashboard-pro-cda6ecdfb3ae6c40fff7b8d42a84549321405d65",
+    "name": "argon-dashboard-pro",
+    "path": "html-css-js/creativetimofficial-argon-dashboard-pro-cda6ecdfb3ae6c40fff7b8d42a84549321405d65/creativetimofficial-argon-dashboard-pro-cda6ecdfb3ae6c40fff7b8d42a84549321405d65",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "creativetimofficial-material-dashboard-pro-7b4ed9a15240a41ea433ab5fb83332994adda7ba",
+    "name": "material-dashboard-pro",
+    "path": "html-css-js/creativetimofficial-material-dashboard-pro-7b4ed9a15240a41ea433ab5fb83332994adda7ba/creativetimofficial-material-dashboard-pro-7b4ed9a15240a41ea433ab5fb83332994adda7ba",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "creativetimofficial-material-kit-pro-ed415934c4c9a717486dcd531b7e415d9b670176",
+    "name": "material-kit-pro",
+    "path": "html-css-js/creativetimofficial-material-kit-pro-ed415934c4c9a717486dcd531b7e415d9b670176/creativetimofficial-material-kit-pro-ed415934c4c9a717486dcd531b7e415d9b670176",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "creativetimofficial-soft-ui-dashboard-pro-6d0fcceee6f9631006fa886228dc48d8c1d0526c",
+    "name": "soft-ui-dashboard-pro",
+    "path": "html-css-js/creativetimofficial-soft-ui-dashboard-pro-6d0fcceee6f9631006fa886228dc48d8c1d0526c/creativetimofficial-soft-ui-dashboard-pro-6d0fcceee6f9631006fa886228dc48d8c1d0526c",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "creativetimofficial-soft-ui-design-system-pro-6c7fad9cdeb1215dd3405e4740e2f897754359c5",
+    "name": "soft-ui-design-system-pro",
+    "path": "html-css-js/creativetimofficial-soft-ui-design-system-pro-6c7fad9cdeb1215dd3405e4740e2f897754359c5/creativetimofficial-soft-ui-design-system-pro-6c7fad9cdeb1215dd3405e4740e2f897754359c5",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "gaia-bootstrap-template-pro-v1.0.1",
+    "name": "gaia-bootstrap-template-pro-v1.0.1",
+    "path": "html-css-js/gaia-bootstrap-template-pro-v1.0.1/gaia-bootstrap-template-pro-v1.0.1",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "get-shit-done-pro-html-v1.4.3",
+    "name": "get-shit-done-pro-html-v1.4.3",
+    "path": "html-css-js/get-shit-done-pro-html-v1.4.3/get-shit-done-pro-html-v1.4.3",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "light-bootstrap-dashboard-pro-html-v2.0.1",
+    "name": "light-bootstrap-dashboard-pro-html-v2.0.1",
+    "path": "html-css-js/light-bootstrap-dashboard-pro-html-v2.0.1/light-bootstrap-dashboard-pro-html-v2.0.1",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "material-dashboard-pro-html-v2.2.2",
+    "name": "material-dashboard-pro",
+    "path": "html-css-js/material-dashboard-pro-html-v2.2.2/material-dashboard-pro-html-v2.2.2",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "material-dashboard-pro-v1.3.0",
+    "name": "material-dashboard-pro-v1.3.0",
+    "path": "html-css-js/material-dashboard-pro-v1.3.0/material-dashboard-pro-v1.3.0",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "material-kit-pro-html-v1.3.0",
+    "name": "material-kit-pro-html-v1.3.0",
+    "path": "html-css-js/material-kit-pro-html-v1.3.0/material-kit-pro-html-v1.3.0",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "material-kit-pro-html-v2.2.1",
+    "name": "material-kit-pro",
+    "path": "html-css-js/material-kit-pro-html-v2.2.1/material-kit-pro-html-v2.2.1",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "notus-design-system-pro-v1.0.0",
+    "name": "notus-design-system-pro",
+    "path": "html-css-js/notus-design-system-pro-v1.0.0/notus-design-system-pro-v1.0.0",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "now-ui-dashboard-pro-v1.6.0",
+    "name": "now-ui-dashboard-pro",
+    "path": "html-css-js/now-ui-dashboard-pro-v1.6.0/now-ui-dashboard-pro-v1.6.0",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "now-ui-design-system-pro-v2.2.0",
+    "name": "now-ui-design-system-pro",
+    "path": "html-css-js/now-ui-design-system-pro-v2.2.0/now-ui-design-system-pro-v2.2.0",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "now-ui-kit-pro-v1.3.1",
+    "name": "now-ui-kit-pro",
+    "path": "html-css-js/now-ui-kit-pro-v1.3.1/now-ui-kit-pro-v1.3.1",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "paper-dashboard-2-pro-html-v2.1.1",
+    "name": "paper-dashboard-2-pro",
+    "path": "html-css-js/paper-dashboard-2-pro-html-v2.1.1/paper-dashboard-2-pro-html-v2.1.1",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "paper-dashboard-pro-v1.3.1",
+    "name": "paper-dashboard-pro-v1.3.1",
+    "path": "html-css-js/paper-dashboard-pro-v1.3.1/paper-dashboard-pro-v1.3.1",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "paper-kit-2-pro-html-v2.3.1",
+    "name": "paper-kit-2-pro",
+    "path": "html-css-js/paper-kit-2-pro-html-v2.3.1/paper-kit-2-pro-html-v2.3.1",
+    "scripts": [],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "paper-kit-pro-html-v1.0.7",
+    "name": "paper-kit-pro-html-v1.0.7",
+    "path": "html-css-js/paper-kit-pro-html-v1.0.7/paper-kit-pro-html-v1.0.7",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "soft-ui-dashboard-pro-tailwind-v1.1.0",
+    "name": "soft-ui-dashboard-pro-tailwind",
+    "path": "html-css-js/soft-ui-dashboard-pro-tailwind-v1.1.0/soft-ui-dashboard-pro-tailwind-v1.1.0",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "html-css-js",
+    "id": "soft-ui-flowbite-pro-v1.0.0",
+    "name": "soft-ui-flowbite-pro",
+    "path": "html-css-js/soft-ui-flowbite-pro-v1.0.0/soft-ui-flowbite-pro-v1.0.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "html-css-js",
+    "id": "x_rubik_1.2.3",
+    "name": "x_rubik_1.2.3",
+    "path": "html-css-js/x_rubik_1.2.3/x_rubik_1.2.3",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": true
+  },
+  {
+    "category": "laravel",
+    "id": "argon-dashboard-pro-laravel-bs4-master",
+    "name": "argon-dashboard-pro-laravel-bs4-master",
+    "path": "laravel/argon-dashboard-pro-laravel-bs4-master/argon-dashboard-pro-laravel-bs4-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "black-dashboard-pro-laravel-master_(2)",
+    "name": "black-dashboard-pro-laravel-master_(2)",
+    "path": "laravel/black-dashboard-pro-laravel-master_(2)/black-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "corporate-ui-dashboard-pro-laravel-master_(1)",
+    "name": "corporate-ui-dashboard-pro-laravel-master_(1)",
+    "path": "laravel/corporate-ui-dashboard-pro-laravel-master_(1)/corporate-ui-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "creativetimofficial-argon-dashboard-pro-laravel-8660a6a4860803265b9228a2ed9c4796f829b627",
+    "name": "creativetimofficial-argon-dashboard-pro-laravel-8660a6a4860803265b9228a2ed9c4796f829b627",
+    "path": "laravel/creativetimofficial-argon-dashboard-pro-laravel-8660a6a4860803265b9228a2ed9c4796f829b627/creativetimofficial-argon-dashboard-pro-laravel-8660a6a4860803265b9228a2ed9c4796f829b627",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "laravel-json-api-v3-master",
+    "name": "laravel-json-api-v3-master",
+    "path": "laravel/laravel-json-api-v3-master/laravel-json-api-v3-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "light-bootstrap-dashboard-pro-laravel-master",
+    "name": "light-bootstrap-dashboard-pro-laravel-master",
+    "path": "laravel/light-bootstrap-dashboard-pro-laravel-master/light-bootstrap-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "material-blog-pro-laravel-master_(2)",
+    "name": "material-blog-pro-laravel-master_(2)",
+    "path": "laravel/material-blog-pro-laravel-master_(2)/material-blog-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "material-dashboard-pro-laravel-bs4-master",
+    "name": "material-dashboard-pro-laravel-bs4-master",
+    "path": "laravel/material-dashboard-pro-laravel-bs4-master/material-dashboard-pro-laravel-bs4-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "material-dashboard-pro-laravel-livewire-master_(2)",
+    "name": "material-dashboard-pro-laravel-livewire-master_(2)",
+    "path": "laravel/material-dashboard-pro-laravel-livewire-master_(2)/material-dashboard-pro-laravel-livewire-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "material-dashboard-pro-laravel-master",
+    "name": "material-dashboard-pro-laravel-master",
+    "path": "laravel/material-dashboard-pro-laravel-master/material-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "now-ui-dashboard-pro-laravel-master",
+    "name": "now-ui-dashboard-pro-laravel-master",
+    "path": "laravel/now-ui-dashboard-pro-laravel-master/now-ui-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "paper-dashboard-pro-laravel-master_(1)",
+    "name": "paper-dashboard-pro-laravel-master_(1)",
+    "path": "laravel/paper-dashboard-pro-laravel-master_(1)/paper-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "soft-ui-dashboard-pro-laravel-livewire-master",
+    "name": "soft-ui-dashboard-pro-laravel-livewire-master",
+    "path": "laravel/soft-ui-dashboard-pro-laravel-livewire-master/soft-ui-dashboard-pro-laravel-livewire-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "soft-ui-dashboard-pro-laravel-master",
+    "name": "package.json",
+    "path": "laravel/soft-ui-dashboard-pro-laravel-master/soft-ui-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "soft-ui-dashboard-pro-tall-master_(1)",
+    "name": "soft-ui-dashboard-pro-tall-master_(1)",
+    "path": "laravel/soft-ui-dashboard-pro-tall-master_(1)/soft-ui-dashboard-pro-tall-master",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "laravel",
+    "id": "white-dashboard-pro-laravel-master",
+    "name": "white-dashboard-pro-laravel-master",
+    "path": "laravel/white-dashboard-pro-laravel-master/white-dashboard-pro-laravel-master",
+    "scripts": [
+      "dev"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "n8n-workflows",
+    "id": "creativetimofficial-n8n-workflow-templates-collection-ab200a59eb32caf921a2d15ac5d6d3650fa73563",
+    "name": "creativetimofficial-n8n-workflow-templates-collection-ab200a59eb32caf921a2d15ac5d6d3650fa73563",
+    "path": "n8n-workflows/creativetimofficial-n8n-workflow-templates-collection-ab200a59eb32caf921a2d15ac5d6d3650fa73563/creativetimofficial-n8n-workflow-templates-collection-ab200a59eb32caf921a2d15ac5d6d3650fa73563",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "creativetimofficial-astro-launch-ui-pro-8be9d93cdb4cea138c517ba2c70a7355381d347d",
+    "name": "astro-launch-ui-pro",
+    "path": "nextjs/creativetimofficial-astro-launch-ui-pro-8be9d93cdb4cea138c517ba2c70a7355381d347d/creativetimofficial-astro-launch-ui-pro-8be9d93cdb4cea138c517ba2c70a7355381d347d",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "horizon-ui-boilerplate-shadcn-pro-3.0.2",
+    "name": "horizon-ai-boilerplate-shadcn-pro",
+    "path": "nextjs/horizon-ui-boilerplate-shadcn-pro-3.0.2/boilerplate-shadcn-pro-main",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "material-tailwind-dashboard-nextjs-pro-v1.0.0",
+    "name": "material-tailwind-dashboard-nextjs-pro",
+    "path": "nextjs/material-tailwind-dashboard-nextjs-pro-v1.0.0/material-tailwind-dashboard-nextjs-pro-v1.0.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "next.js-material-kit-pro-v1.3.2",
+    "name": "nextjs-material-kit-pro",
+    "path": "nextjs/next.js-material-kit-pro-v1.3.2/next.js-material-kit-pro",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "nextjs-material-dashboard-2-pro-v2.2.0",
+    "name": "nextjs-material-dashboard-2-pro",
+    "path": "nextjs/nextjs-material-dashboard-2-pro-v2.2.0/nextjs-material-dashboard-2-pro-v2.2.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nextjs",
+    "id": "nextjs-material-dashboard-pro-v1.1.0",
+    "name": "nextjs-material-dashboard-pro",
+    "path": "nextjs/nextjs-material-dashboard-pro-v1.1.0/nextjs-material-dashboard-pro-v1.1.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxt-laravel",
+    "id": "creativetimofficial-nuxt-argon-dashboard-pro-laravel-ec7a3029d913b35b9e01fca8912cd54d170f114e",
+    "name": "creativetimofficial-nuxt-argon-dashboard-pro-laravel-ec7a3029d913b35b9e01fca8912cd54d170f114e",
+    "path": "nuxt-laravel/creativetimofficial-nuxt-argon-dashboard-pro-laravel-ec7a3029d913b35b9e01fca8912cd54d170f114e/creativetimofficial-nuxt-argon-dashboard-pro-laravel-ec7a3029d913b35b9e01fca8912cd54d170f114e",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxt-laravel",
+    "id": "nuxt-argon-dashboard-pro-laravel-bs4-master",
+    "name": "nuxt-argon-dashboard-pro-laravel-bs4-master",
+    "path": "nuxt-laravel/nuxt-argon-dashboard-pro-laravel-bs4-master/nuxt-argon-dashboard-pro-laravel-bs4-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxtjs",
+    "id": "nuxt-argon-dashboard-2-pro-v2.1.1",
+    "name": "nuxt-argon-dashboard-2-pro",
+    "path": "nuxtjs/nuxt-argon-dashboard-2-pro-v2.1.1/nuxt-argon-dashboard-2-pro-v2.1.1",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxtjs",
+    "id": "nuxt-argon-dashboard-pro-v1.4.0",
+    "name": "nuxt-argon-dashboard-pro",
+    "path": "nuxtjs/nuxt-argon-dashboard-pro-v1.4.0/nuxt-argon-dashboard-pro-v1.4.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxtjs",
+    "id": "nuxt-black-dashboard-pro-v1.2.0",
+    "name": "nuxt-black-dashboard-pro",
+    "path": "nuxtjs/nuxt-black-dashboard-pro-v1.2.0/nuxt-black-dashboard-pro-v1.2.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "nuxtjs",
+    "id": "nuxt-now-ui-kit-pro-v1.2.0",
+    "name": "nuxt-now-ui-kit-pro",
+    "path": "nuxtjs/nuxt-now-ui-kit-pro-v1.2.0/nuxt-now-ui-kit-pro-v1.2.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "argon-dashboard-chakra-pro-main-2.0.0",
+    "name": "argon-dashboard-chakra-pro",
+    "path": "react/argon-dashboard-chakra-pro-main-2.0.0/argon-dashboard-chakra-pro-main",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "argon-dashboard-pro-material-ui-v1.0.0",
+    "name": "argon-dashboard-pro-material-ui-v1.0.0",
+    "path": "react/argon-dashboard-pro-material-ui-v1.0.0/Documentation",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "argon-dashboard-pro-material-ui-v3.0.1",
+    "name": "argon-dashboard-pro-mui",
+    "path": "react/argon-dashboard-pro-material-ui-v3.0.1/argon-dashboard-pro-material-ui-v3.0.1",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "argon-dashboard-pro-react-v1.2.5",
+    "name": "argon-dashboard-pro-react",
+    "path": "react/argon-dashboard-pro-react-v1.2.5/argon-dashboard-pro-react-v1.2.5",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "argon-design-system-pro-react-v1.0.2",
+    "name": "argon-design-system-pro-react",
+    "path": "react/argon-design-system-pro-react-v1.0.2/argon-design-system-pro-react-v1.0.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "black-dashboard-pro-react-v1.2.4",
+    "name": "black-dashboard-pro-react",
+    "path": "react/black-dashboard-pro-react-v1.2.4/black-dashboard-pro-react-v1.2.4",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "blk-design-system-pro-react-v1.2.2",
+    "name": "blk-design-system-pro-react",
+    "path": "react/blk-design-system-pro-react-v1.2.2/blk-design-system-pro-react-v1.2.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "creativetimofficial-material-dashboard-pro-react-15ad0425fb8286bcd4ae727f8a144c9d334d06d4",
+    "name": "material-dashboard-3-pro-react",
+    "path": "react/creativetimofficial-material-dashboard-pro-react-15ad0425fb8286bcd4ae727f8a144c9d334d06d4/creativetimofficial-material-dashboard-pro-react-15ad0425fb8286bcd4ae727f8a144c9d334d06d4",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "creativetimofficial-paper-kit-pro-react-d901db7165268722c8fe56593e0e425eaee9838a",
+    "name": "paper-kit-pro-react",
+    "path": "react/creativetimofficial-paper-kit-pro-react-d901db7165268722c8fe56593e0e425eaee9838a/creativetimofficial-paper-kit-pro-react-d901db7165268722c8fe56593e0e425eaee9838a",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "ligth-bootstrap-dashboard-pro-react-v2.0.1",
+    "name": "light-bootstrap-dashboard-pro-react",
+    "path": "react/ligth-bootstrap-dashboard-pro-react-v2.0.1/ligth-bootstrap-dashboard-pro-react-v2.0.1",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "material-dashboard-2-pro-react-v1.0.2",
+    "name": "material-dashboard-2-pro-react-ts",
+    "path": "react/material-dashboard-2-pro-react-v1.0.2/material-dashboard-2-pro-react-v1.0.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "material-dashboard-pro-react-v1.10.0",
+    "name": "material-dashboard-pro-react",
+    "path": "react/material-dashboard-pro-react-v1.10.0/material-dashboard-pro-react-v1.10.0",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "material-kit-pro-material-ui-v4",
+    "name": "material-kit-pro-react",
+    "path": "react/material-kit-pro-material-ui-v4/material-kit-pro-react",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "material-kit-pro-react-v2.1.1",
+    "name": "material-kit-2-pro-react",
+    "path": "react/material-kit-pro-react-v2.1.1/material-kit-pro-react-v2.1.1",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "muse-ant-design-dashboard-pro-v1.1.0",
+    "name": "muse-ant-design-dashboard-pro",
+    "path": "react/muse-ant-design-dashboard-pro-v1.1.0/muse-ant-design-dashboard-pro-v1.1.0",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "now-ui-dashboard-pro-react-v1.5.2",
+    "name": "now-ui-dashboard-pro-react",
+    "path": "react/now-ui-dashboard-pro-react-v1.5.2/now-ui-dashboard-pro-react-v1.5.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "now-ui-kit-pro-react-v1.5.2",
+    "name": "now-ui-kit-pro-react",
+    "path": "react/now-ui-kit-pro-react-v1.5.2/now-ui-kit-pro-react-v1.5.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "paper-dashboard-pro-react-v1.3.2",
+    "name": "paper-dashboard-pro-react",
+    "path": "react/paper-dashboard-pro-react-v1.3.2/paper-dashboard-pro-react-v1.3.2",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "purity-ui-dashboard-pro-2.1.0",
+    "name": "purity-dashboard-react-pro",
+    "path": "react/purity-ui-dashboard-pro-2.1.0/purity-ui-dashboard-pro-main",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "soft-ui-dashboard-pro-react-v4.0.3",
+    "name": "soft-ui-dashboard-pro-react",
+    "path": "react/soft-ui-dashboard-pro-react-v4.0.3/soft-ui-dashboard-pro-react-v4.0.3",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "vision-ui-dashboard-pro-chakra-1.0.3",
+    "name": "vision-dashboard-react-pro",
+    "path": "react/vision-ui-dashboard-pro-chakra-1.0.3/vision-ui-dashboard-pro-chakra-main",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react",
+    "id": "vision-ui-dashboard-pro-react-main-2.1.0",
+    "name": "vision-ui-dashboard-pro-react",
+    "path": "react/vision-ui-dashboard-pro-react-main-2.1.0/vision-ui-dashboard-pro-react-main",
+    "scripts": [
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-laravel",
+    "id": "material-dashboard-pro-react-laravel-master_(1)",
+    "name": "material-dashboard-pro-react-laravel-master_(1)",
+    "path": "react-laravel/material-dashboard-pro-react-laravel-master_(1)/material-dashboard-pro-react-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "react-native",
+    "id": "creativetimofficial-argon-pro-react-native-v1.6.1-4-g91328cb4a58aa6393b67306940c200e869354551",
+    "name": "argon-pro-react-native",
+    "path": "react-native/creativetimofficial-argon-pro-react-native-v1.6.1-4-g91328cb4a58aa6393b67306940c200e869354551/creativetimofficial-argon-pro-react-native-91328cb4a58aa6393b67306940c200e869354551",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-native",
+    "id": "creativetimofficial-material-kit-pro-react-native-v1.8.0-18-g8cd29ee530f07301c81983b92f6eea832b9e34a1",
+    "name": "rn-material-kit-pro",
+    "path": "react-native/creativetimofficial-material-kit-pro-react-native-v1.8.0-18-g8cd29ee530f07301c81983b92f6eea832b9e34a1/creativetimofficial-material-kit-pro-react-native-8cd29ee530f07301c81983b92f6eea832b9e34a1",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-native",
+    "id": "creativetimofficial-now-ui-pro-react-native-v1.4.0-17-g3d060249b3c0ca8f6e88e589462c7ebfd7725a3d",
+    "name": "now-ui-pro-react-native",
+    "path": "react-native/creativetimofficial-now-ui-pro-react-native-v1.4.0-17-g3d060249b3c0ca8f6e88e589462c7ebfd7725a3d/creativetimofficial-now-ui-pro-react-native-3d060249b3c0ca8f6e88e589462c7ebfd7725a3d",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-native",
+    "id": "creativetimofficial-soft-ui-pro-react-native-547170c10f1795f09affc38500dec085849c0e75",
+    "name": "creativetimofficial-soft-ui-pro-react-native-547170c10f1795f09affc38500dec085849c0e75",
+    "path": "react-native/creativetimofficial-soft-ui-pro-react-native-547170c10f1795f09affc38500dec085849c0e75/creativetimofficial-soft-ui-pro-react-native-547170c10f1795f09affc38500dec085849c0e75",
+    "scripts": [
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-node",
+    "id": "argon-dashboard-pro-nodejs-v1.0.1",
+    "name": "argon-dashboard-pro-nodejs",
+    "path": "react-node/argon-dashboard-pro-nodejs-v1.0.1/argon-dashboard-pro-nodejs-master",
+    "scripts": [
+      "dev",
+      "start"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "react-node",
+    "id": "argon-dashboard-pro-react-nodejs-v1.0.0",
+    "name": "argon-dashboard-pro-react-nodejs-v1.0.0",
+    "path": "react-node/argon-dashboard-pro-react-nodejs-v1.0.0/argon-dashboard-pro-react-nodejs-v1.0.0",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "react-node",
+    "id": "material-dashboard-react-pro-nodejs-master_(1)",
+    "name": "material-dashboard-react-pro-nodejs-master_(1)",
+    "path": "react-node/material-dashboard-react-pro-nodejs-master_(1)/material-dashboard-react-pro-nodejs-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "shopify",
+    "id": "notus-shopify-v1.0.0",
+    "name": "notus-shopify-v1.0.0",
+    "path": "shopify/notus-shopify-v1.0.0/snippets",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "svelte",
+    "id": "argon-dashboard-pro-svelte-v1.2.0",
+    "name": "argon-dashboard-pro-svelte",
+    "path": "svelte/argon-dashboard-pro-svelte-v1.2.0/argon-dashboard-pro-svelte-v1.2.0",
+    "scripts": [
+      "dev",
+      "start",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "bootstrap-vue-argon-dashboard-pro-v1.2.0",
+    "name": "bootstrap-vue-argon-dashboard-pro",
+    "path": "vue/bootstrap-vue-argon-dashboard-pro-v1.2.0/bootstrap-vue-argon-dashboard-pro-v1.2.0",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "muse-vue-ant-design-dashboard-pro-v1.0.0",
+    "name": "muse-vue-ant-design-dashboard-pro",
+    "path": "vue/muse-vue-ant-design-dashboard-pro-v1.0.0/muse-vue-ant-design-dashboard-pro-v1.0.0",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vite-soft-ui-dashboard-pro-v1.0.0",
+    "name": "vite-soft-ui-dashboard-pro",
+    "path": "vue/vite-soft-ui-dashboard-pro-v1.0.0/vite-soft-ui-dashboard-pro-v1.0.0",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "vue",
+    "id": "vue-argon-dashboard-2-pro-v4.0.0",
+    "name": "vue-argon-dashboard-2-pro",
+    "path": "vue/vue-argon-dashboard-2-pro-v4.0.0/vue-argon-dashboard-2-pro-v4.0.0",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-argon-dashboard-pro-bs4-v2.0.2",
+    "name": "vue-argon-dashboard-pro",
+    "path": "vue/vue-argon-dashboard-pro-bs4-v2.0.2/vue-argon-dashboard-pro-bs4-v2.0.2",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-argon-design-system-pro-v1.1.0",
+    "name": "vue-argon-design-system-pro",
+    "path": "vue/vue-argon-design-system-pro-v1.1.0/vue-argon-design-system-pro-v1.1.0",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-black-dashboard-pro-v1.4.1",
+    "name": "vue-black-dashboard-pro",
+    "path": "vue/vue-black-dashboard-pro-v1.4.1/vue-black-dashboard-pro-v1.4.1",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-light-bootstrap-dashboard-pro-v1.4.2",
+    "name": "vue-light-bootstrap-dashboard-pro",
+    "path": "vue/vue-light-bootstrap-dashboard-pro-v1.4.2/vue-light-bootstrap-dashboard-pro-v1.4.2",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-material-dashboard-2-pro-v3.1.0",
+    "name": "vue-material-dashboard-2-pro",
+    "path": "vue/vue-material-dashboard-2-pro-v3.1.0/vue-material-dashboard-2-pro-v3.1.0",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-material-dashboard-pro-v1.5.3",
+    "name": "vue-material-dashboard-pro",
+    "path": "vue/vue-material-dashboard-pro-v1.5.3/vue-material-dashboard-pro-v1.5.3",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-material-kit-2-pro-v2.0.0",
+    "name": "vue-material-kit-2-pro",
+    "path": "vue/vue-material-kit-2-pro-v2.0.0/vue-material-kit-2-pro-v2.0.0",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": true
+  },
+  {
+    "category": "vue",
+    "id": "vue-material-kit-pro-bs4",
+    "name": "vue-material-kit-pro-bs4",
+    "path": "vue/vue-material-kit-pro-bs4/vue-material-kit-pro-bs4",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-now-ui-dashboard-pro-v2.2.0",
+    "name": "vue-now-ui-dashboard-pro",
+    "path": "vue/vue-now-ui-dashboard-pro-v2.2.0/vue-now-ui-dashboard-pro-v2.2.0",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-now-ui-kit-pro-v1.3.0",
+    "name": "vue-now-ui-kit-pro",
+    "path": "vue/vue-now-ui-kit-pro-v1.3.0/vue-now-ui-kit-pro-v1.3.0",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-paper-dashboard-2-pro-v2.4.0",
+    "name": "vue-paper-dashboard-pro",
+    "path": "vue/vue-paper-dashboard-2-pro-v2.4.0/vue-paper-dashboard-2-pro-v2.4.0",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-paper-dashboard-pro-v2.4.2",
+    "name": "vue-paper-dashboard-pro",
+    "path": "vue/vue-paper-dashboard-pro-v2.4.2/vue-paper-dashboard-pro-v2.4.2",
+    "scripts": [
+      "dev",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-soft-ui-dashboard-pro-v3.0.0",
+    "name": "vue-soft-ui-dashboard-pro",
+    "path": "vue/vue-soft-ui-dashboard-pro-v3.0.0/vue-soft-ui-dashboard-pro-v3.0.0",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vue-white-dashboard-pro-v1.1.0",
+    "name": "vue-white-dashboard-pro",
+    "path": "vue/vue-white-dashboard-pro-v1.1.0/vue-white-dashboard-pro-v1.1.0",
+    "scripts": [
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vuetify-material-dashboard-2-pro",
+    "name": "vuetify-material-dashboard-pro",
+    "path": "vue/vuetify-material-dashboard-2-pro/vuetify-material-dashboard-2-pro",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue",
+    "id": "vuetify-soft-ui-dashboard-pro-v1.0.0",
+    "name": "vuetify-soft-ui-dashboard-pro",
+    "path": "vue/vuetify-soft-ui-dashboard-pro-v1.0.0/vuetify-soft-ui-dashboard-pro-v1.0.0",
+    "scripts": [
+      "dev",
+      "serve",
+      "build"
+    ],
+    "hasPackageJson": true,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "creativetimofficial-vue-argon-dashboard-pro-laravel-fd914dc1b5592a1ab5fc7c53e0f906bea8dd3b9e",
+    "name": "creativetimofficial-vue-argon-dashboard-pro-laravel-fd914dc1b5592a1ab5fc7c53e0f906bea8dd3b9e",
+    "path": "vue-laravel/creativetimofficial-vue-argon-dashboard-pro-laravel-fd914dc1b5592a1ab5fc7c53e0f906bea8dd3b9e/creativetimofficial-vue-argon-dashboard-pro-laravel-fd914dc1b5592a1ab5fc7c53e0f906bea8dd3b9e",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-argon-dashboard-pro-laravel-bs4-master",
+    "name": "vue-argon-dashboard-pro-laravel-bs4-master",
+    "path": "vue-laravel/vue-argon-dashboard-pro-laravel-bs4-master/vue-argon-dashboard-pro-laravel-bs4-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-black-dashboard-pro-laravel-master",
+    "name": "vue-black-dashboard-pro-laravel-master",
+    "path": "vue-laravel/vue-black-dashboard-pro-laravel-master/vue-black-dashboard-pro-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-material-dashboard-laravel-pro-bs4-master",
+    "name": "vue-material-dashboard-laravel-pro-bs4-master",
+    "path": "vue-laravel/vue-material-dashboard-laravel-pro-bs4-master/vue-material-dashboard-laravel-pro-bs4-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-material-dashboard-laravel-pro-master",
+    "name": "vue-material-dashboard-laravel-pro-master",
+    "path": "vue-laravel/vue-material-dashboard-laravel-pro-master/vue-material-dashboard-laravel-pro-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-now-ui-dashboard-pro-laravel-master",
+    "name": "vue-now-ui-dashboard-pro-laravel-master",
+    "path": "vue-laravel/vue-now-ui-dashboard-pro-laravel-master/vue-now-ui-dashboard-pro-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-paper-dashboard-pro-laravel-master",
+    "name": "vue-paper-dashboard-pro-laravel-master",
+    "path": "vue-laravel/vue-paper-dashboard-pro-laravel-master/vue-paper-dashboard-pro-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-soft-ui-dashboard-pro-laravel-master_(3)",
+    "name": "vue-soft-ui-dashboard-pro-laravel-master_(3)",
+    "path": "vue-laravel/vue-soft-ui-dashboard-pro-laravel-master_(3)/vue-soft-ui-dashboard-pro-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  },
+  {
+    "category": "vue-laravel",
+    "id": "vue-white-dashboard-pro-laravel-master",
+    "name": "vue-white-dashboard-pro-laravel-master",
+    "path": "vue-laravel/vue-white-dashboard-pro-laravel-master/vue-white-dashboard-pro-laravel-master",
+    "scripts": [],
+    "hasPackageJson": false,
+    "hasIndex": false
+  }
+]

@@ -1790,7 +1790,211 @@ app.post("/api/projects/init", (req, res) => {
 });
 
 // ============================================================
-// PROJECT CREATOR
+// TEMPLATE SYSTEM
+// ============================================================
+
+interface Template {
+  category: string;
+  id: string;
+  name: string;
+  path: string;
+  scripts: string[];
+  hasPackageJson: boolean;
+  hasIndex: boolean;
+}
+
+// Load template manifest (cached)
+let templateManifest: Template[] = [];
+const TEMPLATES_DIR = join(PROJECT_ROOT, "extracted_templates");
+
+function loadTemplateManifest(): Template[] {
+  if (templateManifest.length > 0) return templateManifest;
+  try {
+    const manifestPath = join(TEMPLATES_DIR, "manifest.json");
+    if (existsSync(manifestPath)) {
+      templateManifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+    }
+  } catch {}
+  return templateManifest;
+}
+
+// Category display names and icons
+const CATEGORY_META: Record<string, { label: string; icon: string }> = {
+  react: { label: "React", icon: "component" },
+  nextjs: { label: "Next.js", icon: "globe" },
+  vue: { label: "Vue", icon: "component" },
+  angular: { label: "Angular", icon: "component" },
+  svelte: { label: "Svelte", icon: "component" },
+  nuxtjs: { label: "Nuxt", icon: "globe" },
+  "html-css-js": { label: "HTML/CSS/JS", icon: "file-code" },
+  "react-node": { label: "React + Node", icon: "layers" },
+  "react-laravel": { label: "React + Laravel", icon: "layers" },
+  "vue-laravel": { label: "Vue + Laravel", icon: "layers" },
+  "nuxt-laravel": { label: "Nuxt + Laravel", icon: "layers" },
+  laravel: { label: "Laravel", icon: "server" },
+  django: { label: "Django", icon: "server" },
+  flutter: { label: "Flutter", icon: "smartphone" },
+  "react-native": { label: "React Native", icon: "smartphone" },
+  shopify: { label: "Shopify", icon: "shopping-cart" },
+  "figma-design": { label: "Figma", icon: "palette" },
+  "email-templates": { label: "Email", icon: "mail" },
+  "n8n-workflows": { label: "n8n", icon: "workflow" },
+  docs: { label: "Docs", icon: "book" },
+};
+
+app.get("/api/templates", (_req, res) => {
+  const templates = loadTemplateManifest();
+  const categories = [...new Set(templates.map((t) => t.category))].sort();
+  const grouped = categories.map((cat) => ({
+    id: cat,
+    ...CATEGORY_META[cat] || { label: cat, icon: "folder" },
+    templates: templates.filter((t) => t.category === cat),
+  }));
+  res.json(grouped);
+});
+
+app.get("/api/templates/:category", (req, res) => {
+  const templates = loadTemplateManifest();
+  const filtered = templates.filter((t) => t.category === req.params.category);
+  res.json(filtered);
+});
+
+// Template-based project creation — fast path (copy + install + dev server)
+app.post("/api/projects/create-from-template", (req, res) => {
+  const { templateId, name, basePath, description } = req.body;
+  if (!templateId || !name) {
+    return res.status(400).json({ error: "templateId and name are required" });
+  }
+
+  const templates = loadTemplateManifest();
+  const template = templates.find((t) => t.id === templateId);
+  if (!template) return res.status(404).json({ error: "Template not found" });
+
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+  const base = basePath || join(HOME, "projects");
+  const projectDir = join(base, safeName);
+
+  // Create base dir if needed
+  if (!existsSync(base)) mkdirSync(base, { recursive: true });
+  if (existsSync(projectDir)) {
+    return res.status(409).json({ error: `Directory already exists: ${projectDir}` });
+  }
+
+  try {
+    // Copy template to project dir
+    const templateSrc = join(TEMPLATES_DIR, template.path);
+    if (!existsSync(templateSrc)) {
+      return res.status(404).json({ error: "Template source directory not found" });
+    }
+
+    execFileSync("cp", ["-R", templateSrc, projectDir], { timeout: 30000 });
+
+    // Update package.json name if it exists
+    const pkgPath = join(projectDir, "package.json");
+    if (existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+        pkg.name = safeName;
+        writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+      } catch {}
+    }
+
+    // Initialize git repo
+    try {
+      execFileSync("git", ["init"], { cwd: projectDir, encoding: "utf-8", timeout: 5000 });
+      execFileSync("git", ["add", "."], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
+      execFileSync("git", ["commit", "-m", "Initial commit from template: " + template.name], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
+    } catch {}
+
+    // Detect project type
+    const type = detectProjectType(projectDir);
+
+    // Install dependencies (background — don't block the response)
+    let installCmd = "npm";
+    if (existsSync(join(projectDir, "bun.lockb")) || existsSync(join(projectDir, "bun.lock"))) {
+      installCmd = "bun";
+    }
+
+    // Set as active project
+    activeProject = projectDir;
+    if (!userProjects.some((p) => p.path === projectDir)) {
+      userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
+    }
+
+    // Respond immediately — frontend will handle install + dev server
+    res.status(201).json({
+      ok: true,
+      projectDir,
+      type,
+      template: { id: template.id, name: template.name, category: template.category },
+      scripts: template.scripts,
+      installCmd,
+      sessionId: null, // No Claude session for template projects (unless customizing)
+    });
+
+    // If description provided, spawn Claude to customize the template (non-blocking)
+    if (description && description.trim()) {
+      try {
+        const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
+        const customizePrompt = `This project was created from the "${template.name}" template. The user wants to customize it:\n\n${description}\n\nThe template is already set up with all dependencies. Modify the existing code to match the user's vision. Do NOT start from scratch — build on what's already there. Focus on customizing the UI, content, and functionality.`;
+
+        const id = randomUUID().slice(0, 12);
+        const args = ["-p", customizePrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+        const env = buildProjectEnv(projectDir);
+
+        const child = spawn(claudePath, args, {
+          env,
+          cwd: projectDir,
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+
+        const session: ClaudeSession = {
+          id,
+          prompt: customizePrompt,
+          status: "running",
+          messages: [{ role: "user", content: customizePrompt, timestamp: new Date().toISOString() }],
+          output: [],
+          exitCode: null,
+          startedAt: new Date().toISOString(),
+          pid: child.pid,
+          cwd: projectDir,
+          process: child,
+        };
+
+        claudeSessions.set(id, session);
+        wireStreamJson(child, session, id);
+
+        child.on("close", (code) => {
+          session.status = code === 0 ? "done" : "error";
+          session.exitCode = code;
+          session.endedAt = new Date().toISOString();
+          session.messages.push({ role: "assistant", content: session.output.join(""), timestamp: new Date().toISOString() });
+          delete session.process;
+          if (code === 0) session.filesChanged = detectFileChanges(session.cwd);
+          const clients = sseClients.get(id);
+          if (clients) {
+            for (const client of clients) {
+              client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
+              client.end();
+            }
+            sseClients.delete(id);
+          }
+          persistSessions();
+          setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
+        });
+
+        // Update the response won't work since already sent — but the session is tracked
+        // Frontend can poll for the customization session separately
+      } catch {}
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to create project from template";
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ============================================================
+// PROJECT CREATOR (from scratch — original flow)
 // ============================================================
 
 app.post("/api/projects/create", (req, res) => {
