@@ -437,14 +437,30 @@ export interface DevServerStatus {
   running: boolean;
   status?: string;
   port?: number;
+  runtime?: string;
   output?: string;
 }
 
-export const startDevServer = (cwd: string) =>
-  api.post<{ ok: boolean; port: number; status: string }>("/dev-server/start", { cwd });
+export const startDevServer = (cwd: string, runtime?: string) =>
+  api.post<{ ok: boolean; port: number; status: string; runtime: string }>("/dev-server/start", { cwd, runtime });
 export const fetchDevServerStatus = (cwd: string) =>
   api.get<DevServerStatus>(`/dev-server/status?cwd=${encodeURIComponent(cwd)}`);
 export const stopDevServer = (cwd: string) =>
   api.post<{ ok: boolean }>("/dev-server/stop", { cwd });
+
+// --- Project Type Detection ---
+export type ProjectType = "frontend" | "backend" | "fullstack" | "cli" | "static" | "unknown";
+
+export const fetchProjectType = (cwd: string) =>
+  api.get<{ type: ProjectType }>(`/projects/type?cwd=${encodeURIComponent(cwd)}`);
+
+// --- Container Runtime Detection ---
+export interface RuntimeInfo {
+  available: Array<{ name: string; version: string }>;
+  preferred: string | null;
+  native: true;
+}
+
+export const fetchRuntimes = () => api.get<RuntimeInfo>("/runtime/detect");
 export const stopOpsProcess = (id: string) =>
   api.post<{ ok: boolean }>(`/ops/stop/${id}`, {});

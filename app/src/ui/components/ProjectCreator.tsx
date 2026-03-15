@@ -12,6 +12,8 @@ import {
   GitBranch,
   Check,
   CircleOff,
+  Container,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,7 @@ import {
   fetchSupabaseStatus,
   fetchSupabaseProjects,
   fetchAwsStatus,
+  fetchRuntimes,
 } from "@/api/config";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +31,7 @@ interface ProjectCreatorProps {
   open: boolean;
   onClose: () => void;
   onProjectCreated?: (projectDir: string, sessionId: string | null) => void;
+  onRuntimeSelected?: (runtime: string) => void;
   defaultBasePath?: string;
 }
 
@@ -42,12 +46,13 @@ const TEMPLATES = [
 type BackendChoice = "none" | "supabase" | "aws";
 type RepoChoice = "none" | "new" | "existing";
 
-export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePath }: ProjectCreatorProps) {
+export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelected, defaultBasePath }: ProjectCreatorProps) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePath, setBasePath] = useState(defaultBasePath || "");
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedRuntime, setSelectedRuntime] = useState("native");
 
   // Backend & repo choices
   const [backend, setBackend] = useState<BackendChoice>("none");
@@ -63,10 +68,11 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
   const [newEnvKey, setNewEnvKey] = useState("");
   const [newEnvValue, setNewEnvValue] = useState("");
 
-  // Fetch integration statuses
+  // Fetch integration statuses + available runtimes
   const github = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus, enabled: open });
   const supabase = useQuery({ queryKey: ["supabase-status"], queryFn: fetchSupabaseStatus, enabled: open });
   const aws = useQuery({ queryKey: ["aws-status"], queryFn: fetchAwsStatus, enabled: open });
+  const runtimes = useQuery({ queryKey: ["runtimes"], queryFn: fetchRuntimes, enabled: open });
   const sbProjects = useQuery({
     queryKey: ["supabase-projects"],
     queryFn: fetchSupabaseProjects,
@@ -100,6 +106,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["projects"] });
+      onRuntimeSelected?.(selectedRuntime);
       onProjectCreated?.(data.projectDir, data.sessionId);
       onClose();
       resetForm();
@@ -149,6 +156,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
     setNewSupabaseName("");
     setSupabaseMode("select");
     setRepoChoice("none");
+    setSelectedRuntime("native");
     setEnvVars([]);
     setNewEnvKey("");
     setNewEnvValue("");
@@ -474,6 +482,48 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
               )}
             </div>
 
+            {/* Runtime — only show if container runtimes detected */}
+            {runtimes.data && runtimes.data.available.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-1.5">
+                  <Container className="h-3.5 w-3.5" /> Runtime
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRuntime("native")}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors",
+                      selectedRuntime === "native" ? "border-primary bg-primary/5" : "border-border hover:bg-accent"
+                    )}
+                  >
+                    <Monitor className="h-3.5 w-3.5" />
+                    Native
+                  </button>
+                  {runtimes.data.available.map((rt) => (
+                    <button
+                      key={rt.name}
+                      type="button"
+                      onClick={() => setSelectedRuntime(rt.name)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors",
+                        selectedRuntime === rt.name ? "border-primary bg-primary/5" : "border-border hover:bg-accent"
+                      )}
+                    >
+                      <Container className="h-3.5 w-3.5" />
+                      {rt.name}
+                      <span className="text-[9px] text-muted-foreground">{rt.version}</span>
+                    </button>
+                  ))}
+                </div>
+                {selectedRuntime !== "native" && (
+                  <p className="text-[9px] text-muted-foreground">
+                    Dev server will run in a {selectedRuntime} container with hot reload via volume mount.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Location */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
@@ -493,6 +543,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, defaultBasePat
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-border px-6 py-4 shrink-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {selectedRuntime !== "native" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{selectedRuntime}</Badge>}
               {backend !== "none" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{backend}</Badge>}
               {repoChoice === "new" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">github</Badge>}
               {envVars.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{envVars.length} env</Badge>}

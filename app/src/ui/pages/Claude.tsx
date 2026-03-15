@@ -77,6 +77,7 @@ import {
   fetchSuggestions,
   fetchFollowUpSuggestions,
   startDevServer,
+  fetchProjectType,
   deleteProject,
   revealProject,
   type ClaudeSession,
@@ -85,6 +86,7 @@ import {
   type GitStatus,
   type Suggestion,
   type FollowUpSuggestion,
+  type ProjectType,
 } from "@/api/config";
 import { cn, relativeTime } from "@/lib/utils";
 import { api } from "@/api/client";
@@ -2014,6 +2016,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const [activeProjectPath, setActiveProjectPath] = useState<string | null>(null);
   /** Project currently being built by Claude — triggers auto-start dev server when done */
   const [buildingProjectDir, setBuildingProjectDir] = useState<string | null>(null);
+  /** Preferred runtime for new project dev servers (native, docker, podman, etc.) */
+  const [preferredRuntime, setPreferredRuntime] = useState<string>("native");
   /** Project env drawer state */
   const [envDrawerProject, setEnvDrawerProject] = useState<string | null>(null);
   const [browserInitialUrl, setBrowserInitialUrl] = useState<string | null>(null);
@@ -2106,20 +2110,34 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     return grouped;
   }, [sessions, openProjects]);
 
-  // --------------- Auto-start dev server when build completes ---------------
+  // --------------- Auto-start dev environment when build completes (type-aware) ---------------
   useEffect(() => {
     if (!buildingProjectDir || !activeSession) return;
     if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
       const projectDir = buildingProjectDir;
-      // Don't clear buildingProjectDir yet — keep building animation until dev server is ready
+      const runtime = preferredRuntime;
+      // Don't clear buildingProjectDir yet — keep building animation until ready
       setTimeout(async () => {
         try {
-          const result = await startDevServer(projectDir);
-          if (result.ok && result.port) {
-            setBrowserInitialUrl(`http://localhost:${result.port}`);
+          // Detect project type to decide what to open
+          const { type } = await fetchProjectType(projectDir);
+
+          if (type === "cli") {
+            // CLI projects: open terminal, no dev server
+            setTerminalPanelOpen(true);
+            setBrowserPanelOpen(false);
+          } else {
+            // Frontend, backend, fullstack, static: start dev server
+            const result = await startDevServer(projectDir, runtime !== "native" ? runtime : undefined);
+            if (result.ok && result.port) {
+              setBrowserInitialUrl(`http://localhost:${result.port}`);
+            }
+            // Backend projects: also open terminal for logs
+            if (type === "backend") {
+              setTerminalPanelOpen(true);
+            }
           }
         } catch {}
-        // Clear building state after dev server attempt (success or fail)
         setBuildingProjectDir(null);
       }, 2000);
     }
@@ -2863,6 +2881,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 2000);
           }
         }}
+        onRuntimeSelected={setPreferredRuntime}
       />
 
       {/* Project Environment Drawer */}

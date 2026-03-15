@@ -2601,25 +2601,117 @@ app.delete("/api/projects/env/var", (req, res) => {
 });
 
 // ============================================================
+// PROJECT TYPE DETECTION
+// ============================================================
+
+type ProjectType = "frontend" | "backend" | "fullstack" | "cli" | "static" | "unknown";
+
+function detectProjectType(cwd: string): ProjectType {
+  try {
+    const pkgPath = join(cwd, "package.json");
+    if (!existsSync(pkgPath)) {
+      // Check for static site (index.html at root)
+      if (existsSync(join(cwd, "index.html"))) return "static";
+      return "unknown";
+    }
+
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+    const scripts = pkg.scripts || {};
+
+    // Fullstack frameworks detected first (they bundle frontend + backend)
+    const fullstackFw = ["next", "nuxt", "remix", "@redwoodjs/core", "@blitzjs/next"];
+    if (fullstackFw.some((fw) => allDeps[fw])) return "fullstack";
+
+    const webFrameworks = ["react", "vue", "svelte", "@angular/core", "vite", "astro", "express", "fastify", "hono", "koa", "@nestjs/core", "hapi"];
+
+    // CLI detection: has bin field + no web frameworks + no dev/start script
+    if (pkg.bin && !webFrameworks.some((fw) => allDeps[fw])) {
+      if (!scripts.dev && !scripts.start) return "cli";
+    }
+
+    const hasFrontend = !!(allDeps.react || allDeps.vue || allDeps.svelte || allDeps["@angular/core"] || allDeps.vite || allDeps.astro);
+    const hasBackend = !!(allDeps.express || allDeps.fastify || allDeps.hono || allDeps.koa || allDeps["@nestjs/core"] || allDeps.hapi);
+
+    if (hasFrontend && hasBackend) return "fullstack";
+    if (hasFrontend) return "frontend";
+    if (hasBackend) return "backend";
+
+    // Fallback: if has dev script, assume frontend-ish
+    if (scripts.dev) return "frontend";
+    if (scripts.start) return "backend";
+
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+app.get("/api/projects/type", (req, res) => {
+  const cwd = req.query.cwd as string;
+  if (!cwd) return res.status(400).json({ error: "cwd is required" });
+  res.json({ type: detectProjectType(cwd) });
+});
+
+// ============================================================
+// CONTAINER RUNTIME DETECTION
+// ============================================================
+
+interface RuntimeInfo {
+  available: Array<{ name: string; version: string }>;
+  preferred: string | null;
+  native: true;
+}
+
+let cachedRuntimes: RuntimeInfo | null = null;
+
+function detectContainerRuntimes(): RuntimeInfo {
+  if (cachedRuntimes) return cachedRuntimes;
+
+  const runtimes: Array<{ name: string; version: string }> = [];
+  const candidates = ["docker", "podman", "finch", "nerdctl"];
+
+  for (const rt of candidates) {
+    try {
+      const version = execFileSync(rt, ["--version"], { encoding: "utf-8", timeout: 5000 }).trim();
+      const match = version.match(/(\d+\.\d+[\.\d]*)/);
+      runtimes.push({ name: rt, version: match?.[1] || "unknown" });
+    } catch {}
+  }
+
+  // Prefer podman (rootless/daemonless) > docker > others
+  const preferOrder = ["podman", "docker", "finch", "nerdctl"];
+  const preferred = preferOrder.find((r) => runtimes.some((rt) => rt.name === r)) || null;
+
+  cachedRuntimes = { available: runtimes, preferred, native: true };
+  return cachedRuntimes;
+}
+
+app.get("/api/runtime/detect", (_req, res) => {
+  res.json(detectContainerRuntimes());
+});
+
+// ============================================================
 // DEV SERVER MANAGEMENT — start/stop/status for project dev servers
 // ============================================================
 
-const devServers = new Map<string, { process: ReturnType<typeof spawn>; port: number; cwd: string; status: string; output: string[] }>();
+interface DevServerEntry {
+  process: ReturnType<typeof spawn>;
+  port: number;
+  cwd: string;
+  status: string;
+  output: string[];
+  runtime: "native" | string; // "native" | "docker" | "podman" | etc.
+  containerId?: string;
+}
 
-app.post("/api/dev-server/start", (req, res) => {
-  const { cwd: projectCwd } = req.body;
-  if (!projectCwd) return res.status(400).json({ error: "cwd is required" });
+const devServers = new Map<string, DevServerEntry>();
 
-  // Check if already running for this project
-  const existing = devServers.get(projectCwd);
-  if (existing && existing.status === "running") {
-    return res.json({ ok: true, port: existing.port, status: "already-running" });
-  }
-
-  // Detect package manager and dev command
+// Detect package manager and dev command for a project
+function detectDevCommand(projectCwd: string): { cmd: string; args: string[]; port: number; installCmd: string } | { error: string } {
   let cmd = "bun";
   let args = ["run", "dev"];
-  let port = 5173;
+  const port = 5173;
 
   if (existsSync(join(projectCwd, "bun.lockb")) || existsSync(join(projectCwd, "bun.lock"))) {
     cmd = "bun"; args = ["run", "dev"];
@@ -2631,24 +2723,138 @@ app.post("/api/dev-server/start", (req, res) => {
     cmd = "npx"; args = ["pnpm", "dev"];
   }
 
-  // Check if package.json exists and has a dev script
   try {
     const pkg = JSON.parse(readFileSync(join(projectCwd, "package.json"), "utf-8"));
     if (!pkg.scripts?.dev) {
-      // Try start instead
       if (pkg.scripts?.start) { args = ["run", "start"]; }
-      else { return res.status(400).json({ error: "No dev or start script in package.json" }); }
+      else { return { error: "No dev or start script in package.json" }; }
     }
   } catch {
-    return res.status(400).json({ error: "No package.json found. Build the project first." });
+    return { error: "No package.json found. Build the project first." };
   }
 
-  // First install deps if node_modules doesn't exist
-  if (!existsSync(join(projectCwd, "node_modules"))) {
+  return { cmd, args, port, installCmd: cmd === "bun" ? "bun" : "npm" };
+}
+
+// Wire output capture + readiness detection for a dev server entry
+function wireDevServerOutput(child: ReturnType<typeof spawn>, entry: DevServerEntry) {
+  const onData = (data: Buffer) => {
+    const text = data.toString();
+    entry.output.push(text);
+    const portMatch = text.match(/(?:localhost|127\.0\.0\.1):(\d{4,5})/);
+    if (portMatch) entry.port = parseInt(portMatch[1], 10);
+    if (text.includes("ready") || text.includes("Local:") || text.includes("listening") || text.includes("started") || portMatch) {
+      entry.status = "running";
+    }
+  };
+  child.stdout?.on("data", onData);
+  child.stderr?.on("data", onData);
+  child.on("close", (code) => { entry.status = code === 0 ? "stopped" : "error"; });
+}
+
+// Wait for dev server to become ready, then respond
+function waitForReady(entry: DevServerEntry, res: express.Response, timeoutMs = 8000) {
+  let waited = 0;
+  const check = setInterval(() => {
+    waited += 500;
+    if (entry.status === "running" || waited >= timeoutMs) {
+      clearInterval(check);
+      if (entry.status !== "running") entry.status = "running";
+      res.json({ ok: true, port: entry.port, status: entry.status, runtime: entry.runtime });
+    }
+  }, 500);
+  // Clear interval if client disconnects
+  res.on("close", () => clearInterval(check));
+}
+
+app.post("/api/dev-server/start", (req, res) => {
+  const { cwd: projectCwd, runtime: requestedRuntime } = req.body;
+  if (!projectCwd) return res.status(400).json({ error: "cwd is required" });
+
+  // Path validation: only allow paths under home directory
+  const resolvedCwd = resolve(projectCwd);
+  if (!resolvedCwd.startsWith(HOME) || resolvedCwd.includes("..")) {
+    return res.status(400).json({ error: "Invalid project path" });
+  }
+
+  // Check if already running
+  const existing = devServers.get(projectCwd);
+  if (existing && existing.status === "running") {
+    return res.json({ ok: true, port: existing.port, status: "already-running", runtime: existing.runtime });
+  }
+
+  const devCmd = detectDevCommand(projectCwd);
+  if ("error" in devCmd) return res.status(400).json({ error: devCmd.error });
+
+  const { cmd, args, port, installCmd } = devCmd;
+
+  // Container mode: docker, podman, finch, nerdctl
+  const allowedRuntimes = ["docker", "podman", "finch", "nerdctl"];
+  const containerRuntime = requestedRuntime && allowedRuntimes.includes(requestedRuntime) ? requestedRuntime : null;
+
+  if (containerRuntime) {
     try {
-      const installCmd = cmd === "bun" ? "bun" : "npm";
-      execFileSync(installCmd, ["install"], { cwd: projectCwd, encoding: "utf-8", timeout: 120_000 });
-    } catch {}
+      // Verify runtime is available
+      execFileSync("which", [containerRuntime], { encoding: "utf-8", timeout: 3000 });
+    } catch {
+      // Fallback to native
+      console.log(`Container runtime "${containerRuntime}" not found, falling back to native`);
+      return startNative(projectCwd, cmd, args, port, installCmd, res);
+    }
+
+    try {
+      const image = cmd === "bun" ? "oven/bun:1-slim" : "node:22-slim";
+      const sanitized = projectCwd.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      const containerName = `sidekick-dev-${sanitized.slice(-40)}`;
+
+      // Kill any existing container with same name
+      try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 10000 }); } catch {}
+
+      // Install deps inside container first (if node_modules doesn't exist)
+      const installStep = !existsSync(join(projectCwd, "node_modules"))
+        ? `${installCmd} install && ` : "";
+
+      const containerArgs = [
+        "run", "--rm",
+        "--name", containerName,
+        "-v", `${resolvedCwd}:/app`,
+        "-w", "/app",
+        "-p", `${port}:${port}`,
+        "-e", `PORT=${port}`,
+        "-e", "BROWSER=none",
+        "-e", "HOST=0.0.0.0",
+        image,
+        "sh", "-c", `${installStep}${cmd} ${args.join(" ")}`,
+      ];
+
+      const child = spawn(containerRuntime, containerArgs, {
+        cwd: projectCwd,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+
+      const entry: DevServerEntry = {
+        process: child, port, cwd: projectCwd, status: "starting",
+        output: [], runtime: containerRuntime, containerId: containerName,
+      };
+      devServers.set(projectCwd, entry);
+      wireDevServerOutput(child, entry);
+      waitForReady(entry, res, 30000); // Containers need more startup time
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to start container";
+      // Fallback to native on container failure
+      console.log(`Container start failed: ${msg}. Falling back to native.`);
+      startNative(projectCwd, cmd, args, port, installCmd, res);
+    }
+    return;
+  }
+
+  // Native mode (default)
+  startNative(projectCwd, cmd, args, port, installCmd, res);
+});
+
+function startNative(projectCwd: string, cmd: string, args: string[], port: number, installCmd: string, res: express.Response) {
+  if (!existsSync(join(projectCwd, "node_modules"))) {
+    try { execFileSync(installCmd, ["install"], { cwd: projectCwd, encoding: "utf-8", timeout: 120_000 }); } catch {}
   }
 
   try {
@@ -2658,43 +2864,15 @@ app.post("/api/dev-server/start", (req, res) => {
       env: { ...buildProjectEnv(projectCwd), PORT: String(port), BROWSER: "none" },
     });
 
-    const entry = { process: child, port, cwd: projectCwd, status: "starting", output: [] as string[] };
+    const entry: DevServerEntry = { process: child, port, cwd: projectCwd, status: "starting", output: [], runtime: "native" };
     devServers.set(projectCwd, entry);
-
-    // Capture output to detect port and ready state
-    const onData = (data: Buffer) => {
-      const text = data.toString();
-      entry.output.push(text);
-      // Detect port from common frameworks
-      const portMatch = text.match(/(?:localhost|127\.0\.0\.1):(\d{4,5})/);
-      if (portMatch) entry.port = parseInt(portMatch[1], 10);
-      // Detect ready state
-      if (text.includes("ready") || text.includes("Local:") || text.includes("listening") || text.includes("started") || portMatch) {
-        entry.status = "running";
-      }
-    };
-    child.stdout?.on("data", onData);
-    child.stderr?.on("data", onData);
-
-    child.on("close", (code) => {
-      entry.status = code === 0 ? "stopped" : "error";
-    });
-
-    // Wait up to 8s for server to start
-    let waited = 0;
-    const checkReady = setInterval(() => {
-      waited += 500;
-      if (entry.status === "running" || waited >= 8000) {
-        clearInterval(checkReady);
-        if (entry.status !== "running") entry.status = "running"; // assume started
-        res.json({ ok: true, port: entry.port, status: entry.status });
-      }
-    }, 500);
+    wireDevServerOutput(child, entry);
+    waitForReady(entry, res);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to start dev server";
     res.status(500).json({ error: msg });
   }
-});
+}
 
 app.get("/api/dev-server/status", (req, res) => {
   const projectCwd = req.query.cwd as string;
@@ -2707,6 +2885,7 @@ app.get("/api/dev-server/status", (req, res) => {
     running: entry.status === "running" || entry.status === "starting",
     status: entry.status,
     port: entry.port,
+    runtime: entry.runtime,
     output: entry.output.slice(-20).join(""),
   });
 });
@@ -2715,7 +2894,15 @@ app.post("/api/dev-server/stop", (req, res) => {
   const { cwd: projectCwd } = req.body;
   const entry = devServers.get(projectCwd);
   if (!entry) return res.json({ ok: true });
+
+  // Kill the process — containers with --rm auto-remove on exit
   try { entry.process.kill("SIGTERM"); } catch {}
+  // Safety: force-remove container if still hanging after 3s
+  if (entry.containerId && entry.runtime !== "native") {
+    setTimeout(() => {
+      try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId!], { encoding: "utf-8", timeout: 5000 }); } catch {}
+    }, 3000);
+  }
   devServers.delete(projectCwd);
   res.json({ ok: true });
 });
@@ -2895,6 +3082,9 @@ function cleanupChildProcesses() {
     }
   }
   for (const entry of devServers.values()) {
+    if (entry.containerId && entry.runtime !== "native") {
+      try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId], { encoding: "utf-8", timeout: 5000 }); } catch {}
+    }
     if (entry.process) {
       try { entry.process.kill("SIGTERM"); } catch {}
     }
