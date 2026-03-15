@@ -2175,9 +2175,12 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const sessionFiles = activeSession?.filesChanged ?? [];
 
   // SSE streaming for the active session
-  const sse = useSSE(
-    activeSession?.status === "running" ? activeSession.id : null
-  );
+  // Connect immediately when activeId is set (even before sessions query refreshes)
+  // to avoid missing early streaming output during project creation
+  const sseSessionId = activeSession?.status === "running"
+    ? activeSession.id
+    : (!activeSession && activeId ? activeId : null);
+  const sse = useSSE(sseSessionId);
 
   // When SSE completes, clear pending messages and refresh session data + suggestions
   useEffect(() => {
@@ -2878,8 +2881,11 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             setBuildingProjectDir(projectDir);
             setBrowserPanelOpen(true);
             setActiveId(sessionId);
+            // Aggressively refresh sessions so the new session appears in the chat
             queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
-            setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 2000);
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 500);
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 1500);
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 3000);
           } else {
             // Template-based (no Claude session): install deps + start dev server immediately
             setBrowserPanelOpen(true);
