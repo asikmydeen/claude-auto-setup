@@ -2685,8 +2685,20 @@ function saveProjectEnv(projectCwd: string, config: ProjectEnvConfig): void {
 }
 
 /** Build the merged env for a project: process.env → global integrations → project-specific */
+// Ensure PATH includes common tool locations (Electrobun bundles have limited PATH)
+const EXTRA_PATH_DIRS = [
+  join(HOME, ".local/share/mise/shims"),
+  join(HOME, ".local/bin"),
+  join(HOME, ".bun/bin"),
+  "/opt/homebrew/bin",
+  "/usr/local/bin",
+  join(HOME, ".nvm/versions/node", "*/bin"), // nvm
+].join(":");
+
 function buildProjectEnv(projectCwd: string): Record<string, string> {
   const env = { ...process.env } as Record<string, string>;
+  // Augment PATH for Electrobun bundles
+  env.PATH = `${EXTRA_PATH_DIRS}:${env.PATH || "/usr/bin:/bin"}`;
   const globalConfig = loadIntegrations();
   const projectConfig = loadProjectEnv(projectCwd);
 
@@ -2914,7 +2926,7 @@ const devServers = new Map<string, DevServerEntry>();
 
 // Detect package manager and dev command for a project
 function detectDevCommand(projectCwd: string): { cmd: string; args: string[]; port: number; installCmd: string } | { error: string } {
-  let cmd = "bun";
+  let cmd = "npm"; // default to npm (always available)
   let args = ["run", "dev"];
   const port = 5173;
 
@@ -3057,25 +3069,53 @@ app.post("/api/dev-server/start", (req, res) => {
   startNative(projectCwd, cmd, args, port, installCmd, res);
 });
 
-function startNative(projectCwd: string, cmd: string, args: string[], port: number, installCmd: string, res: express.Response) {
-  if (!existsSync(join(projectCwd, "node_modules"))) {
-    try { execFileSync(installCmd, ["install"], { cwd: projectCwd, encoding: "utf-8", timeout: 120_000 }); } catch {}
-  }
+function launchDevProcess(projectCwd: string, cmd: string, args: string[], port: number) {
+  const child = spawn(cmd, args, {
+    cwd: projectCwd,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...buildProjectEnv(projectCwd), PORT: String(port), BROWSER: "none" },
+  });
 
-  try {
-    const child = spawn(cmd, args, {
+  const entry: DevServerEntry = { process: child, port, cwd: projectCwd, status: "starting", output: [], runtime: "native" };
+  devServers.set(projectCwd, entry);
+  wireDevServerOutput(child, entry);
+  return entry;
+}
+
+function startNative(projectCwd: string, cmd: string, args: string[], port: number, installCmd: string, res: express.Response) {
+  // Need to install deps first — do it async
+  if (!existsSync(join(projectCwd, "node_modules"))) {
+    const installProc = spawn(installCmd, ["install"], {
       cwd: projectCwd,
       stdio: ["ignore", "pipe", "pipe"],
-      env: { ...buildProjectEnv(projectCwd), PORT: String(port), BROWSER: "none" },
+      env: buildProjectEnv(projectCwd),
     });
 
-    const entry: DevServerEntry = { process: child, port, cwd: projectCwd, status: "starting", output: [], runtime: "native" };
+    // Track install as the dev server entry so /status works during install
+    const entry: DevServerEntry = {
+      process: installProc, port, cwd: projectCwd, status: "installing", output: [], runtime: "native",
+    };
     devServers.set(projectCwd, entry);
-    wireDevServerOutput(child, entry);
-    waitForReady(entry, res);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to start dev server";
-    res.status(500).json({ error: msg });
+    installProc.stdout?.on("data", (d: Buffer) => entry.output.push(d.toString()));
+    installProc.stderr?.on("data", (d: Buffer) => entry.output.push(d.toString()));
+    installProc.on("close", () => {
+      // Install done — launch the dev server (no HTTP response needed, frontend polls /status)
+      devServers.delete(projectCwd);
+      try {
+        launchDevProcess(projectCwd, cmd, args, port);
+      } catch {}
+    });
+    // Respond immediately — frontend polls /status
+    res.json({ ok: true, port, status: "installing", runtime: "native" });
+  } else {
+    // Deps already installed — launch and wait for ready
+    try {
+      const entry = launchDevProcess(projectCwd, cmd, args, port);
+      waitForReady(entry, res);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to start dev server";
+      res.status(500).json({ error: msg });
+    }
   }
 }
 
