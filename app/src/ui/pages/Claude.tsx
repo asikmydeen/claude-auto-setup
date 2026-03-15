@@ -2135,9 +2135,10 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
 
   // Smart suggestions -- refetch when project changes or session completes
   const suggestionsProjectCwd = activeProjectPath || activeSession?.cwd || openProjects[0] || "";
+  const suggestionsSessionId = activeSession?.id;
   const suggestionsQuery = useQuery({
-    queryKey: ["suggestions", suggestionsProjectCwd],
-    queryFn: (): Promise<Suggestion[]> => fetchSuggestions(suggestionsProjectCwd),
+    queryKey: ["suggestions", suggestionsProjectCwd, suggestionsSessionId],
+    queryFn: (): Promise<Suggestion[]> => fetchSuggestions(suggestionsProjectCwd, suggestionsSessionId),
   });
 
   const suggestions = suggestionsQuery.data ?? [];

@@ -106,6 +106,16 @@ build_app() {
   log "Building Electrobun app..."
   bunx electrobun build
 
+  # Copy React UI into the Electrobun bundle as a safety net
+  local app_bundle
+  app_bundle=$(find "$BUILD_DIR" -name "*.app" -maxdepth 2 -type d 2>/dev/null | head -1)
+  if [ -n "$app_bundle" ] && [ -d "$APP_DIR/dist" ]; then
+    local views_dir="$app_bundle/Contents/Resources/views/ui"
+    mkdir -p "$views_dir"
+    cp -R "$APP_DIR/dist/"* "$views_dir/"
+    log "Copied React UI to $views_dir"
+  fi
+
   ok "Build complete"
 
   # Find the .app bundle

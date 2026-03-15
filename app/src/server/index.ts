@@ -85,6 +85,10 @@ app.use(express.json({ limit: "100kb" }));
 function findDistDir(): string | null {
   const scriptDir = dirname(new URL(import.meta.url).pathname);
   const candidates = [
+    // Electrobun bundle paths (production — check first)
+    join(scriptDir, "../../views/ui"),          // Electrobun bundle
+    join(PROJECT_ROOT, "app/build/views/ui"),   // Electrobun build output
+    // Dev paths
     join(scriptDir, "../../dist"),              // dev: running from src/server/
     join(PROJECT_ROOT, "app/dist"),             // from project root
     join(PROJECT_ROOT, "dist"),                 // if running inside app/
@@ -800,7 +804,7 @@ app.post("/api/claude/sessions", (req, res) => {
     if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
 
     const id = randomUUID().slice(0, 12);
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose"];
+    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
     const sessionCwd = cwd || activeProject;
     const env = buildProjectEnv(sessionCwd);
 
@@ -944,7 +948,7 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
     }).trim();
     if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
 
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--continue"];
+    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions", "--continue"];
     const env = buildProjectEnv(session.cwd);
 
     const child = spawn(claudePath, args, {
@@ -1151,6 +1155,9 @@ app.post("/api/claude/launch", (req, res) => {
   if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
     return res.status(400).json({ error: "Prompt is required" });
   }
+  if (!Array.isArray(flags) || !flags.every((f: unknown) => typeof f === "string")) {
+    return res.status(400).json({ error: "flags must be an array of strings" });
+  }
 
   try {
     const claudePath = execFileSync("which", ["claude"], {
@@ -1159,7 +1166,7 @@ app.post("/api/claude/launch", (req, res) => {
     if (!claudePath) return res.status(404).json({ error: "Claude not found" });
 
     const id = randomUUID().slice(0, 12);
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", ...flags];
+    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions", ...flags];
     const env = buildProjectEnv(PROJECT_ROOT);
 
     const child = spawn(claudePath, args, {
@@ -1363,15 +1370,47 @@ app.get("/api/git/diff", (req, res) => {
 // SMART SUGGESTIONS (context-aware)
 // ============================================================
 
+// Conversation topic detection for context-aware suggestions
+type ConversationTopic = "testing" | "debugging" | "refactoring" | "api" | "ui" | "database";
+
+const TOPIC_PATTERNS: Record<ConversationTopic, RegExp> = {
+  testing: /\b(test|spec|coverage|jest|vitest|assert|mock|stub|fixture|expect)\b/i,
+  debugging: /\b(debug|debugging|debugger|error|bug|crash|exception|stack.?trace|breakpoint|failure|failing|failed)\b|\bfix\s+(bug|error|issue|crash)/i,
+  refactoring: /\b(refactor|clean|rename|extract|simplify|restructure|reorganize|deduplicate)\b/i,
+  api: /\b(api|endpoint|route|request|response|REST|GraphQL|handler|middleware)\b/i,
+  ui: /\b(ui|component|css|style|layout|render|display|button|modal|form|page)\b/i,
+  database: /\b(database|db|sql|dynamo|postgres|mongo|collection|schema|migration)\b/i,
+};
+
+function detectTopics(messages: ClaudeMessage[]): ConversationTopic[] {
+  const recent = messages.slice(-10);
+  const text = recent.map((m) => m.content || "").filter(Boolean).join(" ");
+  if (!text.trim()) return [];
+  return (Object.entries(TOPIC_PATTERNS) as [ConversationTopic, RegExp][])
+    .filter(([, pattern]) => pattern.test(text))
+    .map(([topic]) => topic);
+}
+
+const TOPIC_SUGGESTIONS: Record<ConversationTopic, { id: string; label: string; prompt: string; icon: string }> = {
+  testing: { id: "more-tests", label: "Add more test coverage", prompt: "Add more test coverage for the code we just worked on. Focus on edge cases and error paths.", icon: "test-tube" },
+  debugging: { id: "continue-debug", label: "Continue debugging", prompt: "Continue investigating and fixing the issue we were debugging", icon: "bug" },
+  refactoring: { id: "refactor-related", label: "Refactor related code", prompt: "Look for similar patterns in related files that could benefit from the same refactoring", icon: "sparkles" },
+  api: { id: "doc-api", label: "Document API endpoints", prompt: "Document the API endpoints we just worked on with request/response examples", icon: "file-text" },
+  ui: { id: "polish-ui", label: "Polish UI components", prompt: "Review and polish the UI components we worked on — accessibility, responsiveness, edge cases", icon: "layout" },
+  database: { id: "optimize-db", label: "Optimize database queries", prompt: "Review the database queries we worked on for performance and add proper indexes if needed", icon: "database" },
+};
+
 // Suggestions cache (10s TTL) to avoid blocking git calls on every request
 const suggestionsCache = new Map<string, { data: unknown; timestamp: number }>();
 const SUGGESTIONS_TTL = 10_000;
 
 app.get("/api/suggestions", (req, res) => {
   const cwd = (req.query.cwd as string) || activeProject;
+  const sessionId = req.query.sessionId as string | undefined;
 
-  // Check cache
-  const cached = suggestionsCache.get(cwd);
+  // Cache key includes sessionId for conversation-aware caching
+  const cacheKey = sessionId ? `${cwd}:${sessionId}` : cwd;
+  const cached = suggestionsCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < SUGGESTIONS_TTL) {
     return res.json(cached.data);
   }
@@ -1383,6 +1422,20 @@ app.get("/api/suggestions", (req, res) => {
     priority: number;
     category: "git" | "code" | "test" | "review" | "fix" | "general";
   }> = [];
+
+  // Conversation-aware suggestions: analyze recent messages if sessionId provided
+  if (sessionId) {
+    const session = claudeSessions.get(sessionId);
+    if (session && session.messages.length > 0) {
+      const topics = detectTopics(session.messages);
+      for (const topic of topics) {
+        const s = TOPIC_SUGGESTIONS[topic];
+        if (!suggestions.some((existing) => existing.id === s.id)) {
+          suggestions.push({ ...s, priority: 25, category: "general" });
+        }
+      }
+    }
+  }
 
   try {
     // Check git status
@@ -1557,7 +1610,7 @@ app.get("/api/suggestions", (req, res) => {
   suggestions.sort((a, b) => b.priority - a.priority);
 
   // Cache
-  suggestionsCache.set(cwd, { data: suggestions, timestamp: Date.now() });
+  suggestionsCache.set(cacheKey, { data: suggestions, timestamp: Date.now() });
   res.json(suggestions);
 });
 
@@ -1591,6 +1644,15 @@ app.get("/api/suggestions/followup/:sessionId", (req, res) => {
       { id: "retry", label: "Try a different approach", prompt: "The previous attempt failed. Try a completely different approach to solve: " + session.prompt, icon: "refresh" },
       { id: "debug", label: "Debug the error", prompt: "Debug why the previous attempt failed and fix the issue", icon: "bug" },
     );
+  }
+
+  // Add topic-specific follow-ups based on conversation content
+  const topics = detectTopics(session.messages);
+  for (const topic of topics) {
+    const s = TOPIC_SUGGESTIONS[topic];
+    if (!suggestions.some((existing) => existing.id === s.id)) {
+      suggestions.push(s);
+    }
   }
 
   res.json(suggestions);
@@ -1780,7 +1842,7 @@ app.post("/api/projects/create", (req, res) => {
     const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add, bun run dev) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built and how to run it`;
 
     const id = randomUUID().slice(0, 12);
-    const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose"];
+    const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
     const env = buildProjectEnv(projectDir);
 
     const child = spawn(claudePath, args, {

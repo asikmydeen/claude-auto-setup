@@ -280,8 +280,13 @@ export interface FollowUpSuggestion {
   icon: string;
 }
 
-export const fetchSuggestions = (cwd?: string) =>
-  api.get<Suggestion[]>(`/suggestions${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`);
+export const fetchSuggestions = (cwd?: string, sessionId?: string) => {
+  const params = new URLSearchParams();
+  if (cwd) params.set("cwd", cwd);
+  if (sessionId) params.set("sessionId", sessionId);
+  const qs = params.toString();
+  return api.get<Suggestion[]>(`/suggestions${qs ? `?${qs}` : ""}`);
+};
 export const fetchFollowUpSuggestions = (sessionId: string) =>
   api.get<FollowUpSuggestion[]>(`/suggestions/followup/${sessionId}`);
 

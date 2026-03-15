@@ -11,7 +11,7 @@ export default {
       entrypoint: "src/bun/index.ts",
     },
     views: {},
-    copy: {},
+    copy: { "dist": "views/ui" },
     mac: {
       icons: "icon.iconset",
     },
