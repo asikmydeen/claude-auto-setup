@@ -309,43 +309,45 @@ export const fetchProjectIntel = (cwd?: string) =>
 export const initProject = (cwd?: string) =>
   api.post<{ ok: boolean; output: string }>("/projects/init", { cwd });
 
-// --- Templates ---
+// --- Templates (curated design references) ---
 export interface TemplateInfo {
-  category: string;
   id: string;
-  name: string;
+  category: string;
+  style: string;
+  label: string;
+  desc: string;
+  framework: string;
+  uiLib: string;
+  tags: string[];
   path: string;
   scripts: string[];
-  hasPackageJson: boolean;
-  hasIndex: boolean;
 }
 
-export interface TemplateCategory {
+export interface TemplateStyleGroup {
   id: string;
   label: string;
+  desc: string;
   icon: string;
   templates: TemplateInfo[];
 }
 
-export const fetchTemplates = () => api.get<TemplateCategory[]>("/templates");
+export const fetchTemplates = () => api.get<TemplateStyleGroup[]>("/templates");
 
 export interface CreateFromTemplateResponse {
   ok: boolean;
   projectDir: string;
-  type: string;
-  template: { id: string; name: string; category: string };
-  scripts: string[];
-  installCmd: string;
-  sessionId: string | null;
+  sessionId: string;
+  session: ClaudeSession;
+  template: { id: string; label: string; framework: string };
 }
 
 export const createFromTemplate = (
   templateId: string,
   name: string,
+  description: string,
   basePath?: string,
-  description?: string,
 ) =>
-  api.post<CreateFromTemplateResponse>("/projects/create-from-template", { templateId, name, basePath, description });
+  api.post<CreateFromTemplateResponse>("/projects/create-from-template", { templateId, name, description, basePath });
 
 // --- Project Creator (from scratch) ---
 export interface CreateProjectResponse {

@@ -91,14 +91,14 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
     if (name && !newSupabaseName) setNewSupabaseName(name.replace(/[^a-zA-Z0-9-]/g, "-"));
   }, [name, newSupabaseName]);
 
-  // Template-based creation (fast path)
+  // Template-based creation (copy template + Claude customizes)
   const templateMut = useMutation({
     mutationFn: () =>
       createFromTemplate(
         selectedTemplateId!,
         name.trim(),
+        description.trim(),
         basePath.trim() || undefined,
-        description.trim() || undefined,
       ),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["projects"] });
@@ -188,7 +188,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
   const currentCategory = activeCategory || sortedCategories[0]?.id || "";
   const currentTemplates = sortedCategories.find((c) => c.id === currentCategory)?.templates || [];
   const filteredTemplates = templateSearch
-    ? currentTemplates.filter((t) => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+    ? currentTemplates.filter((t) => t.label.toLowerCase().includes(templateSearch.toLowerCase()))
     : currentTemplates;
   const selectedTemplate = allCategories.flatMap((c) => c.templates).find((t) => t.id === selectedTemplateId);
 
@@ -324,12 +324,9 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
                           : "border-border hover:bg-accent"
                       )}
                     >
-                      <span className="text-[11px] font-medium truncate w-full">{t.name}</span>
-                      <div className="flex gap-1">
-                        {t.scripts.slice(0, 2).map((s) => (
-                          <span key={s} className="text-[8px] px-1 py-0 rounded bg-muted text-muted-foreground">{s}</span>
-                        ))}
-                      </div>
+                      <span className="text-[11px] font-medium truncate w-full">{t.label}</span>
+                      <span className="text-[9px] text-muted-foreground truncate w-full">{t.desc}</span>
+                      <span className="text-[8px] px-1 py-0 rounded bg-muted text-muted-foreground w-fit">{t.framework}</span>
                     </button>
                   ))}
                   {!templatesQuery.isLoading && filteredTemplates.length === 0 && (
@@ -339,9 +336,13 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
 
                 {/* Selected template info */}
                 {selectedTemplate && (
-                  <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
-                    <p className="text-xs font-medium">{selectedTemplate.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{selectedTemplate.category} · {selectedTemplate.scripts.join(", ") || "no scripts"}</p>
+                  <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 space-y-0.5">
+                    <p className="text-xs font-medium">{selectedTemplate.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{selectedTemplate.desc}</p>
+                    <div className="flex gap-1.5 pt-0.5">
+                      <span className="text-[9px] px-1.5 py-0 rounded bg-primary/10 text-primary font-medium">{selectedTemplate.framework}</span>
+                      <span className="text-[9px] px-1.5 py-0 rounded bg-muted text-muted-foreground">{selectedTemplate.uiLib}</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -351,15 +352,15 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
                 <Lightbulb className="h-3.5 w-3.5" />
-                {mode === "template" ? "Customize (optional)" : "Describe your idea"}
+                {mode === "template" ? "What should Claude build with this design?" : "Describe your idea"}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={mode === "template"
-                  ? "Optionally describe changes to the template — Claude will customize it for you..."
+                  ? "Describe your app — Claude will build it using this design template as the base..."
                   : "A task management app with real-time sync, user authentication, and a clean minimal UI..."}
-                rows={mode === "template" ? 2 : 3}
+                rows={3}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               />
             </div>
@@ -673,13 +674,13 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
               {backend !== "none" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{backend}</Badge>}
               {repoChoice === "new" && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">github</Badge>}
               {envVars.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{envVars.length} env</Badge>}
-              <span>{mode === "template" ? "Copy template & start instantly" : "Claude builds from scratch"}</span>
+              <span>{mode === "template" ? "Claude customizes this design for you" : "Claude builds from scratch"}</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
               <Button
                 size="sm"
-                disabled={!name.trim() || (mode === "scratch" && !description.trim()) || (mode === "template" && !selectedTemplateId) || isPending}
+                disabled={!name.trim() || !description.trim() || (mode === "template" && !selectedTemplateId) || isPending}
                 onClick={handleCreate}
               >
                 {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
