@@ -86,7 +86,8 @@ function findDistDir(): string | null {
   const scriptDir = dirname(new URL(import.meta.url).pathname);
   const candidates = [
     // Electrobun bundle paths (production — check first)
-    join(scriptDir, "../../views/ui"),          // Electrobun bundle
+    join(scriptDir, "../views/ui"),             // Electrobun bundle: app/bun/ → app/views/ui/
+    join(scriptDir, "../../views/ui"),          // Electrobun bundle: alternative layout
     join(PROJECT_ROOT, "app/build/views/ui"),   // Electrobun build output
     // Dev paths
     join(scriptDir, "../../dist"),              // dev: running from src/server/
