@@ -138,53 +138,133 @@ export function AIProviders() {
                 ))}
               </div>
 
-              {/* API key input */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type={showKeys[provider.id] ? "text" : "password"}
-                    value={isEditing ? editingKeys[provider.apiKeyField] : (savedKeys[provider.apiKeyField] || "")}
-                    onChange={(e) => setEditingKeys((prev) => ({ ...prev, [provider.apiKeyField]: e.target.value }))}
-                    placeholder={provider.id === "bedrock" ? "Bedrock API key (or leave empty for AWS profile)" : `${provider.name} API key`}
-                    className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKeys((prev) => ({ ...prev, [provider.id]: !prev[provider.id] }))}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showKeys[provider.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  disabled={!isEditing || saveMut.isPending}
-                  onClick={() => handleSaveKey(provider)}
-                >
-                  {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  disabled={(!hasKey && !isEditing) || testMut.isPending}
-                  onClick={() => handleTest(provider)}
-                >
-                  {testMut.isPending && testMut.variables?.provider === provider.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : "Test"}
-                </Button>
-              </div>
+              {/* Bedrock: custom two-mode auth section */}
+              {provider.id === "bedrock" ? (
+                <div className="space-y-2">
+                  {/* Auth mode toggle */}
+                  <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setEditingKeys((prev) => ({ ...prev, _bedrockMode: "profile" }))}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors",
+                        (editingKeys._bedrockMode || "profile") === "profile"
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      AWS Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingKeys((prev) => ({ ...prev, _bedrockMode: "apikey" }))}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors",
+                        editingKeys._bedrockMode === "apikey"
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      API Key
+                    </button>
+                  </div>
 
-              {/* Bedrock help note */}
-              {provider.id === "bedrock" && (
-                <p className="text-[9px] text-muted-foreground">
-                  {hasKey && !editingKeys[provider.apiKeyField]
-                    ? "Using AWS credentials from ~/.aws/credentials"
-                    : "Paste a Bedrock API key, or leave empty to use your AWS CLI profile automatically."}
-                </p>
+                  {(editingKeys._bedrockMode || "profile") === "profile" ? (
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-muted-foreground">
+                        Uses credentials from <code className="text-[9px] bg-muted px-1 rounded">~/.aws/credentials</code>. Configure with <code className="text-[9px] bg-muted px-1 rounded">aws configure</code> or your credential manager.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-1.5 font-mono">
+                          {hasKey ? "AWS profile detected" : "No AWS credentials found"}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={!hasKey || testMut.isPending}
+                          onClick={() => handleTest(provider)}
+                        >
+                          {testMut.isPending && testMut.variables?.provider === provider.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : "Test"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-muted-foreground">
+                        Get a Bedrock API key from the AWS Console &rarr; Amazon Bedrock &rarr; API keys.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 relative">
+                          <input
+                            type={showKeys[provider.id] ? "text" : "password"}
+                            value={isEditing ? editingKeys[provider.apiKeyField] : (savedKeys[provider.apiKeyField] || "")}
+                            onChange={(e) => setEditingKeys((prev) => ({ ...prev, [provider.apiKeyField]: e.target.value }))}
+                            placeholder="Bedrock API key"
+                            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowKeys((prev) => ({ ...prev, [provider.id]: !prev[provider.id] }))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showKeys[provider.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </button>
+                        </div>
+                        <Button variant="outline" size="sm" className="h-7 text-xs"
+                          disabled={!isEditing || saveMut.isPending}
+                          onClick={() => handleSaveKey(provider)}
+                        >
+                          {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-xs"
+                          disabled={(!hasKey && !isEditing) || testMut.isPending}
+                          onClick={() => handleTest(provider)}
+                        >
+                          {testMut.isPending && testMut.variables?.provider === provider.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : "Test"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Standard API key input for all other providers */
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type={showKeys[provider.id] ? "text" : "password"}
+                      value={isEditing ? editingKeys[provider.apiKeyField] : (savedKeys[provider.apiKeyField] || "")}
+                      onChange={(e) => setEditingKeys((prev) => ({ ...prev, [provider.apiKeyField]: e.target.value }))}
+                      placeholder={`${provider.name} API key`}
+                      className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowKeys((prev) => ({ ...prev, [provider.id]: !prev[provider.id] }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showKeys[provider.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-7 text-xs"
+                    disabled={!isEditing || saveMut.isPending}
+                    onClick={() => handleSaveKey(provider)}
+                  >
+                    {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs"
+                    disabled={(!hasKey && !isEditing) || testMut.isPending}
+                    onClick={() => handleTest(provider)}
+                  >
+                    {testMut.isPending && testMut.variables?.provider === provider.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : "Test"}
+                  </Button>
+                </div>
               )}
 
               {/* Test result */}
