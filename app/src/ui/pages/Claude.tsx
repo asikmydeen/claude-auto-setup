@@ -894,6 +894,8 @@ function ProjectGroup({
     queryFn: () =>
       api.get<GitStatus>(`/git/status?cwd=${encodeURIComponent(projectPath)}`),
     refetchInterval: 30_000,
+    retry: 1, // Don't keep retrying on invalid/deleted projects
+    staleTime: 10_000,
   });
 
   const git = gitQuery.data;
@@ -910,12 +912,13 @@ function ProjectGroup({
   }, [menuOpen]);
 
   const handleDeleteProject = async (deleteFiles: boolean) => {
+    // Close menu/confirm first to prevent stale renders
+    setConfirmDelete(false);
+    setMenuOpen(false);
+    onClose();
     try {
       await deleteProject(projectPath, deleteFiles);
     } catch {}
-    onClose();
-    setConfirmDelete(false);
-    setMenuOpen(false);
   };
 
   return (
@@ -2105,10 +2108,30 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     null
   );
 
-  // Persist openProjects to localStorage
+  // Persist openProjects to localStorage + clean up stale paths on mount
   useEffect(() => {
     localStorage.setItem("openProjects", JSON.stringify(openProjects));
   }, [openProjects]);
+
+  // On mount: validate that saved project paths still exist
+  useEffect(() => {
+    if (openProjects.length === 0) return;
+    (async () => {
+      const valid: string[] = [];
+      for (const p of openProjects) {
+        try {
+          const res = await fetch(`/api/projects/type?cwd=${encodeURIComponent(p)}`);
+          if (res.ok) valid.push(p);
+        } catch {}
+      }
+      if (valid.length !== openProjects.length) {
+        setOpenProjects(valid);
+        if (activeProjectPath && !valid.includes(activeProjectPath)) {
+          setActiveProjectPath(valid[0] || null);
+        }
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for "open in built-in browser" events from LinkProvider
   useEffect(() => {
@@ -2631,11 +2654,20 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 setActiveProjectPath(projectPath);
               }}
               onDeleteSession={(id) => setDeleteConfirmId(id)}
-              onClose={() =>
-                setOpenProjects((prev) =>
-                  prev.filter((p) => p !== projectPath)
-                )
-              }
+              onClose={() => {
+                setOpenProjects((prev) => {
+                  const next = prev.filter((p) => p !== projectPath);
+                  // Reset state when removing a project
+                  if (activeProjectPath === projectPath) {
+                    setActiveProjectPath(next[0] || null);
+                  }
+                  if (activeSession?.cwd === projectPath) {
+                    setActiveId(null);
+                    setPendingMessages([]);
+                  }
+                  return next;
+                });
+              }}
               onStartDevServer={async (path) => {
                 try {
                   const result = await startDevServer(path);
