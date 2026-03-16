@@ -3109,13 +3109,56 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               </div>
             )}
 
-            {/* Error from follow-up */}
+            {/* Error from follow-up — with reconnect option */}
             {followUpMutation.isError && (
-              <ErrorBanner
-                message={followUpMutation.error.message}
-                onRetry={() => followUpMutation.reset()}
-                onDismiss={() => followUpMutation.reset()}
-              />
+              <div className="mx-auto max-w-3xl px-6 py-2 animate-fade-in-up">
+                <div className="flex flex-col gap-2 rounded-lg bg-destructive/10 px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{followUpMutation.error.message}</span>
+                    <button
+                      type="button"
+                      onClick={() => followUpMutation.reset()}
+                      className="rounded p-0.5 text-destructive/60 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        followUpMutation.reset();
+                        handleRegenerate();
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Retry
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        followUpMutation.reset();
+                        // Start a fresh session in the same project
+                        if (activeSession?.cwd) {
+                          const cwd = activeSession.cwd;
+                          const lastUserMsg = activeSession.messages.filter(m => m.role === "user").pop();
+                          setActiveId(null);
+                          setPendingMessages([]);
+                          if (lastUserMsg) {
+                            createMutation.mutate({ prompt: lastUserMsg.content, cwd });
+                          }
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Reconnect (new session)
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Creating session indicator */}

@@ -1035,9 +1035,16 @@ app.delete("/api/claude/sessions/:id", (req, res) => {
 });
 
 // Send follow-up message to an existing session using --continue
+// Falls back to a new session with conversation context if --continue fails
 app.post("/api/claude/sessions/:id/message", (req, res) => {
   const session = claudeSessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
+  if (!session) {
+    return res.status(404).json({
+      error: "Session expired or not found. Use the Reconnect button to start a new session.",
+      recoverable: true,
+      cwd: null,
+    });
+  }
   if (session.status === "running") {
     return res.status(409).json({ error: "Session is still running" });
   }
@@ -1047,13 +1054,23 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
     return res.status(400).json({ error: "Prompt is required" });
   }
 
+  let claudePath: string;
   try {
-    const claudePath = execFileSync("which", ["claude"], {
-      encoding: "utf-8",
-    }).trim();
-    if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
+    claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
+  } catch {
+    return res.status(503).json({
+      error: "Claude CLI not found. Is it installed? Run: npm install -g @anthropic-ai/claude-code",
+      recoverable: false,
+    });
+  }
 
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions", "--continue"];
+  function launchFollowUp(useContinue: boolean): void {
+    if (!session) return; // TS guard — already checked above
+    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+
+    if (useContinue) {
+      args.push("--continue");
+    }
 
     // Attach images if provided
     if (Array.isArray(imagePaths)) {
@@ -1089,7 +1106,23 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
 
     wireStreamJson(child, session, session.id);
 
+    // Detect early crash (within 3s) — likely --continue failed
+    let earlyCrash = true;
+    const earlyTimer = setTimeout(() => { earlyCrash = false; }, 3000);
+
     child.on("close", (code) => {
+      clearTimeout(earlyTimer);
+
+      // If --continue crashed immediately, retry as a new session (without --continue)
+      if (useContinue && earlyCrash && code !== 0) {
+        console.log(`[follow-up] --continue failed (exit ${code}), retrying as new session`);
+        // Remove the failed user message we just added
+        session.messages.pop();
+        session.status = "done"; // Reset to allow retry
+        launchFollowUp(false);
+        return;
+      }
+
       session.status = code === 0 ? "done" : "error";
       session.exitCode = code;
       session.endedAt = new Date().toISOString();
@@ -1100,7 +1133,6 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
       });
       delete session.process;
 
-      // Detect file changes after successful completion
       if (code === 0) {
         session.filesChanged = detectFileChanges(session.cwd);
       }
@@ -1116,10 +1148,33 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
       persistSessions();
     });
 
+    child.on("error", (err) => {
+      clearTimeout(earlyTimer);
+      console.error(`[follow-up] spawn error:`, err.message);
+      session.status = "error";
+      session.exitCode = -1;
+      session.endedAt = new Date().toISOString();
+      session.messages.push({
+        role: "assistant",
+        content: `Error: Failed to start Claude CLI. ${err.message}`,
+        timestamp: new Date().toISOString(),
+      });
+      delete session.process;
+      persistSessions();
+    });
+  }
+
+  try {
+    launchFollowUp(true); // Try with --continue first
     const { process: _, ...safe } = session;
     res.json(safe);
-  } catch {
-    res.status(500).json({ error: "Failed to send follow-up" });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    res.status(500).json({
+      error: `Failed to send follow-up: ${msg}`,
+      recoverable: true,
+      cwd: session.cwd,
+    });
   }
 });
 
