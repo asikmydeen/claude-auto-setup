@@ -2093,19 +2093,36 @@ ${description}
 You are working inside a "${template.label}" template (${template.framework} + ${template.uiLib}).
 The template already has a working UI with components, layouts, routing, and styling.
 ${integrationContext ? `\n${integrationContext}\n` : ""}
-Your job:
-1. First run "npm install" to install all dependencies
-2. Study the existing template structure — understand the components, pages, and routing
-3. Customize the template to match the user's idea:
-   - Rename/restructure pages and navigation to fit their app
-   - Update content, copy, and branding
-   - Add new components or pages as needed for their features
-   - Wire up any data fetching, forms, or interactivity they described
-   - Keep the design system and UI library — don't replace them
-4. Make sure the dev server starts without errors
-5. Create a brief README.md explaining what was built
+## Your Process
 
-IMPORTANT: Do NOT tell the user to "run npm run dev" or any other command. The app will automatically start the dev server and open it in a browser panel when you're done. Just focus on writing the code.
+1. **Explore first** — Use Read, Grep, Glob to study the template structure before editing anything. Understand the components, pages, routing, and design patterns.
+2. **Install dependencies** — Run "npm install" plus any extra packages needed (e.g. @supabase/supabase-js if using Supabase).
+3. **Customize systematically:**
+   - Rename/restructure pages and navigation to fit the user's app
+   - Update content, copy, and branding
+   - Add new components or pages for features described
+   - Wire up data fetching, forms, state management, and interactivity
+   - Keep the design system and UI library — build ON the template, don't replace it
+4. **Verify your work:**
+   - After editing, re-read the files you changed to confirm correctness
+   - Check for React hooks rules (no hooks in conditionals, no hooks in callbacks)
+   - Check that all imports exist and are correct
+   - Run "npm run build" or "npx tsc --noEmit" to catch type errors
+   - If errors are found, FIX THEM before finishing
+5. **Self-review** — Before marking done, review your changes: are there obvious bugs, missing imports, broken routes, or hardcoded values that should be dynamic?
+
+## Quality Standards
+- Match the template's existing code patterns and conventions
+- No React hooks violations (hooks must be at top level of components, never conditional)
+- All components must render valid JSX (no objects as React children)
+- Use the template's existing design tokens, colors, and component library
+- Handle loading states and errors for any data fetching
+- Do NOT leave placeholder text like "TODO" or "Lorem ipsum" — use realistic data
+
+## Available Tools
+You have access to plugins (serena, context7, code-review) and can search codebases, fetch library docs, and review your own code. Use them.
+
+IMPORTANT: Do NOT tell the user to "run npm run dev" or any other command. The app will automatically start the dev server and open it in a browser panel when you're done. Just focus on writing correct, working code.
 
 Build on the template — don't start from scratch. The design is already beautiful.`;
 
@@ -2223,7 +2240,34 @@ app.post("/api/projects/create", (req, res) => {
     // Write .env with connected integrations (Supabase, AWS) and get prompt context
     const integrationContext = writeProjectDotEnv(projectDir);
 
-    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\n${integrationContext ? integrationContext + "\n\n" : ""}Build this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built\n\nIMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing the code.`;
+    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:
+
+${description}
+
+${integrationContext ? integrationContext + "\n" : ""}## Your Process
+
+1. **Plan the architecture** — Before writing code, decide on: framework, file structure, data model, key components. Use context7 plugin to fetch docs for any library you're unsure about.
+2. **Set up the project** — Use bun as the package manager (bun init, bun add) for speed. Create all files, install dependencies.
+3. **Implement the core functionality** — Not just scaffolding. Make features actually work with realistic data, proper state management, and clean UI.
+4. **MUST have a working "dev" script** in package.json that starts a dev server (vite, next dev, bun serve).
+5. **Verify your work:**
+   - After writing code, re-read modified files to confirm correctness
+   - Check for React hooks rules (no hooks in conditionals)
+   - Run "bun run build" or type-check to catch errors
+   - If errors found, FIX THEM before finishing
+6. **Self-review** — Before marking done, check for: missing imports, broken routes, hardcoded values, unhandled errors.
+
+## Quality Standards
+- Use modern best practices: TypeScript, proper error handling, clean code
+- No placeholder content (TODO, Lorem ipsum) — use realistic data
+- Handle loading and error states for data fetching
+- Mobile-responsive design
+- Accessible (semantic HTML, proper labels)
+
+## Available Tools
+You have access to plugins (serena for code navigation, context7 for library docs, code-review for self-review). Use them to write better code.
+
+IMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing correct, working code.`;
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
