@@ -2216,19 +2216,19 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   // --------------- Fallback: auto-start if SSE done handler missed it ---------------
   useEffect(() => {
     if (!buildingProjectDir || !activeSession) return;
-    if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
-      // SSE done handler should have already triggered autoStartAndPreview
-      // This is a fallback in case it was missed (e.g. session query loaded after SSE)
+    if (activeSession.status === "done") {
+      // Direct SSE listener (in onProjectCreated) should have already triggered autoStartAndPreview.
+      // This is a last-resort fallback in case that listener was missed or didn't connect.
       const timer = setTimeout(() => {
         if (buildingProjectDir) {
           const projectDir = buildingProjectDir;
           setBuildingProjectDir(null);
           autoStartAndPreview(projectDir);
         }
-      }, 3000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [activeSession?.status, activeSession?.cwd, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSession?.status, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // File changes
   const fileChangesQuery = useQuery<FileChangesResponse>({
@@ -3056,6 +3056,28 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 500);
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 1500);
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["claude-sessions"] }), 3000);
+
+            // Direct SSE listener — bypasses React hook lifecycle race condition.
+            // useSSE can reset done=false when sseSessionId changes to null (session
+            // query loads with status "done" → sseSessionId becomes null → useSSE resets).
+            // This standalone listener is immune to that race.
+            const directSSE = new EventSource(`/api/claude/stream/${sessionId}`);
+            directSSE.onmessage = (event) => {
+              try {
+                const data = JSON.parse(event.data);
+                if (data.type === "done") {
+                  directSSE.close();
+                  autoStartAndPreview(projectDir);
+                }
+              } catch { /* ignore */ }
+            };
+            directSSE.onerror = () => {
+              directSSE.close();
+              // Session ended unexpectedly — still try to start dev server
+              autoStartAndPreview(projectDir);
+            };
+            // Safety: clean up after 10 minutes (session should never take this long)
+            setTimeout(() => directSSE.close(), 600000);
           } else {
             // Template-based (no Claude session): install deps + start dev server immediately
             setBrowserPanelOpen(true);
