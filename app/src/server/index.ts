@@ -2800,6 +2800,54 @@ function buildProjectEnv(projectCwd: string): Record<string, string> {
     }
   }
 
+  // Inject LLM API keys from AI Models settings into the environment
+  // This bridges AI Models credentials → CLI agents (Claude Code, Kiro, etc.)
+  const llmKeys = getLLMKeys();
+
+  // Anthropic: direct API key → Claude Code uses it instead of subscription
+  if (llmKeys.anthropicApiKey) {
+    env.ANTHROPIC_API_KEY = llmKeys.anthropicApiKey;
+  }
+
+  // AWS Bedrock: configure Claude Code to use Bedrock
+  if (llmKeys.bedrockApiKey) {
+    if (llmKeys.bedrockApiKey.startsWith("profile:")) {
+      const profile = llmKeys.bedrockApiKey.slice(8);
+      env.AWS_PROFILE = profile;
+      env.AWS_REGION = env.AWS_REGION || "us-east-1";
+    }
+    // Enable Bedrock mode for Claude Code if no direct Anthropic key
+    if (!llmKeys.anthropicApiKey) {
+      env.CLAUDE_CODE_USE_BEDROCK = "1";
+      env.AWS_REGION = env.AWS_REGION || "us-east-1";
+    }
+  }
+
+  // OpenAI
+  if (llmKeys.openaiApiKey) {
+    env.OPENAI_API_KEY = llmKeys.openaiApiKey;
+  }
+
+  // Google
+  if (llmKeys.googleApiKey) {
+    env.GOOGLE_GENERATIVE_AI_API_KEY = llmKeys.googleApiKey;
+  }
+
+  // Mistral
+  if (llmKeys.mistralApiKey) {
+    env.MISTRAL_API_KEY = llmKeys.mistralApiKey;
+  }
+
+  // Groq
+  if (llmKeys.groqApiKey) {
+    env.GROQ_API_KEY = llmKeys.groqApiKey;
+  }
+
+  // OpenRouter
+  if (llmKeys.openrouterApiKey) {
+    env.OPENROUTER_API_KEY = llmKeys.openrouterApiKey;
+  }
+
   // Always clear these for nested Claude sessions
   env.CLAUDECODE = "";
   env.CLAUDE_CODE_ENTRYPOINT = "";
@@ -3768,12 +3816,22 @@ app.post("/api/llm/test", async (req, res) => {
 });
 
 app.get("/api/health", (_req, res) => {
+  const llmKeys = getLLMKeys();
+  const bridgedCredentials: string[] = [];
+  if (llmKeys.anthropicApiKey) bridgedCredentials.push("anthropic→ANTHROPIC_API_KEY");
+  if (llmKeys.bedrockApiKey) bridgedCredentials.push("bedrock→CLAUDE_CODE_USE_BEDROCK");
+  if (llmKeys.openaiApiKey) bridgedCredentials.push("openai→OPENAI_API_KEY");
+  if (llmKeys.googleApiKey) bridgedCredentials.push("google→GOOGLE_GENERATIVE_AI_API_KEY");
+  if (llmKeys.groqApiKey) bridgedCredentials.push("groq→GROQ_API_KEY");
+  if (llmKeys.openrouterApiKey) bridgedCredentials.push("openrouter→OPENROUTER_API_KEY");
+
   res.json({
     ok: true,
     sessions: sessions.size,
     activity: activity.length,
     defaultRuntime: defaultContainerRuntime || "native",
     devServers: devServers.size,
+    bridgedCredentials,
     projectRoot: PROJECT_ROOT,
     claudeDir: CLAUDE_DIR,
   });
