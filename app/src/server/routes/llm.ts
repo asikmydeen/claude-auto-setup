@@ -2,7 +2,7 @@
  * LLM provider integration routes (Vercel AI SDK).
  * Extracted from server/index.ts (lines ~3801-4075).
  */
-import { Router } from "express";
+import { Elysia } from "elysia";
 import { existsSync } from "fs";
 import { join } from "path";
 import { streamText, generateText } from "ai";
@@ -22,8 +22,6 @@ import {
   maskSecret,
   HOME,
 } from "../lib/shared";
-
-const router = Router();
 
 // ============================================================
 // LLM PROVIDER INTEGRATION (Vercel AI SDK)
@@ -149,144 +147,176 @@ const LLM_PROVIDERS: LLMProviderConfig[] = [
   },
 ];
 
-// GET /api/llm/providers — list all providers with configuration status
-router.get("/api/llm/providers", (_req, res) => {
-  const keys = getLLMKeys();
-  const providers = LLM_PROVIDERS.map((p) => ({
-    id: p.id,
-    name: p.name,
-    configured: p.id === "bedrock"
-      ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
-      : !!keys[p.apiKeyField],
-    models: p.models,
-    apiKeyField: p.apiKeyField,
-  }));
-  res.json(providers);
-});
+export const llmRoutes = new Elysia()
 
-// GET /api/llm/models — all models from configured providers
-router.get("/api/llm/models", (_req, res) => {
-  const keys = getLLMKeys();
-  const models: Array<{ provider: string; providerName: string; id: string; name: string; context?: number }> = [];
-  for (const p of LLM_PROVIDERS) {
-    const configured = p.id === "bedrock"
-      ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
-      : !!keys[p.apiKeyField];
-    if (configured) {
-      for (const m of p.models) {
-        models.push({ provider: p.id, providerName: p.name, ...m });
+  // GET /api/llm/providers — list all providers with configuration status
+  .get("/api/llm/providers", () => {
+    const keys = getLLMKeys();
+    const providers = LLM_PROVIDERS.map((p) => ({
+      id: p.id,
+      name: p.name,
+      configured: p.id === "bedrock"
+        ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
+        : !!keys[p.apiKeyField],
+      models: p.models,
+      apiKeyField: p.apiKeyField,
+    }));
+    return providers;
+  })
+
+  // GET /api/llm/models — all models from configured providers
+  .get("/api/llm/models", () => {
+    const keys = getLLMKeys();
+    const models: Array<{ provider: string; providerName: string; id: string; name: string; context?: number }> = [];
+    for (const p of LLM_PROVIDERS) {
+      const configured = p.id === "bedrock"
+        ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
+        : !!keys[p.apiKeyField];
+      if (configured) {
+        for (const m of p.models) {
+          models.push({ provider: p.id, providerName: p.name, ...m });
+        }
       }
     }
-  }
-  res.json(models);
-});
+    return models;
+  })
 
-// PUT /api/llm/keys — save API keys for providers
-router.put("/api/llm/keys", (req, res) => {
-  const { keys } = req.body;
-  if (!keys || typeof keys !== "object") return res.status(400).json({ error: "keys object required" });
-  const existing = getLLMKeys();
-  saveLLMKeys({ ...existing, ...keys });
-  res.json({ ok: true });
-});
+  // PUT /api/llm/keys — save API keys for providers
+  .put("/api/llm/keys", ({ body, set }) => {
+    const { keys } = body as { keys: Record<string, string> };
+    if (!keys || typeof keys !== "object") {
+      set.status = 400;
+      return { error: "keys object required" };
+    }
+    const existing = getLLMKeys();
+    saveLLMKeys({ ...existing, ...keys });
+    return { ok: true };
+  })
 
-// GET /api/llm/keys — get configured keys (masked)
-router.get("/api/llm/keys", (_req, res) => {
-  const keys = getLLMKeys();
-  const masked: Record<string, string> = {};
-  for (const [k, v] of Object.entries(keys)) {
-    masked[k] = v ? maskSecret(v) : "";
-  }
-  res.json(masked);
-});
+  // GET /api/llm/keys — get configured keys (masked)
+  .get("/api/llm/keys", () => {
+    const keys = getLLMKeys();
+    const masked: Record<string, string> = {};
+    for (const [k, v] of Object.entries(keys)) {
+      masked[k] = v ? maskSecret(v) : "";
+    }
+    return masked;
+  })
 
-// POST /api/llm/chat — streaming chat with any configured provider/model
-router.post("/api/llm/chat", async (req, res) => {
-  const { provider: providerId, model: modelId, messages, system } = req.body;
-  if (!providerId || !modelId || !messages) {
-    return res.status(400).json({ error: "provider, model, and messages are required" });
-  }
-
-  const providerConfig = LLM_PROVIDERS.find((p) => p.id === providerId);
-  if (!providerConfig) return res.status(404).json({ error: `Unknown provider: ${providerId}` });
-
-  const keys = getLLMKeys();
-  // Bedrock: use saved API key, or fall back to AWS credential chain (empty string triggers auto-detect)
-  const apiKey = keys[providerConfig.apiKeyField] || (providerId === "bedrock" ? "" : "");
-  if (!apiKey) {
-    return res.status(401).json({ error: `No API key configured for ${providerConfig.name}. Add it in Settings → AI Providers.` });
-  }
-
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const provider = providerConfig.createProvider(apiKey) as any;
-    const model = provider(modelId);
-
-    // Set up SSE streaming
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-
-    const result = streamText({
-      model,
-      messages: messages.map((m: { role: string; content: string }) => ({
-        role: m.role as "user" | "assistant" | "system",
-        content: m.content,
-      })),
-      system: system || undefined,
-    });
-
-    // Stream text chunks as SSE
-    for await (const chunk of result.textStream) {
-      res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
+  // POST /api/llm/chat — streaming chat with any configured provider/model
+  .post("/api/llm/chat", async ({ body, set }) => {
+    const { provider: providerId, model: modelId, messages, system } = body as {
+      provider: string;
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+      system?: string;
+    };
+    if (!providerId || !modelId || !messages) {
+      set.status = 400;
+      return { error: "provider, model, and messages are required" };
     }
 
-    // Send done event with usage stats
-    res.write(`data: ${JSON.stringify({ type: "done", usage: await result.usage })}\n\n`);
-    res.end();
-  } catch (err: unknown) {
-    console.error("LLM chat error:", err);
-    const msg = err instanceof Error ? `${err.name}: ${err.message}` : "LLM request failed";
-    if (!res.headersSent) {
-      res.status(500).json({ error: msg });
-    } else {
-      res.write(`data: ${JSON.stringify({ type: "error", error: msg })}\n\n`);
-      res.end();
+    const providerConfig = LLM_PROVIDERS.find((p) => p.id === providerId);
+    if (!providerConfig) {
+      set.status = 404;
+      return { error: `Unknown provider: ${providerId}` };
     }
-  }
-});
 
-// POST /api/llm/test — test a provider connection
-router.post("/api/llm/test", async (req, res) => {
-  const { provider: providerId, apiKey } = req.body;
-  if (!providerId || !apiKey) return res.status(400).json({ error: "provider and apiKey required" });
+    const keys = getLLMKeys();
+    // Bedrock: use saved API key, or fall back to AWS credential chain (empty string triggers auto-detect)
+    const apiKey = keys[providerConfig.apiKeyField] || (providerId === "bedrock" ? "" : "");
+    if (!apiKey) {
+      set.status = 401;
+      return { error: `No API key configured for ${providerConfig.name}. Add it in Settings → AI Providers.` };
+    }
 
-  const providerConfig = LLM_PROVIDERS.find((p) => p.id === providerId);
-  if (!providerConfig) return res.status(404).json({ error: `Unknown provider: ${providerId}` });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const provider = providerConfig.createProvider(apiKey) as any;
+      const model = provider(modelId);
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const provider = providerConfig.createProvider(apiKey) as any;
-    const model = provider(providerConfig.models[0].id);
+      const result = streamText({
+        model,
+        messages: messages.map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        })),
+        system: system || undefined,
+      });
 
-    // Use generateText (not stream) — it fails immediately on auth errors
-    const { text } = await generateText({
-      model,
-      messages: [{ role: "user" as const, content: "Say hi in one word." }],
-      maxOutputTokens: 10,
-    });
+      // Return SSE streaming response via ReadableStream
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          try {
+            // Stream text chunks as SSE
+            for await (const chunk of result.textStream) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`));
+            }
 
-    res.json({ ok: true, response: text.trim() || "Connected" });
-  } catch (err: unknown) {
-    console.error("LLM test error:", err);
-    // Extract useful error message
-    const e = err as { message?: string; name?: string; statusCode?: number; responseBody?: string };
-    let msg = e.message || "Connection failed";
-    // Clean up AI SDK error prefixes
-    msg = msg.replace(/^[A-Z_]+\s*\[AI_\w+\]:\s*/, "");
-    if (msg.length > 120) msg = msg.slice(0, 120) + "...";
-    res.status(400).json({ ok: false, error: msg });
-  }
-});
+            // Send done event with usage stats
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done", usage: await result.usage })}\n\n`));
+            controller.close();
+          } catch (streamErr: unknown) {
+            console.error("LLM chat stream error:", streamErr);
+            const errMsg = streamErr instanceof Error ? `${streamErr.name}: ${streamErr.message}` : "LLM stream failed";
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: errMsg })}\n\n`));
+            controller.close();
+          }
+        },
+      });
 
-export default router;
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    } catch (err: unknown) {
+      console.error("LLM chat error:", err);
+      const msg = err instanceof Error ? `${err.name}: ${err.message}` : "LLM request failed";
+      set.status = 500;
+      return { error: msg };
+    }
+  })
+
+  // POST /api/llm/test — test a provider connection
+  .post("/api/llm/test", async ({ body, set }) => {
+    const { provider: providerId, apiKey } = body as { provider: string; apiKey: string };
+    if (!providerId || !apiKey) {
+      set.status = 400;
+      return { error: "provider and apiKey required" };
+    }
+
+    const providerConfig = LLM_PROVIDERS.find((p) => p.id === providerId);
+    if (!providerConfig) {
+      set.status = 404;
+      return { error: `Unknown provider: ${providerId}` };
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const provider = providerConfig.createProvider(apiKey) as any;
+      const model = provider(providerConfig.models[0].id);
+
+      // Use generateText (not stream) — it fails immediately on auth errors
+      const { text } = await generateText({
+        model,
+        messages: [{ role: "user" as const, content: "Say hi in one word." }],
+        maxOutputTokens: 10,
+      });
+
+      return { ok: true, response: text.trim() || "Connected" };
+    } catch (err: unknown) {
+      console.error("LLM test error:", err);
+      // Extract useful error message
+      const e = err as { message?: string; name?: string; statusCode?: number; responseBody?: string };
+      let msg = e.message || "Connection failed";
+      // Clean up AI SDK error prefixes
+      msg = msg.replace(/^[A-Z_]+\s*\[AI_\w+\]:\s*/, "");
+      if (msg.length > 120) msg = msg.slice(0, 120) + "...";
+      set.status = 400;
+      return { ok: false, error: msg };
+    }
+  });

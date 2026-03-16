@@ -4,8 +4,7 @@
  * Manages Claude CLI child processes, stream-json parsing, SSE broadcasting,
  * session persistence, image uploads, and follow-up messages.
  */
-import { Router } from "express";
-import express from "express";
+import { Elysia } from "elysia";
 import { randomUUID } from "crypto";
 import { spawn, execFileSync } from "child_process";
 import { existsSync, writeFileSync, readFileSync, mkdirSync } from "fs";
@@ -18,13 +17,19 @@ import {
   buildProjectEnv,
   findClaudeCLI,
 } from "../lib/shared";
-
-const router = Router();
+import { registerCleanup } from "../lib/cleanup";
 
 // --- State ---
 
 export const claudeSessions = new Map<string, ClaudeSession>();
-export const sseClients = new Map<string, Set<express.Response>>();
+
+/**
+ * SSE clients — each session maps to a set of ReadableStreamDefaultControllers.
+ * When we push data, we enqueue SSE-formatted strings into each controller.
+ */
+export const sseClients = new Map<string, Set<ReadableStreamDefaultController<Uint8Array>>>();
+
+const encoder = new TextEncoder();
 
 // --- Session persistence ---
 
@@ -135,9 +140,14 @@ function parseStreamJsonLine(line: string): StreamEvent[] {
 function broadcastSSE(sessionId: string, event: Record<string, unknown>) {
   const clients = sseClients.get(sessionId);
   if (!clients) return;
-  const data = JSON.stringify(event);
-  for (const client of clients) {
-    client.write(`data: ${data}\n\n`);
+  const data = `data: ${JSON.stringify(event)}\n\n`;
+  const bytes = encoder.encode(data);
+  for (const controller of clients) {
+    try {
+      controller.enqueue(bytes);
+    } catch {
+      clients.delete(controller);
+    }
   }
 }
 
@@ -247,337 +257,395 @@ export function initClaude(opts: { getActiveProject: () => string }) {
 }
 
 // ============================================================
-// IMAGE UPLOAD
+// ROUTES
 // ============================================================
 
-router.post("/api/images/upload", express.json({ limit: "50mb" }), (req, res) => {
-  const { images } = req.body;
-  if (!images || !Array.isArray(images) || images.length === 0) {
-    return res.status(400).json({ error: "No images provided" });
-  }
-  if (images.length > 10) {
-    return res.status(400).json({ error: "Maximum 10 images per upload" });
-  }
+export const claudeRoutes = new Elysia()
 
-  mkdirSync(TMP_IMAGES_DIR, { recursive: true });
+  // ============================================================
+  // IMAGE UPLOAD
+  // ============================================================
 
-  const paths: string[] = [];
-  for (const img of images) {
-    if (!img.name || !img.data) continue;
-    const ext = (img.name as string).split(".").pop()?.toLowerCase() || "png";
-    if (!["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) continue;
-    const filePath = join(TMP_IMAGES_DIR, `${randomUUID()}.${ext}`);
-    writeFileSync(filePath, Buffer.from(img.data as string, "base64"));
-    paths.push(filePath);
-  }
-
-  res.json({ paths });
-});
-
-// ============================================================
-// CLAUDE SESSIONS
-// ============================================================
-
-// List all sessions
-router.get("/api/claude/sessions", (_req, res) => {
-  const list = [...claudeSessions.values()].map(({ process, ...s }) => s);
-  res.json(list.reverse());
-});
-
-// Get single session
-router.get("/api/claude/sessions/:id", (req, res) => {
-  const session = claudeSessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
-  const { process, ...safe } = session;
-  res.json(safe);
-});
-
-// Launch new session
-router.post("/api/claude/sessions", (req, res) => {
-  const { prompt, cwd, imagePaths } = req.body;
-  if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
-    return res.status(400).json({ error: "Prompt is required" });
-  }
-
-  try {
-    const claudePath = findClaudeCLI();
-    if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
-
-    const id = randomUUID().slice(0, 12);
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
-
-    // Attach images if provided
-    if (Array.isArray(imagePaths)) {
-      for (const imgPath of imagePaths) {
-        if (typeof imgPath === "string" && existsSync(imgPath)) {
-          args.push("--image", imgPath);
-        }
-      }
+  .post("/api/images/upload", ({ body, set }) => {
+    const { images } = body as { images?: Array<{ name?: string; data?: string }> };
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      set.status = 400;
+      return { error: "No images provided" };
     }
-    const sessionCwd = cwd || getActiveProject();
-    const env = buildProjectEnv(sessionCwd);
+    if (images.length > 10) {
+      set.status = 400;
+      return { error: "Maximum 10 images per upload" };
+    }
 
-    const child = spawn(claudePath, args, {
-      env,
-      cwd: sessionCwd,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    const session: ClaudeSession = {
-      id,
-      prompt: prompt.trim(),
-      status: "running",
-      messages: [
-        { role: "user", content: prompt.trim(), timestamp: new Date().toISOString() },
-      ],
-      output: [],
-      exitCode: null,
-      startedAt: new Date().toISOString(),
-      pid: child.pid,
-      cwd: sessionCwd,
-      process: child,
+    mkdirSync(TMP_IMAGES_DIR, { recursive: true });
+
+    const paths: string[] = [];
+    for (const img of images) {
+      if (!img.name || !img.data) continue;
+      const ext = (img.name as string).split(".").pop()?.toLowerCase() || "png";
+      if (!["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) continue;
+      const filePath = join(TMP_IMAGES_DIR, `${randomUUID()}.${ext}`);
+      writeFileSync(filePath, Buffer.from(img.data as string, "base64"));
+      paths.push(filePath);
+    }
+
+    return { paths };
+  })
+
+  // ============================================================
+  // CLAUDE SESSIONS
+  // ============================================================
+
+  // List all sessions
+  .get("/api/claude/sessions", () => {
+    const list = [...claudeSessions.values()].map(({ process, ...s }) => s);
+    return list.reverse();
+  })
+
+  // Get single session
+  .get("/api/claude/sessions/:id", ({ params, set }) => {
+    const session = claudeSessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return { error: "Session not found" };
+    }
+    const { process, ...safe } = session;
+    return safe;
+  })
+
+  // Launch new session
+  .post("/api/claude/sessions", ({ body, set }) => {
+    const { prompt, cwd, imagePaths } = body as {
+      prompt?: string;
+      cwd?: string;
+      imagePaths?: string[];
     };
-
-    claudeSessions.set(id, session);
-    wireStreamJson(child, session, id);
-    persistSessions(); // Persist immediately so session survives crash
-
-    // On close
-    child.on("close", (code) => {
-      session.status = code === 0 ? "done" : "error";
-      session.exitCode = code;
-      session.endedAt = new Date().toISOString();
-      session.messages.push({
-        role: "assistant",
-        content: session.output.join(""),
-        timestamp: new Date().toISOString(),
-      });
-      delete session.process;
-
-      // Detect file changes after successful completion
-      if (code === 0) {
-        session.filesChanged = detectFileChanges(session.cwd);
-      }
-
-      // Notify SSE clients of completion
-      const clients = sseClients.get(id);
-      if (clients) {
-        for (const client of clients) {
-          client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
-          client.end();
-        }
-        sseClients.delete(id);
-      }
-
-      // Persist to disk
-      persistSessions();
-
-      // Clean up from memory after 2 hours (stays on disk)
-      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
-    });
-
-    const { process: _, ...safe } = session;
-    res.status(201).json(safe);
-  } catch {
-    res.status(500).json({ error: "Failed to launch Claude" });
-  }
-});
-
-// SSE stream for a session
-router.get("/api/claude/stream/:id", (req, res) => {
-  const session = claudeSessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
-
-  res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-    "X-Accel-Buffering": "no",
-  });
-
-  // Send existing output first
-  if (session.output.length > 0) {
-    res.write(`data: ${JSON.stringify({ type: "replay", content: session.output.join("") })}\n\n`);
-  }
-
-  // If already done, send done event immediately
-  if (session.status !== "running") {
-    res.write(`data: ${JSON.stringify({ type: "done", exitCode: session.exitCode })}\n\n`);
-    res.end();
-    return;
-  }
-
-  // Register SSE client
-  if (!sseClients.has(req.params.id)) {
-    sseClients.set(req.params.id, new Set());
-  }
-  sseClients.get(req.params.id)!.add(res);
-
-  // Clean up on disconnect
-  req.on("close", () => {
-    sseClients.get(req.params.id)?.delete(res);
-  });
-});
-
-// Stop a running session
-router.post("/api/claude/stop/:id", (req, res) => {
-  const session = claudeSessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
-  if (session.process) {
-    session.process.kill("SIGTERM");
-    session.status = "stopped";
-  }
-  res.json({ ok: true });
-});
-
-// Delete a session
-router.delete("/api/claude/sessions/:id", (req, res) => {
-  const session = claudeSessions.get(req.params.id);
-  if (session?.process) session.process.kill("SIGTERM");
-  claudeSessions.delete(req.params.id);
-  res.json({ ok: true });
-});
-
-// Send follow-up message to an existing session using --continue
-// Falls back to a new session with conversation context if --continue fails
-router.post("/api/claude/sessions/:id/message", (req, res) => {
-  const session = claudeSessions.get(req.params.id);
-  if (!session) {
-    return res.status(404).json({
-      error: "Session expired or not found. Use the Reconnect button to start a new session.",
-      recoverable: true,
-      cwd: null,
-    });
-  }
-  if (session.status === "running") {
-    return res.status(409).json({ error: "Session is still running" });
-  }
-
-  const { prompt, imagePaths } = req.body;
-  if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
-    return res.status(400).json({ error: "Prompt is required" });
-  }
-
-  const claudePath = findClaudeCLI();
-  if (!claudePath) {
-    return res.status(503).json({
-      error: "Claude CLI not found. Is it installed? Run: npm install -g @anthropic-ai/claude-code",
-      recoverable: false,
-    });
-  }
-
-  function launchFollowUp(useContinue: boolean): void {
-    if (!session) return; // TS guard — already checked above
-    const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
-
-    if (useContinue) {
-      args.push("--continue");
+    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+      set.status = 400;
+      return { error: "Prompt is required" };
     }
 
-    // Attach images if provided
-    if (Array.isArray(imagePaths)) {
-      for (const imgPath of imagePaths) {
-        if (typeof imgPath === "string" && existsSync(imgPath)) {
-          args.push("--image", imgPath);
+    try {
+      const claudePath = findClaudeCLI();
+      if (!claudePath) {
+        set.status = 404;
+        return { error: "Claude CLI not found" };
+      }
+
+      const id = randomUUID().slice(0, 12);
+      const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+
+      // Attach images if provided
+      if (Array.isArray(imagePaths)) {
+        for (const imgPath of imagePaths) {
+          if (typeof imgPath === "string" && existsSync(imgPath)) {
+            args.push("--image", imgPath);
+          }
         }
       }
+      const sessionCwd = cwd || getActiveProject();
+      const env = buildProjectEnv(sessionCwd);
+
+      const child = spawn(claudePath, args, {
+        env,
+        cwd: sessionCwd,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const session: ClaudeSession = {
+        id,
+        prompt: prompt.trim(),
+        status: "running",
+        messages: [
+          { role: "user", content: prompt.trim(), timestamp: new Date().toISOString() },
+        ],
+        output: [],
+        exitCode: null,
+        startedAt: new Date().toISOString(),
+        pid: child.pid,
+        cwd: sessionCwd,
+        process: child,
+      };
+
+      claudeSessions.set(id, session);
+      wireStreamJson(child, session, id);
+      persistSessions(); // Persist immediately so session survives crash
+
+      // On close
+      child.on("close", (code) => {
+        session.status = code === 0 ? "done" : "error";
+        session.exitCode = code;
+        session.endedAt = new Date().toISOString();
+        session.messages.push({
+          role: "assistant",
+          content: session.output.join(""),
+          timestamp: new Date().toISOString(),
+        });
+        delete session.process;
+
+        // Detect file changes after successful completion
+        if (code === 0) {
+          session.filesChanged = detectFileChanges(session.cwd);
+        }
+
+        // Notify SSE clients of completion
+        const clients = sseClients.get(id);
+        if (clients) {
+          const doneData = encoder.encode(
+            `data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`
+          );
+          for (const controller of clients) {
+            try {
+              controller.enqueue(doneData);
+              controller.close();
+            } catch {}
+          }
+          sseClients.delete(id);
+        }
+
+        // Persist to disk
+        persistSessions();
+
+        // Clean up from memory after 2 hours (stays on disk)
+        setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
+      });
+
+      const { process: _, ...safe } = session;
+      set.status = 201;
+      return safe;
+    } catch {
+      set.status = 500;
+      return { error: "Failed to launch Claude" };
+    }
+  })
+
+  // SSE stream for a session
+  .get("/api/claude/stream/:id", ({ params, set }) => {
+    const session = claudeSessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return { error: "Session not found" };
     }
 
-    const env = buildProjectEnv(session.cwd);
+    const sessionId = params.id;
 
-    const child = spawn(claudePath!, args, {
-      env,
-      cwd: session.cwd,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+    let controllerRef: ReadableStreamDefaultController<Uint8Array> | null = null;
 
-    // Add user message
-    session.messages.push({
-      role: "user",
-      content: prompt.trim(),
-      timestamp: new Date().toISOString(),
-    });
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controllerRef = controller;
 
-    // Reset output buffer for this turn
-    session.output = [];
-    session.status = "running";
-    session.pid = child.pid;
-    session.exitCode = null;
-    session.endedAt = undefined;
-    session.process = child;
-
-    wireStreamJson(child, session, session.id);
-
-    // Detect early crash (within 3s) — likely --continue failed
-    let earlyCrash = true;
-    const earlyTimer = setTimeout(() => { earlyCrash = false; }, 3000);
-
-    child.on("close", (code) => {
-      clearTimeout(earlyTimer);
-
-      // If --continue crashed immediately, retry as a new session (without --continue)
-      if (useContinue && earlyCrash && code !== 0) {
-        console.log(`[follow-up] --continue failed (exit ${code}), retrying as new session`);
-        // Remove the failed user message we just added
-        session.messages.pop();
-        session.status = "done"; // Reset to allow retry
-        launchFollowUp(false);
-        return;
-      }
-
-      session.status = code === 0 ? "done" : "error";
-      session.exitCode = code;
-      session.endedAt = new Date().toISOString();
-      session.messages.push({
-        role: "assistant",
-        content: session.output.join(""),
-        timestamp: new Date().toISOString(),
-      });
-      delete session.process;
-
-      if (code === 0) {
-        session.filesChanged = detectFileChanges(session.cwd);
-      }
-
-      const clients = sseClients.get(session.id);
-      if (clients) {
-        for (const client of clients) {
-          client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
-          client.end();
+        // Send existing output first
+        if (session.output.length > 0) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "replay", content: session.output.join("") })}\n\n`)
+          );
         }
-        sseClients.delete(session.id);
-      }
-      persistSessions();
+
+        // If already done, send done event immediately
+        if (session.status !== "running") {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "done", exitCode: session.exitCode })}\n\n`)
+          );
+          controller.close();
+          return;
+        }
+
+        // Register SSE client
+        if (!sseClients.has(sessionId)) {
+          sseClients.set(sessionId, new Set());
+        }
+        sseClients.get(sessionId)!.add(controller);
+      },
+      cancel() {
+        if (controllerRef) {
+          sseClients.get(sessionId)?.delete(controllerRef);
+        }
+      },
     });
 
-    child.on("error", (err) => {
-      clearTimeout(earlyTimer);
-      console.error(`[follow-up] spawn error:`, err.message);
-      session.status = "error";
-      session.exitCode = -1;
-      session.endedAt = new Date().toISOString();
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  })
+
+  // Stop a running session
+  .post("/api/claude/stop/:id", ({ params, set }) => {
+    const session = claudeSessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return { error: "Session not found" };
+    }
+    if (session.process) {
+      session.process.kill("SIGTERM");
+      session.status = "stopped";
+    }
+    return { ok: true };
+  })
+
+  // Delete a session
+  .delete("/api/claude/sessions/:id", ({ params }) => {
+    const session = claudeSessions.get(params.id);
+    if (session?.process) session.process.kill("SIGTERM");
+    claudeSessions.delete(params.id);
+    return { ok: true };
+  })
+
+  // Send follow-up message to an existing session using --continue
+  // Falls back to a new session with conversation context if --continue fails
+  .post("/api/claude/sessions/:id/message", ({ params, body, set }) => {
+    const session = claudeSessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return {
+        error: "Session expired or not found. Use the Reconnect button to start a new session.",
+        recoverable: true,
+        cwd: null,
+      };
+    }
+    if (session.status === "running") {
+      set.status = 409;
+      return { error: "Session is still running" };
+    }
+
+    const { prompt, imagePaths } = body as { prompt?: string; imagePaths?: string[] };
+    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+      set.status = 400;
+      return { error: "Prompt is required" };
+    }
+
+    const claudePath = findClaudeCLI();
+    if (!claudePath) {
+      set.status = 503;
+      return {
+        error: "Claude CLI not found. Is it installed? Run: npm install -g @anthropic-ai/claude-code",
+        recoverable: false,
+      };
+    }
+
+    function launchFollowUp(useContinue: boolean): void {
+      if (!session) return; // TS guard — already checked above
+      const args = ["-p", prompt!.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+
+      if (useContinue) {
+        args.push("--continue");
+      }
+
+      // Attach images if provided
+      if (Array.isArray(imagePaths)) {
+        for (const imgPath of imagePaths) {
+          if (typeof imgPath === "string" && existsSync(imgPath)) {
+            args.push("--image", imgPath);
+          }
+        }
+      }
+
+      const env = buildProjectEnv(session.cwd);
+
+      const child = spawn(claudePath!, args, {
+        env,
+        cwd: session.cwd,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+
+      // Add user message
       session.messages.push({
-        role: "assistant",
-        content: `Error: Failed to start Claude CLI. ${err.message}`,
+        role: "user",
+        content: prompt!.trim(),
         timestamp: new Date().toISOString(),
       });
-      delete session.process;
-      persistSessions();
-    });
-  }
 
-  try {
-    launchFollowUp(true); // Try with --continue first
-    const { process: _, ...safe } = session;
-    res.json(safe);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    res.status(500).json({
-      error: `Failed to send follow-up: ${msg}`,
-      recoverable: true,
-      cwd: session.cwd,
-    });
-  }
-});
+      // Reset output buffer for this turn
+      session.output = [];
+      session.status = "running";
+      session.pid = child.pid;
+      session.exitCode = null;
+      session.endedAt = undefined;
+      session.process = child;
+
+      wireStreamJson(child, session, session.id);
+
+      // Detect early crash (within 3s) — likely --continue failed
+      let earlyCrash = true;
+      const earlyTimer = setTimeout(() => { earlyCrash = false; }, 3000);
+
+      child.on("close", (code) => {
+        clearTimeout(earlyTimer);
+
+        // If --continue crashed immediately, retry as a new session (without --continue)
+        if (useContinue && earlyCrash && code !== 0) {
+          console.log(`[follow-up] --continue failed (exit ${code}), retrying as new session`);
+          // Remove the failed user message we just added
+          session.messages.pop();
+          session.status = "done"; // Reset to allow retry
+          launchFollowUp(false);
+          return;
+        }
+
+        session.status = code === 0 ? "done" : "error";
+        session.exitCode = code;
+        session.endedAt = new Date().toISOString();
+        session.messages.push({
+          role: "assistant",
+          content: session.output.join(""),
+          timestamp: new Date().toISOString(),
+        });
+        delete session.process;
+
+        if (code === 0) {
+          session.filesChanged = detectFileChanges(session.cwd);
+        }
+
+        const clients = sseClients.get(session.id);
+        if (clients) {
+          const doneData = encoder.encode(
+            `data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`
+          );
+          for (const controller of clients) {
+            try {
+              controller.enqueue(doneData);
+              controller.close();
+            } catch {}
+          }
+          sseClients.delete(session.id);
+        }
+        persistSessions();
+      });
+
+      child.on("error", (err) => {
+        clearTimeout(earlyTimer);
+        console.error(`[follow-up] spawn error:`, err.message);
+        session.status = "error";
+        session.exitCode = -1;
+        session.endedAt = new Date().toISOString();
+        session.messages.push({
+          role: "assistant",
+          content: `Error: Failed to start Claude CLI. ${err.message}`,
+          timestamp: new Date().toISOString(),
+        });
+        delete session.process;
+        persistSessions();
+      });
+    }
+
+    try {
+      launchFollowUp(true); // Try with --continue first
+      const { process: _, ...safe } = session;
+      return safe;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      set.status = 500;
+      return {
+        error: `Failed to send follow-up: ${msg}`,
+        recoverable: true,
+        cwd: session.cwd,
+      };
+    }
+  });
 
 // ============================================================
 // CLEANUP
@@ -593,15 +661,17 @@ export function cleanup() {
   persistSessions();
 }
 
+// Register cleanup with the centralized shutdown handler
+registerCleanup(cleanup);
+
 /** SSE heartbeat — call from setInterval in index.ts to detect dead clients. */
 export function heartbeat() {
   for (const [id, clients] of sseClients.entries()) {
-    for (const client of clients) {
-      try { client.write(":heartbeat\n\n"); }
-      catch { clients.delete(client); }
+    const heartbeatData = encoder.encode(":heartbeat\n\n");
+    for (const controller of clients) {
+      try { controller.enqueue(heartbeatData); }
+      catch { clients.delete(controller); }
     }
     if (clients.size === 0) sseClients.delete(id);
   }
 }
-
-export default router;

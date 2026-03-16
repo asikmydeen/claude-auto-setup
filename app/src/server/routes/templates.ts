@@ -2,7 +2,7 @@
  * Template system + project creation routes — curated templates, auto-pick,
  * create-from-template, and create-from-scratch flows.
  */
-import { Router } from "express";
+import { Elysia } from "elysia";
 import {
   readFileSync,
   writeFileSync,
@@ -12,7 +12,6 @@ import {
 import { join, resolve } from "path";
 import { execFileSync, spawn } from "child_process";
 import { randomUUID } from "crypto";
-import type express from "express";
 
 import {
   HOME,
@@ -35,7 +34,7 @@ import {
 // ---------------------------------------------------------------------------
 
 let claudeSessions: Map<string, ClaudeSession>;
-let sseClients: Map<string, Set<express.Response>>;
+let sseClients: Map<string, Set<ReadableStreamDefaultController>>;
 let wireStreamJson: (
   child: ReturnType<typeof spawn>,
   session: ClaudeSession,
@@ -153,93 +152,162 @@ function autoPickTemplate(description: string): CuratedTemplate {
 }
 
 // ---------------------------------------------------------------------------
-// Router
+// Helper: spawn Claude session and wire up close handler
 // ---------------------------------------------------------------------------
 
-const router = Router();
+function spawnClaudeSession(
+  claudePath: string,
+  buildPrompt: string,
+  projectDir: string,
+): { id: string; session: ClaudeSession } {
+  const id = randomUUID().slice(0, 12);
+  const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+  const env = buildProjectEnv(projectDir);
 
-// ============================================================
-// TEMPLATE SYSTEM — curated, verified design references
-// ============================================================
+  const child = spawn(claudePath, args, {
+    env,
+    cwd: projectDir,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
-// GET /api/templates — returns curated templates grouped by design style
-router.get("/api/templates", (_req, res) => {
-  const { styles, templates } = loadCurated();
-  const grouped = Object.entries(styles).map(([id, meta]) => ({
+  const session: ClaudeSession = {
     id,
-    ...meta,
-    templates: templates.filter((t) => {
-      if (id === "landing") return t.tags.includes("landing") || t.tags.includes("marketing");
-      if (id === "dashboard-modern") return t.style === "modern" && !t.tags.includes("landing");
-      if (id === "dashboard-material") return t.style === "material" && !t.tags.includes("landing");
-      if (id === "dashboard-dark") return t.style === "dark";
-      if (id === "dashboard-soft") return t.style === "soft";
-      return t.style === "clean" && !t.tags.includes("landing");
-    }),
-  })).filter((g) => g.templates.length > 0);
-  res.json(grouped);
-});
+    prompt: buildPrompt,
+    status: "running",
+    messages: [{ role: "user", content: buildPrompt, timestamp: new Date().toISOString() }],
+    output: [],
+    exitCode: null,
+    startedAt: new Date().toISOString(),
+    pid: child.pid,
+    cwd: projectDir,
+    process: child,
+  };
 
-// POST /api/projects/create-from-template — copy template + always spawn Claude to customize
-// templateId is optional — if omitted, auto-picks based on description
-router.post("/api/projects/create-from-template", (req, res) => {
-  const { templateId, name, description, basePath } = req.body;
-  if (!name || !description) {
-    return res.status(400).json({ error: "name and description are required" });
-  }
+  claudeSessions.set(id, session);
+  wireStreamJson(child, session, id);
 
-  const { templates } = loadCurated();
-  const template = templateId
-    ? templates.find((t) => t.id === templateId)
-    : autoPickTemplate(description);
-  if (!template) return res.status(404).json({ error: "Template not found" });
-
-  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
-  const base = basePath || join(HOME, "projects");
-  const projectDir = join(base, safeName);
-
-  if (!existsSync(base)) mkdirSync(base, { recursive: true });
-  if (existsSync(projectDir)) {
-    return res.status(409).json({ error: `Directory already exists: ${projectDir}` });
-  }
-
-  try {
-    // Copy template as starting point
-    const templateSrc = join(TEMPLATES_DIR, template.path);
-    if (!existsSync(templateSrc)) {
-      return res.status(404).json({ error: "Template source directory not found" });
+  child.on("close", (code) => {
+    session.status = code === 0 ? "done" : "error";
+    session.exitCode = code;
+    session.endedAt = new Date().toISOString();
+    session.messages.push({ role: "assistant", content: session.output.join(""), timestamp: new Date().toISOString() });
+    delete session.process;
+    if (code === 0) session.filesChanged = detectFileChanges(session.cwd);
+    const clients = sseClients.get(id);
+    if (clients) {
+      for (const client of clients) {
+        client.enqueue(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
+        try { client.close(); } catch {}
+      }
+      sseClients.delete(id);
     }
-    execFileSync("cp", ["-R", templateSrc, projectDir], { timeout: 30000 });
+    persistSessions();
+    // Keep in memory for 2h, persist handles disk storage
+    setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
+  });
 
-    // Update package.json name
-    const pkgPath = join(projectDir, "package.json");
-    if (existsSync(pkgPath)) {
-      try {
-        const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-        pkg.name = safeName;
-        writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-      } catch {}
+  return { id, session };
+}
+
+// ---------------------------------------------------------------------------
+// Elysia plugin
+// ---------------------------------------------------------------------------
+
+export const templatesRoutes = new Elysia()
+
+  // ============================================================
+  // TEMPLATE SYSTEM — curated, verified design references
+  // ============================================================
+
+  // GET /api/templates — returns curated templates grouped by design style
+  .get("/api/templates", () => {
+    const { styles, templates } = loadCurated();
+    const grouped = Object.entries(styles).map(([id, meta]) => ({
+      id,
+      ...meta,
+      templates: templates.filter((t) => {
+        if (id === "landing") return t.tags.includes("landing") || t.tags.includes("marketing");
+        if (id === "dashboard-modern") return t.style === "modern" && !t.tags.includes("landing");
+        if (id === "dashboard-material") return t.style === "material" && !t.tags.includes("landing");
+        if (id === "dashboard-dark") return t.style === "dark";
+        if (id === "dashboard-soft") return t.style === "soft";
+        return t.style === "clean" && !t.tags.includes("landing");
+      }),
+    })).filter((g) => g.templates.length > 0);
+    return grouped;
+  })
+
+  // POST /api/projects/create-from-template — copy template + always spawn Claude to customize
+  // templateId is optional — if omitted, auto-picks based on description
+  .post("/api/projects/create-from-template", ({ body, set }) => {
+    const { templateId, name, description, basePath } = body as {
+      templateId?: string;
+      name?: string;
+      description?: string;
+      basePath?: string;
+    };
+    if (!name || !description) {
+      set.status = 400;
+      return { error: "name and description are required" };
     }
 
-    // Init git
+    const { templates } = loadCurated();
+    const template = templateId
+      ? templates.find((t) => t.id === templateId)
+      : autoPickTemplate(description);
+    if (!template) {
+      set.status = 404;
+      return { error: "Template not found" };
+    }
+
+    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+    const base = basePath || join(HOME, "projects");
+    const projectDir = join(base, safeName);
+
+    if (!existsSync(base)) mkdirSync(base, { recursive: true });
+    if (existsSync(projectDir)) {
+      set.status = 409;
+      return { error: `Directory already exists: ${projectDir}` };
+    }
+
     try {
-      execFileSync("git", ["init"], { cwd: projectDir, encoding: "utf-8", timeout: 5000 });
-      execFileSync("git", ["add", "."], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
-      execFileSync("git", ["commit", "-m", "Initial commit from template: " + template.label], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
-    } catch {}
+      // Copy template as starting point
+      const templateSrc = join(TEMPLATES_DIR, template.path);
+      if (!existsSync(templateSrc)) {
+        set.status = 404;
+        return { error: "Template source directory not found" };
+      }
+      execFileSync("cp", ["-R", templateSrc, projectDir], { timeout: 30000 });
 
-    // Set as active project
-    setActiveProject(projectDir);
-    if (!userProjects.some((p) => p.path === projectDir)) {
-      userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
-    }
+      // Update package.json name
+      const pkgPath = join(projectDir, "package.json");
+      if (existsSync(pkgPath)) {
+        try {
+          const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+          pkg.name = safeName;
+          writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+        } catch {}
+      }
 
-    // Always spawn Claude to customize the template based on user's description
-    const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
-    // Write .env with connected integrations (Supabase, AWS) and get prompt context
-    const integrationContext = writeProjectDotEnv(projectDir);
+      // Init git
+      try {
+        execFileSync("git", ["init"], { cwd: projectDir, encoding: "utf-8", timeout: 5000 });
+        execFileSync("git", ["add", "."], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
+        execFileSync("git", ["commit", "-m", "Initial commit from template: " + template.label], { cwd: projectDir, encoding: "utf-8", timeout: 10000 });
+      } catch {}
 
-    const buildPrompt = `You are building a project called "${name}" for the user.
+      // Set as active project
+      setActiveProject(projectDir);
+      if (!userProjects.some((p) => p.path === projectDir)) {
+        userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
+      }
+
+      // Always spawn Claude to customize the template based on user's description
+      const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
+      // Write .env with connected integrations (Supabase, AWS) and get prompt context
+      const integrationContext = writeProjectDotEnv(projectDir);
+
+      const buildPrompt = `You are building a project called "${name}" for the user.
 
 The user's idea:
 ${description}
@@ -280,121 +348,89 @@ IMPORTANT: Do NOT tell the user to "run npm run dev" or any other command. The a
 
 Build on the template — don't start from scratch. The design is already beautiful.`;
 
-    const id = randomUUID().slice(0, 12);
-    const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
-    const env = buildProjectEnv(projectDir);
+      const { id, session } = spawnClaudeSession(claudePath, buildPrompt, projectDir);
 
-    const child = spawn(claudePath, args, {
-      env,
-      cwd: projectDir,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+      const { process: _, ...safe } = session;
+      set.status = 201;
+      return {
+        ok: true,
+        projectDir,
+        sessionId: id,
+        session: safe,
+        template: { id: template.id, label: template.label, framework: template.framework },
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create project from template";
+      set.status = 500;
+      return { error: msg };
+    }
+  })
 
-    const session: ClaudeSession = {
-      id,
-      prompt: buildPrompt,
-      status: "running",
-      messages: [{ role: "user", content: buildPrompt, timestamp: new Date().toISOString() }],
-      output: [],
-      exitCode: null,
-      startedAt: new Date().toISOString(),
-      pid: child.pid,
-      cwd: projectDir,
-      process: child,
+  // ============================================================
+  // PROJECT CREATOR (from scratch — original flow)
+  // ============================================================
+
+  .post("/api/projects/create", ({ body, set }) => {
+    const { name, description, basePath, envVars, supabaseOverride, awsProfile } = body as {
+      name?: string;
+      description?: string;
+      basePath?: string;
+      envVars?: Record<string, string>;
+      supabaseOverride?: Record<string, unknown>;
+      awsProfile?: string;
     };
+    if (!name || !description) {
+      set.status = 400;
+      return { error: "Name and description are required" };
+    }
 
-    claudeSessions.set(id, session);
-    wireStreamJson(child, session, id);
+    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+    const parentDir = resolve(basePath || join(HOME, "projects"));
+    // Ensure parent is under home directory
+    if (!parentDir.startsWith(HOME) && !parentDir.startsWith("/tmp")) {
+      set.status = 400;
+      return { error: "Project path must be under home directory" };
+    }
+    const projectDir = join(parentDir, safeName);
 
-    child.on("close", (code) => {
-      session.status = code === 0 ? "done" : "error";
-      session.exitCode = code;
-      session.endedAt = new Date().toISOString();
-      session.messages.push({ role: "assistant", content: session.output.join(""), timestamp: new Date().toISOString() });
-      delete session.process;
-      if (code === 0) session.filesChanged = detectFileChanges(session.cwd);
-      const clients = sseClients.get(id);
-      if (clients) {
-        for (const client of clients) {
-          client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
-          client.end();
-        }
-        sseClients.delete(id);
-      }
-      persistSessions();
-      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
-    });
+    // Create directory
+    if (!existsSync(parentDir)) mkdirSync(parentDir, { recursive: true });
+    if (!existsSync(projectDir)) mkdirSync(projectDir, { recursive: true });
 
-    const { process: _, ...safe } = session;
-    res.status(201).json({
-      ok: true,
-      projectDir,
-      sessionId: id,
-      session: safe,
-      template: { id: template.id, label: template.label, framework: template.framework },
-    });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Failed to create project from template";
-    res.status(500).json({ error: msg });
-  }
-});
+    // Initialize git
+    try {
+      execFileSync("git", ["init"], { cwd: projectDir, timeout: 5000 });
+    } catch {}
 
-// ============================================================
-// PROJECT CREATOR (from scratch — original flow)
-// ============================================================
+    // Save per-project env config if provided
+    const projectEnvConfig: ProjectEnvConfig = {};
+    if (envVars && typeof envVars === "object" && Object.keys(envVars).length > 0) {
+      projectEnvConfig.env = envVars;
+    }
+    if (supabaseOverride && typeof supabaseOverride === "object") {
+      projectEnvConfig.supabase = supabaseOverride;
+    }
+    if (awsProfile && typeof awsProfile === "string") {
+      projectEnvConfig.aws = { profile: awsProfile };
+    }
+    if (Object.keys(projectEnvConfig).length > 0) {
+      saveProjectEnv(projectDir, projectEnvConfig);
+    }
 
-router.post("/api/projects/create", (req, res) => {
-  const { name, description, basePath, envVars, supabaseOverride, awsProfile } = req.body;
-  if (!name || !description) {
-    return res.status(400).json({ error: "Name and description are required" });
-  }
+    // Set as active project
+    setActiveProject(projectDir);
+    if (!userProjects.some((p) => p.path === projectDir)) {
+      userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
+    }
 
-  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
-  const parentDir = resolve(basePath || join(HOME, "projects"));
-  // Ensure parent is under home directory
-  if (!parentDir.startsWith(HOME) && !parentDir.startsWith("/tmp")) {
-    return res.status(400).json({ error: "Project path must be under home directory" });
-  }
-  const projectDir = join(parentDir, safeName);
+    // Launch Claude session to build the project
+    try {
+      const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
 
-  // Create directory
-  if (!existsSync(parentDir)) mkdirSync(parentDir, { recursive: true });
-  if (!existsSync(projectDir)) mkdirSync(projectDir, { recursive: true });
+      // Write .env with connected integrations (Supabase, AWS) and get prompt context
+      const integrationContext = writeProjectDotEnv(projectDir);
 
-  // Initialize git
-  try {
-    execFileSync("git", ["init"], { cwd: projectDir, timeout: 5000 });
-  } catch {}
-
-  // Save per-project env config if provided
-  const projectEnvConfig: ProjectEnvConfig = {};
-  if (envVars && typeof envVars === "object" && Object.keys(envVars).length > 0) {
-    projectEnvConfig.env = envVars;
-  }
-  if (supabaseOverride && typeof supabaseOverride === "object") {
-    projectEnvConfig.supabase = supabaseOverride;
-  }
-  if (awsProfile && typeof awsProfile === "string") {
-    projectEnvConfig.aws = { profile: awsProfile };
-  }
-  if (Object.keys(projectEnvConfig).length > 0) {
-    saveProjectEnv(projectDir, projectEnvConfig);
-  }
-
-  // Set as active project
-  setActiveProject(projectDir);
-  if (!userProjects.some((p) => p.path === projectDir)) {
-    userProjects.push({ path: projectDir, name: safeName, addedAt: new Date().toISOString() });
-  }
-
-  // Launch Claude session to build the project
-  try {
-    const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
-
-    // Write .env with connected integrations (Supabase, AWS) and get prompt context
-    const integrationContext = writeProjectDotEnv(projectDir);
-
-    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:
+      const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:
 
 ${description}
 
@@ -423,59 +459,17 @@ You have access to plugins (serena for code navigation, context7 for library doc
 
 IMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing correct, working code.`;
 
-    const id = randomUUID().slice(0, 12);
-    const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
-    const env = buildProjectEnv(projectDir);
+      const { id, session } = spawnClaudeSession(claudePath, buildPrompt, projectDir);
 
-    const child = spawn(claudePath, args, {
-      env,
-      cwd: projectDir,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    const session: ClaudeSession = {
-      id,
-      prompt: buildPrompt,
-      status: "running",
-      messages: [{ role: "user", content: buildPrompt, timestamp: new Date().toISOString() }],
-      output: [],
-      exitCode: null,
-      startedAt: new Date().toISOString(),
-      pid: child.pid,
-      cwd: projectDir,
-      process: child,
-    };
-
-    claudeSessions.set(id, session);
-    wireStreamJson(child, session, id);
-
-    child.on("close", (code) => {
-      session.status = code === 0 ? "done" : "error";
-      session.exitCode = code;
-      session.endedAt = new Date().toISOString();
-      session.messages.push({ role: "assistant", content: session.output.join(""), timestamp: new Date().toISOString() });
-      delete session.process;
-      if (code === 0) session.filesChanged = detectFileChanges(session.cwd);
-      const clients = sseClients.get(id);
-      if (clients) {
-        for (const client of clients) {
-          client.write(`data: ${JSON.stringify({ type: "done", exitCode: code, filesChanged: session.filesChanged })}\n\n`);
-          client.end();
-        }
-        sseClients.delete(id);
-      }
-      persistSessions();
-      // Keep in memory for 2h, persist handles disk storage
-      setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
-    });
-
-    const { process: _, ...safe } = session;
-    res.status(201).json({ ok: true, projectDir, sessionId: id, session: safe });
-  } catch {
-    // Project created but no Claude session — still success
-    res.status(201).json({ ok: true, projectDir, sessionId: null });
-  }
-});
+      const { process: _, ...safe } = session;
+      set.status = 201;
+      return { ok: true, projectDir, sessionId: id, session: safe };
+    } catch {
+      // Project created but no Claude session — still success
+      set.status = 201;
+      return { ok: true, projectDir, sessionId: null };
+    }
+  });
 
 // ---------------------------------------------------------------------------
 // Initialization — must be called from the main server to inject shared state
@@ -483,7 +477,7 @@ IMPORTANT: Do NOT tell the user to run any commands. The app will automatically 
 
 export interface TemplatesRouterDeps {
   claudeSessions: Map<string, ClaudeSession>;
-  sseClients: Map<string, Set<express.Response>>;
+  sseClients: Map<string, Set<ReadableStreamDefaultController>>;
   wireStreamJson: (
     child: ReturnType<typeof spawn>,
     session: ClaudeSession,
@@ -492,12 +486,9 @@ export interface TemplatesRouterDeps {
   persistSessions: () => void;
 }
 
-export function initTemplatesRouter(deps: TemplatesRouterDeps): typeof router {
+export function initTemplatesRouter(deps: TemplatesRouterDeps) {
   claudeSessions = deps.claudeSessions;
   sseClients = deps.sseClients;
   wireStreamJson = deps.wireStreamJson;
   persistSessions = deps.persistSessions;
-  return router;
 }
-
-export default router;

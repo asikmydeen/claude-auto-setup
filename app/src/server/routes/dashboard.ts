@@ -5,11 +5,9 @@
  * They track agent states, steering commands, and activity logs for the multi-agent
  * orchestration dashboard UI.
  */
-import { Router } from "express";
+import { Elysia } from "elysia";
 import { randomUUID } from "crypto";
 import { sanitize } from "../lib/shared";
-
-const router = Router();
 
 // --- Dashboard-specific types (NOT the same as ClaudeSession) ---
 
@@ -66,95 +64,103 @@ const STEERING_FIELDS = ["command", "target", "message"];
 // SESSIONS
 // ============================================================
 
-router.get("/api/sessions", (_req, res) => {
-  res.json([...sessions.values()]);
-});
+export const dashboardRoutes = new Elysia()
 
-router.get("/api/sessions/:id", (req, res) => {
-  const session = sessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
-  res.json(session);
-});
+  .get("/api/sessions", () => {
+    return [...sessions.values()];
+  })
 
-router.post("/api/sessions", (req, res) => {
-  const data = sanitize(req.body, SESSION_FIELDS);
-  const session: Session = {
-    id: (data.id as string) || randomUUID().slice(0, 12),
-    startedAt: new Date().toISOString(),
-    agents: [],
-    project: (data.project as string) || undefined,
-    phase: (data.phase as string) || "idle",
-    ...data,
-  };
-  sessions.set(session.id, session);
-  res.status(201).json(session);
-});
+  .get("/api/sessions/:id", ({ params, set }) => {
+    const session = sessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return { error: "Session not found" };
+    }
+    return session;
+  })
 
-router.post("/api/sessions/:id/agents", (req, res) => {
-  let session = sessions.get(req.params.id);
-  if (!session) {
-    session = {
-      id: req.params.id,
+  .post("/api/sessions", ({ body, set }) => {
+    const data = sanitize(body as Record<string, unknown>, SESSION_FIELDS);
+    const session: Session = {
+      id: (data.id as string) || randomUUID().slice(0, 12),
       startedAt: new Date().toISOString(),
       agents: [],
-      phase: "active",
+      project: (data.project as string) || undefined,
+      phase: (data.phase as string) || "idle",
+      ...data,
     };
-    sessions.set(req.params.id, session);
-  }
-  const agentData = {
-    ...sanitize(req.body, AGENT_FIELDS),
-    updatedAt: new Date().toISOString(),
-  } as AgentState;
-  const idx = session.agents.findIndex((a) => a.id === agentData.id);
-  if (idx >= 0) {
-    session.agents[idx] = agentData;
-  } else {
-    session.agents.push(agentData);
-  }
-  res.json(agentData);
-});
+    sessions.set(session.id, session);
+    set.status = 201;
+    return session;
+  })
 
-router.post("/api/sessions/:id/steering", (req, res) => {
-  const session = sessions.get(req.params.id);
-  if (!session) return res.status(404).json({ error: "Session not found" });
-  if (!session.steeringCommands) session.steeringCommands = [];
-  session.steeringCommands.push({
-    ...(sanitize(req.body, STEERING_FIELDS) as {
-      command: string;
-      target?: string;
-      message?: string;
-    }),
-    id: randomUUID().slice(0, 8),
-    timestamp: new Date().toISOString(),
+  .post("/api/sessions/:id/agents", ({ params, body }) => {
+    let session = sessions.get(params.id);
+    if (!session) {
+      session = {
+        id: params.id,
+        startedAt: new Date().toISOString(),
+        agents: [],
+        phase: "active",
+      };
+      sessions.set(params.id, session);
+    }
+    const agentData = {
+      ...sanitize(body as Record<string, unknown>, AGENT_FIELDS),
+      updatedAt: new Date().toISOString(),
+    } as AgentState;
+    const idx = session.agents.findIndex((a) => a.id === agentData.id);
+    if (idx >= 0) {
+      session.agents[idx] = agentData;
+    } else {
+      session.agents.push(agentData);
+    }
+    return agentData;
+  })
+
+  .post("/api/sessions/:id/steering", ({ params, body, set }) => {
+    const session = sessions.get(params.id);
+    if (!session) {
+      set.status = 404;
+      return { error: "Session not found" };
+    }
+    if (!session.steeringCommands) session.steeringCommands = [];
+    session.steeringCommands.push({
+      ...(sanitize(body as Record<string, unknown>, STEERING_FIELDS) as {
+        command: string;
+        target?: string;
+        message?: string;
+      }),
+      id: randomUUID().slice(0, 8),
+      timestamp: new Date().toISOString(),
+    });
+    return { ok: true };
+  })
+
+  .get("/api/sessions/:id/commands", ({ params }) => {
+    const session = sessions.get(params.id);
+    if (!session) return [];
+    const commands = session.steeringCommands || [];
+    session.steeringCommands = [];
+    return commands;
+  })
+
+  // ============================================================
+  // ACTIVITY
+  // ============================================================
+
+  .get("/api/activity", () => {
+    return activity.slice().reverse();
+  })
+
+  .post("/api/activity", ({ body, set }) => {
+    const entry = {
+      id: randomUUID().slice(0, 12),
+      timestamp: new Date().toISOString(),
+      ...sanitize(body as Record<string, unknown>, ACTIVITY_FIELDS),
+    };
+    activity.push(entry);
+    if (activity.length > 1000) activity.splice(0, activity.length - 1000);
+    set.status = 201;
+    return entry;
   });
-  res.json({ ok: true });
-});
-
-router.get("/api/sessions/:id/commands", (req, res) => {
-  const session = sessions.get(req.params.id);
-  if (!session) return res.json([]);
-  const commands = session.steeringCommands || [];
-  session.steeringCommands = [];
-  res.json(commands);
-});
-
-// ============================================================
-// ACTIVITY
-// ============================================================
-
-router.get("/api/activity", (_req, res) => {
-  res.json(activity.slice().reverse());
-});
-
-router.post("/api/activity", (req, res) => {
-  const entry = {
-    id: randomUUID().slice(0, 12),
-    timestamp: new Date().toISOString(),
-    ...sanitize(req.body, ACTIVITY_FIELDS),
-  };
-  activity.push(entry);
-  if (activity.length > 1000) activity.splice(0, activity.length - 1000);
-  res.status(201).json(entry);
-});
-
-export default router;
