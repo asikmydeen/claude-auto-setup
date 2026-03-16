@@ -60,6 +60,61 @@ function saveIntegrations(config: IntegrationsConfig): void {
   writeFileSync(INTEGRATIONS_PATH, JSON.stringify(config, null, 2), { mode: 0o600 });
 }
 
+/** Write a .env file with connected integration credentials for a new project.
+ *  Returns context string to include in the Claude prompt so it knows what's available. */
+function writeProjectDotEnv(projectDir: string): string {
+  const config = loadIntegrations();
+  const lines: string[] = [];
+  const promptParts: string[] = [];
+
+  // Supabase
+  if (config.supabase?.url && config.supabase?.anonKey) {
+    // Standard names
+    lines.push(`SUPABASE_URL=${config.supabase.url}`);
+    lines.push(`SUPABASE_ANON_KEY=${config.supabase.anonKey}`);
+    // React (CRA) convention
+    lines.push(`REACT_APP_SUPABASE_URL=${config.supabase.url}`);
+    lines.push(`REACT_APP_SUPABASE_ANON_KEY=${config.supabase.anonKey}`);
+    // Vite convention
+    lines.push(`VITE_SUPABASE_URL=${config.supabase.url}`);
+    lines.push(`VITE_SUPABASE_ANON_KEY=${config.supabase.anonKey}`);
+    // Next.js convention
+    lines.push(`NEXT_PUBLIC_SUPABASE_URL=${config.supabase.url}`);
+    lines.push(`NEXT_PUBLIC_SUPABASE_ANON_KEY=${config.supabase.anonKey}`);
+
+    promptParts.push(
+      `SUPABASE IS ALREADY CONFIGURED. A .env file has been created with all credentials (SUPABASE_URL, SUPABASE_ANON_KEY, plus framework-specific variants like REACT_APP_*, VITE_*, NEXT_PUBLIC_*).` +
+      ` The Supabase project URL is: ${config.supabase.url}` +
+      (config.supabase.projectName ? ` (project: ${config.supabase.projectName})` : "") +
+      `. Do NOT tell the user to add credentials to .env — it's already done.` +
+      ` When building features that need a database, use @supabase/supabase-js and initialize with process.env.REACT_APP_SUPABASE_URL (or the appropriate env var for the framework).` +
+      ` Also create the required Supabase tables by running the SQL via the Supabase Management API or including a setup script.`
+    );
+  }
+
+  // AWS
+  if (config.aws?.activeProfile) {
+    lines.push(`AWS_PROFILE=${config.aws.activeProfile}`);
+  }
+
+  if (lines.length > 0) {
+    const envPath = join(projectDir, ".env");
+    // Merge with existing .env if present
+    if (existsSync(envPath)) {
+      const existing = readFileSync(envPath, "utf-8");
+      const existingKeys = new Set(existing.split("\n").map(l => l.split("=")[0]).filter(Boolean));
+      const newLines = lines.filter(l => !existingKeys.has(l.split("=")[0]));
+      if (newLines.length > 0) {
+        writeFileSync(envPath, existing.trimEnd() + "\n" + newLines.join("\n") + "\n");
+      }
+    } else {
+      writeFileSync(envPath, lines.join("\n") + "\n");
+    }
+  }
+
+  return promptParts.join("\n");
+}
+
 function maskSecret(s: string): string {
   if (s.length <= 8) return "****";
   return s.slice(0, 4) + "****" + s.slice(-4);
@@ -2027,6 +2082,9 @@ app.post("/api/projects/create-from-template", (req, res) => {
 
     // Always spawn Claude to customize the template based on user's description
     const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
+    // Write .env with connected integrations (Supabase, AWS) and get prompt context
+    const integrationContext = writeProjectDotEnv(projectDir);
+
     const buildPrompt = `You are building a project called "${name}" for the user.
 
 The user's idea:
@@ -2034,7 +2092,7 @@ ${description}
 
 You are working inside a "${template.label}" template (${template.framework} + ${template.uiLib}).
 The template already has a working UI with components, layouts, routing, and styling.
-
+${integrationContext ? `\n${integrationContext}\n` : ""}
 Your job:
 1. First run "npm install" to install all dependencies
 2. Study the existing template structure — understand the components, pages, and routing
@@ -2161,7 +2219,11 @@ app.post("/api/projects/create", (req, res) => {
   // Launch Claude session to build the project
   try {
     const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
-    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built\n\nIMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing the code.`;
+
+    // Write .env with connected integrations (Supabase, AWS) and get prompt context
+    const integrationContext = writeProjectDotEnv(projectDir);
+
+    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\n${integrationContext ? integrationContext + "\n\n" : ""}Build this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built\n\nIMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing the code.`;
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
@@ -3278,6 +3340,19 @@ app.post("/api/dev-server/start", (req, res) => {
       const installStep = !existsSync(join(projectCwd, "node_modules"))
         ? `${installCmd} install && ` : "";
 
+      // Read .env from project dir to pass into container
+      const envFlags: string[] = [];
+      const dotEnvPath = join(resolvedCwd, ".env");
+      if (existsSync(dotEnvPath)) {
+        const envContent = readFileSync(dotEnvPath, "utf-8");
+        for (const line of envContent.split("\n")) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+            envFlags.push("-e", trimmed);
+          }
+        }
+      }
+
       const containerArgs = [
         "run", "--rm",
         "--name", containerName,
@@ -3292,6 +3367,8 @@ app.post("/api/dev-server/start", (req, res) => {
         "-e", "CHOKIDAR_USEPOLLING=true",
         "-e", "WATCHPACK_POLLING=true",
         "-e", "FAST_REFRESH=true",
+        // Pass project .env vars into the container
+        ...envFlags,
         image,
         "sh", "-c", `${installStep}${cmd} ${args.join(" ")}`,
       ];
