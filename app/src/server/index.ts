@@ -12,6 +12,7 @@ import { cors } from "@elysiajs/cors";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { PROJECT_ROOT, CLAUDE_DIR, getLLMKeys } from "./lib/shared";
+import { dbStats, DB_PATH } from "./lib/database";
 
 // --- Route plugins ---
 import { claudeRoutes, initClaude, claudeSessions, sseClients, persistSessions, wireStreamJson, heartbeat as claudeHeartbeat } from "./routes/claude";
@@ -110,6 +111,10 @@ const app = new Elysia()
       set.status = 500;
       return { error: err instanceof Error ? err.message : "Failed to open URL" };
     }
+  })
+  // Database stats
+  .get("/api/db/stats", () => {
+    return { ...dbStats(), path: DB_PATH };
   })
   // Health endpoint
   .get("/api/health", async () => {

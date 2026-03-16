@@ -18,6 +18,18 @@ import {
   findClaudeCLI,
 } from "../lib/shared";
 import { registerCleanup } from "../lib/cleanup";
+import {
+  dbInsertSession,
+  dbUpdateSession,
+  dbInsertMessage,
+  dbGetMessages,
+  dbGetSession,
+  dbListRecentSessions,
+  dbListSessionsByProject,
+  dbDeleteSession,
+  migrateFromJson,
+  dbTouchProject,
+} from "../lib/database";
 
 // --- State ---
 
@@ -31,36 +43,51 @@ export const sseClients = new Map<string, Set<ReadableStreamDefaultController<Ui
 
 const encoder = new TextEncoder();
 
-// --- Session persistence ---
+// --- Session persistence (SQLite) ---
 
 const SESSIONS_FILE = join(SCRATCH_DIR, "sessions.json");
 
-export function persistSessions() {
-  try {
-    if (!existsSync(SCRATCH_DIR)) mkdirSync(SCRATCH_DIR, { recursive: true });
-    const toSave = [...claudeSessions.values()]
-      .map(({ process, ...s }) => ({
-        ...s,
-        // If still running at persist time, mark as interrupted
-        status: s.status === "running" ? "error" as const : s.status,
-      }))
-      .slice(-100); // Keep last 100 sessions
-    writeFileSync(SESSIONS_FILE, JSON.stringify(toSave), { mode: 0o600 });
-  } catch {}
+// Migrate from old JSON file on first run
+const migrated = migrateFromJson(SESSIONS_FILE);
+if (migrated > 0) {
+  console.log(`Migrated ${migrated} sessions from sessions.json → SQLite`);
 }
 
-// Auto-persist every 30 seconds so sessions survive crashes
-setInterval(persistSessions, 30_000);
+/** Persist session state to SQLite. Called on session events. */
+export function persistSessions() {
+  // With SQLite, individual writes happen inline. This is now a no-op kept
+  // for API compatibility with modules that call it (templates, projects).
+}
 
+/** Load completed sessions from SQLite into the in-memory Map (for listing). */
 function loadPersistedSessions() {
   try {
-    if (existsSync(SESSIONS_FILE)) {
-      const data = JSON.parse(readFileSync(SESSIONS_FILE, "utf-8")) as ClaudeSession[];
-      for (const s of data) {
-        if (!claudeSessions.has(s.id)) claudeSessions.set(s.id, s);
-      }
+    const rows = dbListRecentSessions(100);
+    for (const row of rows) {
+      if (claudeSessions.has(row.id)) continue;
+      const messages = dbGetMessages(row.id);
+      claudeSessions.set(row.id, {
+        id: row.id,
+        prompt: row.prompt,
+        status: row.status as ClaudeSession["status"],
+        messages: messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          timestamp: m.timestamp,
+        })),
+        output: [],
+        exitCode: row.exit_code,
+        startedAt: row.started_at,
+        endedAt: row.ended_at ?? undefined,
+        pid: row.pid ?? undefined,
+        claudeSessionId: row.claude_session_id ?? undefined,
+        filesChanged: row.files_changed ? JSON.parse(row.files_changed) : undefined,
+        cwd: row.project_path,
+      });
     }
-  } catch {}
+  } catch (err) {
+    console.error("Failed to load sessions from SQLite:", err);
+  }
 }
 
 // Load persisted sessions on startup
@@ -172,6 +199,8 @@ export function wireStreamJson(
       for (const evt of events) {
         if (evt.sessionId && !session.claudeSessionId) {
           session.claudeSessionId = evt.sessionId;
+          // Persist Claude's internal session ID to DB (enables --resume)
+          dbUpdateSession(sessionId, { claudeSessionId: evt.sessionId });
         }
 
         if (evt.type === "text" && evt.content) {
@@ -296,21 +325,72 @@ export const claudeRoutes = new Elysia()
   // CLAUDE SESSIONS
   // ============================================================
 
-  // List all sessions
-  .get("/api/claude/sessions", () => {
-    const list = [...claudeSessions.values()].map(({ process, ...s }) => s);
-    return list.reverse();
+  // List all sessions (in-memory running + DB history)
+  .get("/api/claude/sessions", ({ query }) => {
+    const projectPath = query.project as string | undefined;
+    // Running sessions from memory
+    const running = [...claudeSessions.values()]
+      .filter((s) => s.status === "running")
+      .filter((s) => !projectPath || s.cwd === projectPath)
+      .map(({ process, ...s }) => s);
+    // Completed sessions from DB
+    const dbRows = projectPath
+      ? dbListSessionsByProject(projectPath, 50)
+      : dbListRecentSessions(100);
+    const completed = dbRows
+      .filter((row) => row.status !== "running")
+      .filter((row) => !claudeSessions.has(row.id)) // avoid duplicates with running
+      .map((row) => {
+        const messages = dbGetMessages(row.id);
+        return {
+          id: row.id,
+          prompt: row.prompt,
+          status: row.status,
+          messages: messages.map((m) => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+          output: [] as string[],
+          exitCode: row.exit_code,
+          startedAt: row.started_at,
+          endedAt: row.ended_at,
+          claudeSessionId: row.claude_session_id,
+          filesChanged: row.files_changed ? JSON.parse(row.files_changed) : [],
+          cwd: row.project_path,
+        };
+      });
+    // Merge: running first, then completed by date
+    const inMemoryCompleted = [...claudeSessions.values()]
+      .filter((s) => s.status !== "running")
+      .filter((s) => !projectPath || s.cwd === projectPath)
+      .map(({ process, ...s }) => s);
+    return [...running, ...inMemoryCompleted, ...completed];
   })
 
-  // Get single session
+  // Get single session (check memory first, then DB)
   .get("/api/claude/sessions/:id", ({ params, set }) => {
     const session = claudeSessions.get(params.id);
-    if (!session) {
+    if (session) {
+      const { process, ...safe } = session;
+      return safe;
+    }
+    // Check DB
+    const dbRow = dbGetSession(params.id);
+    if (!dbRow) {
       set.status = 404;
       return { error: "Session not found" };
     }
-    const { process, ...safe } = session;
-    return safe;
+    const messages = dbGetMessages(params.id);
+    return {
+      id: dbRow.id,
+      prompt: dbRow.prompt,
+      status: dbRow.status,
+      messages: messages.map((m) => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+      output: [],
+      exitCode: dbRow.exit_code,
+      startedAt: dbRow.started_at,
+      endedAt: dbRow.ended_at,
+      claudeSessionId: dbRow.claude_session_id,
+      filesChanged: dbRow.files_changed ? JSON.parse(dbRow.files_changed) : [],
+      cwd: dbRow.project_path,
+    };
   })
 
   // Launch new session
@@ -368,16 +448,21 @@ export const claudeRoutes = new Elysia()
 
       claudeSessions.set(id, session);
       wireStreamJson(child, session, id);
-      persistSessions(); // Persist immediately so session survives crash
+
+      // Persist to SQLite immediately
+      dbInsertSession({ id, projectPath: sessionCwd, prompt: prompt.trim(), startedAt: session.startedAt, pid: child.pid });
+      dbInsertMessage(id, "user", prompt.trim(), session.messages[0].timestamp);
+      dbTouchProject(sessionCwd);
 
       // On close
       child.on("close", (code) => {
         session.status = code === 0 ? "done" : "error";
         session.exitCode = code;
         session.endedAt = new Date().toISOString();
+        const assistantContent = session.output.join("");
         session.messages.push({
           role: "assistant",
-          content: session.output.join(""),
+          content: assistantContent,
           timestamp: new Date().toISOString(),
         });
         delete session.process;
@@ -402,11 +487,18 @@ export const claudeRoutes = new Elysia()
           sseClients.delete(id);
         }
 
-        // Persist to disk
-        persistSessions();
+        // Persist to SQLite
+        dbUpdateSession(id, {
+          status: session.status,
+          exitCode: session.exitCode,
+          endedAt: session.endedAt,
+          claudeSessionId: session.claudeSessionId,
+          filesChanged: session.filesChanged,
+        });
+        dbInsertMessage(id, "assistant", assistantContent, session.messages[session.messages.length - 1].timestamp);
 
-        // Clean up from memory after 2 hours (stays on disk)
-        setTimeout(() => { persistSessions(); claudeSessions.delete(id); }, 7200000);
+        // Clean up from memory after 2 hours (stays in SQLite)
+        setTimeout(() => { claudeSessions.delete(id); }, 7200000);
       });
 
       const { process: _, ...safe } = session;
@@ -487,11 +579,12 @@ export const claudeRoutes = new Elysia()
     return { ok: true };
   })
 
-  // Delete a session
+  // Delete a session (from memory + DB)
   .delete("/api/claude/sessions/:id", ({ params }) => {
     const session = claudeSessions.get(params.id);
     if (session?.process) session.process.kill("SIGTERM");
     claudeSessions.delete(params.id);
+    dbDeleteSession(params.id);
     return { ok: true };
   })
 
