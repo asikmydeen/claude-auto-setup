@@ -11,7 +11,7 @@ import {
 import { join, dirname, resolve } from "path";
 import { execFileSync, spawn } from "child_process";
 import { homedir } from "os";
-import { streamText } from "ai";
+import { streamText, generateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
@@ -3399,14 +3399,19 @@ const LLM_PROVIDERS: LLMProviderConfig[] = [
       { id: "us.anthropic.claude-sonnet-4-20250514-v1:0", name: "Claude Sonnet 4 (Bedrock)", context: 200000 },
       { id: "global.anthropic.claude-opus-4-5-20251101-v1:0", name: "Claude Opus 4.5 (Bedrock)", context: 200000 },
     ],
-    createProvider: (apiKey) => {
-      // If it looks like a region (e.g. us-east-1), use AWS profile auth
-      // If it looks like an API key, use bearer token auth
-      // If empty, try auto-detect from AWS profile
-      if (!apiKey || /^[a-z]{2}-[a-z]+-\d$/.test(apiKey)) {
-        return createAmazonBedrock({ region: apiKey || "us-east-1" });
+    createProvider: (config) => {
+      // Config can be: empty (auto-detect), "profile:name", or an API key
+      if (!config) {
+        return createAmazonBedrock({ region: "us-east-1" });
       }
-      return createAmazonBedrock({ apiKey, region: "us-east-1" });
+      if (config.startsWith("profile:")) {
+        const profile = config.slice(8);
+        // Set AWS_PROFILE so the credential chain picks it up
+        process.env.AWS_PROFILE = profile;
+        return createAmazonBedrock({ region: "us-east-1" });
+      }
+      // Otherwise treat as Bedrock API key
+      return createAmazonBedrock({ apiKey: config, region: "us-east-1" });
     },
   },
   {
@@ -3610,20 +3615,22 @@ app.post("/api/llm/test", async (req, res) => {
     const provider = providerConfig.createProvider(apiKey) as any;
     const model = provider(providerConfig.models[0].id);
 
-    const result = streamText({
+    // Use generateText (not stream) — it fails immediately on auth errors
+    const { text } = await generateText({
       model,
       messages: [{ role: "user" as const, content: "Say hi in one word." }],
       maxOutputTokens: 10,
     });
 
-    let text = "";
-    for await (const chunk of result.textStream) {
-      text += chunk;
-    }
-    res.json({ ok: true, response: text.trim() || "Connected (empty response)" });
+    res.json({ ok: true, response: text.trim() || "Connected" });
   } catch (err: unknown) {
     console.error("LLM test error:", err);
-    const msg = err instanceof Error ? `${err.name}: ${err.message}` : "Connection test failed";
+    // Extract useful error message
+    const e = err as { message?: string; name?: string; statusCode?: number; responseBody?: string };
+    let msg = e.message || "Connection failed";
+    // Clean up AI SDK error prefixes
+    msg = msg.replace(/^[A-Z_]+\s*\[AI_\w+\]:\s*/, "");
+    if (msg.length > 120) msg = msg.slice(0, 120) + "...";
     res.status(400).json({ ok: false, error: msg });
   }
 });
