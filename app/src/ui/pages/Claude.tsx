@@ -2454,8 +2454,13 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
         const imageData = await Promise.all(
           attachedImages.map(async (img) => {
             const buf = await img.file.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-            return { name: img.file.name, data: base64 };
+            // Chunked base64 — btoa(String.fromCharCode(...arr)) crashes on large files
+            const bytes = new Uint8Array(buf);
+            let binary = "";
+            for (let i = 0; i < bytes.length; i += 8192) {
+              binary += String.fromCharCode(...bytes.slice(i, i + 8192));
+            }
+            return { name: img.file.name, data: btoa(binary) };
           }),
         );
         const res = await fetch("/api/images/upload", {
@@ -2479,7 +2484,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       // Follow-up in existing session
       setPendingMessages((prev) => [
         ...prev,
-        { role: "user", content: sendText + (hasImages ? ` [${imagePaths.length} image(s) attached]` : "") },
+        { role: "user", content: sendText },
       ]);
       followUpMutation.mutate({ sessionId: activeSession.id, prompt: sendText, imagePaths });
     } else if (!activeSession) {
