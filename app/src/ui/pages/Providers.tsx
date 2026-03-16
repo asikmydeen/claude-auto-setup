@@ -121,22 +121,16 @@ function ProviderCard({
 
         {!installed && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground font-medium">Not installed — set up:</p>
+            <p className="text-[10px] text-muted-foreground font-medium">Not installed — set up:</p>
             {PROVIDER_SETUP[name] && (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-muted-foreground shrink-0">Install:</span>
-                  <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono truncate">
-                    {PROVIDER_SETUP[name].install}
-                  </code>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-muted-foreground shrink-0">Auth:</span>
-                  <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono truncate">
-                    {PROVIDER_SETUP[name].auth}
-                  </code>
-                </div>
-                <p className="text-[9px] text-muted-foreground/70">
+              <div className="space-y-1">
+                <code className="block text-[9px] bg-muted px-2 py-1 rounded font-mono break-all">
+                  $ {PROVIDER_SETUP[name].install}
+                </code>
+                <code className="block text-[9px] bg-muted px-2 py-1 rounded font-mono break-all">
+                  $ {PROVIDER_SETUP[name].auth}
+                </code>
+                <p className="text-[9px] text-muted-foreground/70 pt-0.5">
                   {PROVIDER_SETUP[name].docs}
                 </p>
               </div>
