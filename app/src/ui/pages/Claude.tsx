@@ -79,6 +79,8 @@ import {
   startDevServer,
   fetchDevServerStatus,
   fetchProjectType,
+  fetchLLMModels,
+  type LLMAvailableModel,
   deleteProject,
   revealProject,
   type ClaudeSession,
@@ -1708,6 +1710,9 @@ interface PromptInputProps {
   suggestions: Suggestion[];
   suggestionsLoading: boolean;
   onSuggestion: (suggestion: Suggestion) => void;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  availableModels: LLMAvailableModel[];
 }
 
 function PromptInput({
@@ -1723,7 +1728,11 @@ function PromptInput({
   suggestions,
   suggestionsLoading,
   onSuggestion,
+  selectedModel,
+  onModelChange,
+  availableModels,
 }: PromptInputProps) {
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevDisabledRef = useRef(disabled);
 
@@ -1826,9 +1835,76 @@ function PromptInput({
           </Button>
         </div>
         <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-          <span>
-            {statusHint || (disabled ? "Session running -- waiting for response" : `Enter for new line, ${MOD}Enter to send`)}
-          </span>
+          <div className="flex items-center gap-2">
+            {/* Model selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setModelMenuOpen((o) => !o)}
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-accent hover:text-foreground transition-colors font-medium"
+              >
+                <Zap className="h-2.5 w-2.5" />
+                {selectedModel === "claude-cli" ? "Claude CLI" : (() => {
+                  const m = availableModels.find((am) => `${am.provider}:${am.id}` === selectedModel);
+                  return m ? m.name : selectedModel;
+                })()}
+              </button>
+              {modelMenuOpen && (
+                <div className="absolute bottom-full left-0 mb-1 w-64 max-h-80 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg z-50">
+                  <div className="p-1">
+                    <button
+                      type="button"
+                      onClick={() => { onModelChange("claude-cli"); setModelMenuOpen(false); }}
+                      className={cn(
+                        "w-full text-left rounded-md px-2 py-1.5 text-xs transition-colors",
+                        selectedModel === "claude-cli" ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/50"
+                      )}
+                    >
+                      <div className="font-medium">Claude CLI</div>
+                      <div className="text-[9px] text-muted-foreground">Full coding agent with file editing, terminal</div>
+                    </button>
+                    {availableModels.length > 0 && <div className="my-1 border-t border-border" />}
+                    {/* Group by provider */}
+                    {[...new Set(availableModels.map((m) => m.provider))].map((providerId) => {
+                      const providerModels = availableModels.filter((m) => m.provider === providerId);
+                      return (
+                        <div key={providerId}>
+                          <div className="px-2 py-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            {providerModels[0]?.providerName}
+                          </div>
+                          {providerModels.map((m) => {
+                            const modelKey = `${m.provider}:${m.id}`;
+                            return (
+                              <button
+                                key={modelKey}
+                                type="button"
+                                onClick={() => { onModelChange(modelKey); setModelMenuOpen(false); }}
+                                className={cn(
+                                  "w-full text-left rounded-md px-2 py-1 text-xs transition-colors",
+                                  selectedModel === modelKey ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/50"
+                                )}
+                              >
+                                {m.name}
+                                {m.context && <span className="text-[9px] text-muted-foreground ml-1">{Math.round(m.context / 1000)}K</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                    {availableModels.length === 0 && (
+                      <p className="px-2 py-2 text-[10px] text-muted-foreground">
+                        Configure API keys in Settings &rarr; AI Models to unlock more models
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <span>
+              {statusHint || (disabled ? "Session running" : `${MOD}Enter to send`)}
+            </span>
+          </div>
           {value.length > 500 && (
             <span className="tabular-nums">{value.length} chars</span>
           )}
@@ -1985,6 +2061,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
+  /** Selected LLM model — "claude-cli" for CLI mode, or "provider:model" for API mode */
+  const [selectedModel, setSelectedModel] = useState("claude-cli");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [filesPanelOpen, setFilesPanelOpen] = useState(false);
   /** Optimistic user messages added before the server responds */
@@ -2174,6 +2252,10 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     refetchInterval: 15_000,
     enabled: filesPanelOpen,
   });
+
+  // Available LLM models (from configured providers)
+  const llmModelsQuery = useQuery({ queryKey: ["llm-models"], queryFn: fetchLLMModels });
+  const llmModels = llmModelsQuery.data || [];
 
   // Smart suggestions -- refetch when project changes or session completes
   const suggestionsProjectCwd = activeProjectPath || activeSession?.cwd || openProjects[0] || "";
@@ -2842,6 +2924,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               suggestions={suggestions}
               suggestionsLoading={suggestionsQuery.isLoading}
               onSuggestion={handleSuggestion}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              availableModels={llmModels}
             />
 
             {/* Bottom panel — Terminal (per project/conversation) */}

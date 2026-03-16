@@ -504,3 +504,30 @@ export interface RuntimeInfo {
 export const fetchRuntimes = () => api.get<RuntimeInfo>("/runtime/detect");
 export const stopOpsProcess = (id: string) =>
   api.post<{ ok: boolean }>(`/ops/stop/${id}`, {});
+
+// --- LLM Providers ---
+export interface LLMModel {
+  id: string;
+  name: string;
+  context?: number;
+}
+
+export interface LLMProvider {
+  id: string;
+  name: string;
+  configured: boolean;
+  models: LLMModel[];
+  apiKeyField: string;
+}
+
+export interface LLMAvailableModel extends LLMModel {
+  provider: string;
+  providerName: string;
+}
+
+export const fetchLLMProviders = () => api.get<LLMProvider[]>("/llm/providers");
+export const fetchLLMModels = () => api.get<LLMAvailableModel[]>("/llm/models");
+export const fetchLLMKeys = () => api.get<Record<string, string>>("/llm/keys");
+export const saveLLMKeys = (keys: Record<string, string>) => api.put<{ ok: boolean }>("/llm/keys", { keys });
+export const testLLMProvider = (provider: string, apiKey: string) =>
+  api.post<{ ok: boolean; response?: string; error?: string }>("/llm/test", { provider, apiKey });
