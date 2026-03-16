@@ -1737,20 +1737,40 @@ app.get("/api/suggestions/followup/:sessionId", (req, res) => {
   const suggestions: Array<{ id: string; label: string; prompt: string; icon: string }> = [];
 
   if (session.status === "done") {
-    // If files were changed, suggest review/test
+    // Analyze the last response to generate context-aware suggestions
+    const lastAssistant = session.messages.filter(m => m.role === "assistant").pop();
+    const lastContent = (lastAssistant?.content || session.output.join("")).slice(-2000).toLowerCase();
+    const lastUser = session.messages.filter(m => m.role === "user").pop();
+    const lastUserContent = (lastUser?.content || "").toLowerCase();
+
+    // Context-specific suggestions based on what Claude actually did
+    if (lastContent.includes("error") || lastContent.includes("failed") || lastContent.includes("issue")) {
+      suggestions.push({ id: "fix-errors", label: "Fix the remaining errors", prompt: "There are still errors. Fix all remaining issues and verify the app works.", icon: "bug" });
+    }
+    if (lastContent.includes("todo") || lastContent.includes("placeholder") || lastContent.includes("not yet implemented")) {
+      suggestions.push({ id: "finish-todos", label: "Finish the TODOs", prompt: "Complete all remaining TODOs and placeholder implementations in the code.", icon: "sparkles" });
+    }
+    if (/styl|css|design|layout|theme|color|dark.?mode|light.?mode/.test(lastContent) || /styl|css|design|ui|ux/.test(lastUserContent)) {
+      suggestions.push({ id: "polish-ui", label: "Polish the design", prompt: "Improve the visual design — fix spacing, colors, responsive layout, and overall polish.", icon: "eye" });
+    }
+    if (/api|fetch|supabase|database|query|endpoint/.test(lastContent)) {
+      suggestions.push({ id: "add-error-handling", label: "Add error handling", prompt: "Add proper loading states, error handling, and edge case handling for all data fetching.", icon: "code" });
+    }
+    if (/component|page|route|nav/.test(lastContent) && session.filesChanged && session.filesChanged.length > 3) {
+      suggestions.push({ id: "check-navigation", label: "Fix navigation & routing", prompt: "Verify all routes and navigation links work correctly. Fix any broken links or missing pages.", icon: "file-text" });
+    }
+
+    // File-based suggestions
     if (session.filesChanged && session.filesChanged.length > 0) {
       suggestions.push(
-        { id: "test-changes", label: "Write tests for these changes", prompt: "Write comprehensive tests for the files you just modified", icon: "test-tube" },
-        { id: "review-work", label: "Review what you did", prompt: "Review the changes you just made. Are there any issues or improvements?", icon: "eye" },
-        { id: "commit-work", label: "Commit these changes", prompt: "Stage and commit the changes you just made with an appropriate commit message", icon: "git-commit" },
+        { id: "test-changes", label: "Write tests", prompt: "Write comprehensive tests for the files you just modified", icon: "test-tube" },
+        { id: "commit-work", label: "Commit changes", prompt: "Stage and commit the changes with an appropriate commit message", icon: "git-commit" },
       );
     }
 
-    // Generic follow-ups
+    // Always add a concise "explain" option
     suggestions.push(
-      { id: "continue", label: "Continue improving", prompt: "What else could be improved in the code you just worked on?", icon: "sparkles" },
-      { id: "explain", label: "Explain what you did", prompt: "Explain the changes you just made in detail", icon: "info" },
-      { id: "docs", label: "Update documentation", prompt: "Update any relevant documentation for the changes you just made", icon: "file-text" },
+      { id: "explain", label: "What changed?", prompt: "Give me a concise summary of exactly what you changed and why", icon: "info" },
     );
   }
 

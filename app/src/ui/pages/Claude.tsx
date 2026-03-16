@@ -1498,11 +1498,13 @@ interface ChatAreaProps {
   /** Follow-up suggestions to display after assistant finishes */
   followUpSuggestions: FollowUpSuggestion[];
   onFollowUp: (suggestion: FollowUpSuggestion) => void;
+  onContinue: () => void;
+  onRegenerate: () => void;
   tools: ToolActivity[];
   agents: AgentActivity[];
 }
 
-function ChatArea({ session, streamContent, isStreaming, pendingMessages, followUpSuggestions, onFollowUp, tools, agents }: ChatAreaProps) {
+function ChatArea({ session, streamContent, isStreaming, pendingMessages, followUpSuggestions, onFollowUp, onContinue, onRegenerate, tools, agents }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -1580,7 +1582,7 @@ function ChatArea({ session, streamContent, isStreaming, pendingMessages, follow
               <div className="group relative max-w-[90%] w-full">
                 <CopyButton text={displayContent} />
                 <div className="rounded-2xl rounded-tl-md bg-[#0d1117] px-4 py-3 shadow-sm">
-                  <div className="whitespace-pre-wrap break-words font-mono text-[13px] leading-relaxed text-gray-300">
+                  <div className="prose-sm break-words text-[13px] leading-relaxed text-gray-300">
                     {renderMessageContent(displayContent)}
                   </div>
                 </div>
@@ -1624,14 +1626,30 @@ function ChatArea({ session, streamContent, isStreaming, pendingMessages, follow
           <ActivityTimeline tools={tools} agents={agents} />
         )}
 
-        {/* Session status indicator */}
+        {/* Session status + action buttons */}
         {!isStreaming && session.status === "done" && (
           <>
-            <div className="flex justify-center py-2">
+            <div className="flex items-center justify-center gap-2 py-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-600 dark:text-green-400">
                 <CheckCircle2 className="h-3 w-3" />
-                Session ready for follow-up
+                Done
               </span>
+              <button
+                type="button"
+                onClick={onContinue}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground hover:scale-105 active:scale-95"
+              >
+                <Play className="h-3 w-3" />
+                Continue
+              </button>
+              <button
+                type="button"
+                onClick={onRegenerate}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground hover:scale-105 active:scale-95"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Regenerate
+              </button>
             </div>
             {/* Follow-up suggestions */}
             {followUpSuggestions.length > 0 && (
@@ -1641,11 +1659,19 @@ function ChatArea({ session, streamContent, isStreaming, pendingMessages, follow
         )}
 
         {!isStreaming && session.status === "error" && (
-          <div className="flex justify-center py-2">
+          <div className="flex items-center justify-center gap-2 py-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-[11px] font-medium text-red-600 dark:text-red-400">
               <XCircle className="h-3 w-3" />
-              Session ended with an error. Is Claude CLI installed?
+              Session ended with error
             </span>
+            <button
+              type="button"
+              onClick={onRegenerate}
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/5 px-3 py-1 text-[11px] font-medium text-red-500 transition-all hover:bg-red-500/10 hover:scale-105 active:scale-95"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Retry
+            </button>
           </div>
         )}
       </div>
@@ -2554,6 +2580,24 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     [activeSession, followUpMutation]
   );
 
+  /** Continue generating — sends "Continue" as a follow-up */
+  const handleContinue = useCallback(() => {
+    if (!activeSession) return;
+    setPendingMessages((prev) => [...prev, { role: "user", content: "Continue" }]);
+    followUpMutation.mutate({ sessionId: activeSession.id, prompt: "Continue where you left off. If you were in the middle of something, complete it. If you're done, verify your work and fix any remaining issues." });
+  }, [activeSession, followUpMutation]);
+
+  /** Regenerate — resend the last user message */
+  const handleRegenerate = useCallback(() => {
+    if (!activeSession) return;
+    // Find the last user message
+    const userMessages = activeSession.messages.filter((m) => m.role === "user");
+    const lastUserMsg = userMessages[userMessages.length - 1];
+    if (!lastUserMsg) return;
+    setPendingMessages((prev) => [...prev, { role: "user", content: lastUserMsg.content }]);
+    followUpMutation.mutate({ sessionId: activeSession.id, prompt: lastUserMsg.content });
+  }, [activeSession, followUpMutation]);
+
   const handleNewChat = useCallback(() => {
     setActiveId(null);
     setPrompt("");
@@ -3013,6 +3057,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 pendingMessages={pendingMessages}
                 followUpSuggestions={followUpSuggestions}
                 onFollowUp={handleFollowUpSuggestion}
+                onContinue={handleContinue}
+                onRegenerate={handleRegenerate}
                 tools={sse.tools}
                 agents={sse.agents}
               />
