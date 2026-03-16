@@ -63,6 +63,8 @@ Orchestration MCP tools: `pipeline_*`, `checkpoint_*`, `queue_*`, `analytics_*`,
 
 Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`
 
+Skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
+
 ## Persistent Memory (claude-mem)
 claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - Worker service on port 37777 (auto-started on session start)
@@ -74,6 +76,14 @@ claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - Database: `~/.claude-mem/claude-mem.db` (SQLite + Chroma vector DB)
 - Desktop app: Settings → Memory tab shows status, search, observation count
 - See `universal/rules/memory-system.md` for usage patterns
+
+## Sequential Thinking Skill
+Structured reasoning via `universal/skills/sequential-thinking/`. Installed to `~/.claude/skills/sequential-thinking/`.
+- State machine: `scripts/think.ts` (bun) — numbered thoughts, revision, branching, adaptive depth
+- Multi-agent safe: `--stateFile` flag isolates state per agent
+- Integrated into: all native agents (debugger, security-auditor, code-reviewer, explorer, test-writer) + build/debug commands
+- Activates on: complex problems, multi-step reasoning, hypothesis testing, unclear scope
+- See SKILL.md for full parameter reference
 
 ## Shell Script Rules
 - Must work on macOS bash 3.2 (no `declare -A`, no bash 4+ features)

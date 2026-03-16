@@ -88,13 +88,21 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     echo "    Settings: skipped (python3 needed for merge)"
   fi
 
-  # Install PUA skill (persistence engine)
-  local pua_skill="$UNIVERSAL_DIR/skills/pua/SKILL.md"
-  if [ -f "$pua_skill" ]; then
-    mkdir -p "$CLAUDE_HOME/skills/pua"
-    \cp -f "$pua_skill" "$CLAUDE_HOME/skills/pua/SKILL.md"
-    echo "    PUA skill: installed"
-  fi
+  # Install skills
+  local skill_count=0
+  for skill_dir in "$UNIVERSAL_DIR/skills/"*/; do
+    [ -d "$skill_dir" ] || continue
+    local skill_name
+    skill_name="$(basename "$skill_dir")"
+    mkdir -p "$CLAUDE_HOME/skills/$skill_name"
+    # Copy all files preserving directory structure
+    (cd "$skill_dir" && find . -type f | while read -r f; do
+      mkdir -p "$CLAUDE_HOME/skills/$skill_name/$(dirname "$f")"
+      \cp -f "$f" "$CLAUDE_HOME/skills/$skill_name/$(dirname "$f")/"
+    done)
+    skill_count=$((skill_count + 1))
+  done
+  echo "    Skills: $skill_count installed ($(ls -1 "$UNIVERSAL_DIR/skills/" 2>/dev/null | tr '\n' ', ' | sed 's/, $//'))"
 
   # Install native agents
   if [ -d "$AGENT_DIR/agents" ]; then

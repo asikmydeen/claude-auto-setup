@@ -279,6 +279,7 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
 - **6** agent adapters + 8 native agents (including memory-observer)
+- **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **10** universal rule files, 56 command definitions (including mem-search)
 - **3** container runtimes supported (Podman, Docker, Finch)
 

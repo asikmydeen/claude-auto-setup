@@ -39,6 +39,22 @@ Before starting, check for an existing checkpoint: `cat .claude/scratch/task-sta
 - Look for known issues or breaking changes
 
 ## Phase 2: Diagnose
+
+Use the **sequential-thinking skill** to structure root cause analysis — especially for complex bugs with multiple suspects:
+
+```bash
+cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
+# Thought 1: Synthesize investigation findings
+# Thought 2: Form hypotheses (branch for competing theories)
+# Thought 3+: Test each hypothesis against evidence, revise as needed
+# Final thought: Confirmed root cause with evidence
+```
+
+- **Branch** to explore competing root causes (e.g., `--branchFromThought 2 --branchId "race-condition"` vs `--branchId "state-mutation"`)
+- **Revise** when evidence disproves a hypothesis (`--isRevision --revisesThought N`)
+- **Extend** when the bug goes deeper than expected (`--needsMoreThoughts`)
+- Terminate only when root cause is confirmed with evidence — not speculation
+
 Synthesize findings:
 - Root cause identification
 - Contributing factors

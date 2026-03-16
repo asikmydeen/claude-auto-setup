@@ -50,7 +50,24 @@ Launch parallel exploration agents (scope down based on cached intel):
 **CHECKPOINT**: Write exploration results and key discoveries to `.claude/scratch/task-state.md` (Phase: explore, include discoveries and files identified).
 
 ### 2. Plan Phase
-Synthesize exploration into a spec:
+
+For complex features (3+ tasks, cross-cutting concerns, or architectural decisions), use the **sequential-thinking skill** to reason through the design before writing the spec:
+
+```bash
+cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
+# Thought 1: What are the core requirements and constraints?
+# Thought 2: What existing patterns/code must we integrate with?
+# Thought 3: Architecture approach (branch alternatives if trade-offs exist)
+# Thought 4: Task decomposition — what can parallelize?
+# Thought 5: Risk assessment — what could go wrong?
+# Final: Confidence-checked implementation plan
+```
+
+- **Branch** to compare architectural approaches (e.g., `--branchId "approach-a"` vs `--branchId "approach-b"`)
+- **Revise** when exploration results change assumptions
+- Terminate with a clear, justified plan
+
+Then synthesize into a spec:
 - Write the spec using the standard spec format with `@@@task` blocks
 - Assign each task to the most appropriate agent (reference the orchestration rules agent selection table)
 - Identify which tasks can run in parallel vs sequential

@@ -61,6 +61,25 @@ Act as the `architect-reviewer` agent:
 - Scalability concerns
 - Breaking change detection
 
+## Synthesis Phase
+
+After all parallel agents complete, use the **sequential-thinking skill** to integrate findings from all 4 review dimensions:
+
+```bash
+cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
+# Thought 1: Cross-reference — which issues appear in multiple agent reports?
+# Thought 2: Prioritize — Critical (blocks merge) vs Warning vs Suggestion
+# Thought 3: Resolve conflicts — do agents disagree? (e.g., perf wants caching, security flags cache risk)
+# Thought 4: Pattern detection — systemic issues across multiple files?
+# Thought 5: Verdict — overall quality assessment, safe to merge?
+```
+
+- **Branch** if agents disagree on a finding (e.g., `--branchId "keep-cache"` vs `--branchId "remove-cache"`)
+- **Revise** priority if later analysis changes severity assessment
+- Terminate with a clear verdict and structured findings
+
+Activate for: reviews with 4+ files changed, conflicting agent recommendations, or architecturally significant changes. For small reviews (< 3 files), skip and go directly to output.
+
 ## Output Format
 
 ```
