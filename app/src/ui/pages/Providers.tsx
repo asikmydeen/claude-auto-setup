@@ -38,6 +38,34 @@ const PROVIDER_LABELS: Record<string, string> = {
   kiro: "Kiro CLI",
 };
 
+const PROVIDER_SETUP: Record<string, { install: string; auth: string; docs: string }> = {
+  claude: {
+    install: "npm install -g @anthropic-ai/claude-code",
+    auth: "claude login",
+    docs: "Or add Anthropic API key in AI Models tab to use without subscription",
+  },
+  codex: {
+    install: "npm install -g @openai/codex",
+    auth: "codex login",
+    docs: "Or add OpenAI API key in AI Models tab",
+  },
+  gemini: {
+    install: "npm install -g @anthropic-ai/gemini-cli",
+    auth: "gemini auth",
+    docs: "Or add Google API key in AI Models tab",
+  },
+  amp: {
+    install: "npm install -g @anthropic-ai/amp",
+    auth: "amp login",
+    docs: "Multi-model routing agent — supports multiple providers",
+  },
+  kiro: {
+    install: "npm install -g @anthropic-ai/kiro-cli",
+    auth: "kiro auth (uses AWS credentials)",
+    docs: "Or configure AWS Bedrock in AI Models tab",
+  },
+};
+
 interface ProviderCardProps {
   name: string;
   installed: boolean;
@@ -92,7 +120,28 @@ function ProviderCard({
         )}
 
         {!installed && (
-          <p className="text-sm text-muted-foreground">Not installed</p>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium">Not installed — set up:</p>
+            {PROVIDER_SETUP[name] && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-muted-foreground shrink-0">Install:</span>
+                  <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono truncate">
+                    {PROVIDER_SETUP[name].install}
+                  </code>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-muted-foreground shrink-0">Auth:</span>
+                  <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono truncate">
+                    {PROVIDER_SETUP[name].auth}
+                  </code>
+                </div>
+                <p className="text-[9px] text-muted-foreground/70">
+                  {PROVIDER_SETUP[name].docs}
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         {strengths && strengths.length > 0 && (
