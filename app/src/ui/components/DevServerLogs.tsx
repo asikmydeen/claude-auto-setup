@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Terminal, X, Container, Wifi, WifiOff, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Terminal, X, Container, Wifi, WifiOff, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -25,11 +25,16 @@ export function DevServerLogs({ cwd, open, onClose }: DevServerLogsProps) {
     }
   }, [logs]);
 
-  // Connect to SSE logs stream
-  useEffect(() => {
-    if (!open || !cwd) return;
+  /** Connect (or reconnect) to the SSE logs stream */
+  const connectSSE = useCallback(() => {
+    if (!cwd) return;
 
-    setLogs("");
+    // Close existing connection
+    if (esRef.current) {
+      esRef.current.close();
+      esRef.current = null;
+    }
+
     setStatus("connecting");
 
     const es = new EventSource(`/api/dev-server/logs?cwd=${encodeURIComponent(cwd)}`);
@@ -54,12 +59,27 @@ export function DevServerLogs({ cwd, open, onClose }: DevServerLogsProps) {
     es.onerror = () => {
       setStatus("disconnected");
     };
+  }, [cwd]);
+
+  /** Reconnect after a disconnect */
+  const reconnect = useCallback(() => {
+    connectSSE();
+  }, [connectSSE]);
+
+  // Connect to SSE logs stream
+  useEffect(() => {
+    if (!open || !cwd) return;
+
+    setLogs("");
+    connectSSE();
 
     return () => {
-      es.close();
-      esRef.current = null;
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
     };
-  }, [open, cwd]);
+  }, [open, cwd, connectSSE]);
 
   if (!open) return null;
 
@@ -101,10 +121,26 @@ export function DevServerLogs({ cwd, open, onClose }: DevServerLogsProps) {
              status}
           </span>
         </div>
-        <Button variant="ghost" size="icon-sm" className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" onClick={onClose}>
+        <Button variant="ghost" size="icon-sm" className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" onClick={onClose} aria-label="Close dev server logs">
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
+
+      {/* Disconnected reconnect bar */}
+      {status === "disconnected" && (
+        <div className="flex items-center gap-2 px-3 py-2 text-xs text-yellow-600 dark:text-yellow-500">
+          <WifiOff className="h-3.5 w-3.5" />
+          <span>Connection lost</span>
+          <button
+            onClick={reconnect}
+            className="ml-auto inline-flex items-center gap-1 rounded bg-yellow-600/10 px-2 py-0.5 text-xs font-medium hover:bg-yellow-600/20 transition-colors"
+            aria-label="Reconnect to dev server logs"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Reconnect
+          </button>
+        </div>
+      )}
 
       {/* Log output */}
       <pre

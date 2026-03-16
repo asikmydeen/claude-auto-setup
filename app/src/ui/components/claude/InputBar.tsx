@@ -11,7 +11,6 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Suggestion, LLMAvailableModel } from "@/api/config";
 import type { AttachedImage } from "./types";
@@ -200,6 +199,7 @@ export function PromptInput({
                       onImagesChange?.(images.filter((_, idx) => idx !== i));
                     }}
                     className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-label={`Remove image ${img.file.name}`}
                   >
                     <X className="h-2.5 w-2.5" />
                   </button>
@@ -237,6 +237,7 @@ export function PromptInput({
               disabled={disabled}
               className="flex-shrink-0 text-muted-foreground hover:text-foreground mb-0.5"
               title="Attach image"
+              aria-label="Attach image"
             >
               <ImageIcon className="h-3.5 w-3.5" />
             </Button>
@@ -262,6 +263,7 @@ export function PromptInput({
                 }}
                 className="flex-shrink-0 text-muted-foreground hover:text-foreground"
                 title="Clear input"
+                aria-label="Clear input"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -271,6 +273,7 @@ export function PromptInput({
               disabled={(!value.trim() && (!images || images.length === 0)) || disabled}
               onClick={onSend}
               className="flex-shrink-0 rounded-lg"
+              aria-label="Send message"
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
@@ -284,6 +287,8 @@ export function PromptInput({
                 type="button"
                 onClick={() => setModelMenuOpen((o) => !o)}
                 className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-accent hover:text-foreground transition-colors font-medium"
+                aria-label="Select model"
+                aria-expanded={modelMenuOpen}
               >
                 <Zap className="h-2.5 w-2.5" />
                 {selectedModel === "claude-cli" ? "Claude CLI" : (() => {

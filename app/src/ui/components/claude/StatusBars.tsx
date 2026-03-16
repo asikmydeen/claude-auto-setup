@@ -170,6 +170,7 @@ export function ErrorBanner({
             onDismiss();
           }}
           className="rounded p-0.5 text-destructive/60 hover:text-destructive"
+          aria-label="Dismiss error"
         >
           <X className="h-3 w-3" />
         </button>

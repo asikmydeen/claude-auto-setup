@@ -641,6 +641,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
 
       {/* -------- Sidebar -------- */}
       <aside
+        role="complementary"
+        aria-label="Sidebar"
         className={cn(
           "flex w-60 flex-shrink-0 flex-col border-r border-border bg-card/50",
           "transition-transform duration-200 ease-in-out",
@@ -660,6 +662,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               size="icon-xs"
               onClick={onOpenSettings}
               title="Settings"
+              aria-label="Settings"
             >
               <Settings2 className="h-3.5 w-3.5" />
             </Button>
@@ -742,6 +745,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 setActiveProjectPath(projectPath);
               }}
               onDeleteSession={(id) => setDeleteConfirmId(id)}
+              isLoading={sessionsQuery.isLoading}
               onClose={() => {
                 setOpenProjects((prev) => {
                   const next = prev.filter((p) => p !== projectPath);
@@ -825,7 +829,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       </aside>
 
       {/* -------- Main chat area -------- */}
-      <div className="relative flex flex-1 flex-col overflow-hidden">
+      <main role="main" className="relative flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="flex items-center justify-between border-b border-border bg-background px-4 py-2.5 sm:px-6">
           <div className="flex items-center gap-3">
@@ -903,6 +907,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               size="icon-sm"
               onClick={() => setOpsPanelOpen((o) => !o)}
               title={opsPanelOpen ? "Hide ops panel" : "Show ops panel"}
+              aria-label={opsPanelOpen ? "Hide ops panel" : "Show ops panel"}
               className={cn(
                 opsPanelOpen && "bg-accent text-accent-foreground"
               )}
@@ -917,6 +922,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 size="icon-sm"
                 onClick={() => setFilesPanelOpen((o) => !o)}
                 title={filesPanelOpen ? "Hide file changes" : "Show file changes"}
+                aria-label={filesPanelOpen ? "Hide file changes" : "Show file changes"}
                 className={cn(
                   filesPanelOpen && "bg-accent text-accent-foreground"
                 )}
@@ -932,6 +938,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 onClick={() => activeSession && stopMutation.mutate(activeSession.id)}
                 disabled={stopMutation.isPending}
                 className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                aria-label="Stop session"
               >
                 {stopMutation.isPending ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -1029,6 +1036,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                       type="button"
                       onClick={() => followUpMutation.reset()}
                       className="rounded p-0.5 text-destructive/60 hover:text-destructive"
+                      aria-label="Dismiss error"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1152,7 +1160,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             />
           )}
         </div>
-      </div>
+      </main>
 
       {/* Project Creator Modal */}
       <ProjectCreator

@@ -299,6 +299,7 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
         }}
         className="mt-0.5 flex-shrink-0 rounded p-0.5 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
         title="Delete session"
+        aria-label="Delete session"
       >
         <Trash2 className="h-3 w-3" />
       </button>
@@ -324,6 +325,7 @@ export interface ProjectGroupProps {
   onOpenTerminal?: (projectPath: string) => void;
   onOpenBrowser?: (projectPath: string) => void;
   onConfigureEnv?: (projectPath: string) => void;
+  isLoading?: boolean;
 }
 
 export function ProjectGroup({
@@ -340,6 +342,7 @@ export function ProjectGroup({
   onOpenTerminal,
   onOpenBrowser,
   onConfigureEnv,
+  isLoading,
 }: ProjectGroupProps) {
   const projectName = projectPath.split("/").pop() || projectPath;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -507,7 +510,16 @@ export function ProjectGroup({
       {/* Sessions in this project */}
       {!isCollapsed && (
         <div className="pl-4 pr-1 space-y-0.5">
-          {sessions.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-2 px-3 py-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                  <div className="h-4 flex-1 rounded bg-muted animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : sessions.length === 0 ? (
             <button
               type="button"
               onClick={() => onNewChat(projectPath)}

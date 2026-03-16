@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "./Toast";
 import {
   Plus,
   X,
@@ -55,10 +56,55 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
   const [repoChoice, setRepoChoice] = useState<RepoChoice>("none");
   const [repoPrivate, setRepoPrivate] = useState(true);
 
+  const { toast } = useToast();
+
   // Environment variables
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([]);
   const [newEnvKey, setNewEnvKey] = useState("");
   const [newEnvValue, setNewEnvValue] = useState("");
+
+  // Accessibility: name validation
+  const [nameError, setNameError] = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility: ESC to close + focus trap
+  useEffect(() => {
+    if (!open) return;
+
+    // Focus first focusable element on open
+    requestAnimationFrame(() => {
+      if (!modalRef.current) return;
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length > 0) focusable[0].focus();
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key !== "Tab" || !modalRef.current) return;
+      const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"]):not(:disabled)'
+      );
+      if (focusableEls.length === 0) return;
+      const first = focusableEls[0];
+      const last = focusableEls[focusableEls.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
 
   // Fetch integration statuses, available runtimes
   const github = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus, enabled: open });
@@ -89,6 +135,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
       qc.invalidateQueries({ queryKey: ["projects"] });
       onRuntimeSelected?.(selectedRuntime);
       onProjectCreated?.(data.projectDir, data.sessionId);
+      toast("Project created!", "success");
       onClose();
       resetForm();
     },
@@ -119,6 +166,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
       qc.invalidateQueries({ queryKey: ["projects"] });
       onRuntimeSelected?.(selectedRuntime);
       onProjectCreated?.(data.projectDir, data.sessionId);
+      toast("Project created!", "success");
       onClose();
       resetForm();
     },
@@ -162,6 +210,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
 
   function resetForm() {
     setName("");
+    setNameError("");
     setDescription("");
     setBackend("none");
     setSelectedSupabaseProject(null);
@@ -185,6 +234,10 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="project-creator-title"
           className="w-full max-w-lg max-h-[90vh] rounded-xl border border-border bg-background shadow-2xl flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -192,7 +245,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
           <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
             <div className="flex items-center gap-2">
               <Plus className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Create New Project</h2>
+              <h2 id="project-creator-title" className="text-lg font-semibold">Create New Project</h2>
             </div>
             <Button variant="ghost" size="icon-sm" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -207,11 +260,29 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setName(v);
+                  if (v && !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(v)) {
+                    setNameError("Use lowercase letters, numbers, and hyphens. Must start and end with a letter or number.");
+                  } else {
+                    setNameError("");
+                  }
+                }}
                 placeholder="my-awesome-app"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className={cn(
+                  "w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                  nameError ? "border-destructive" : "border-input"
+                )}
+                aria-invalid={!!nameError || undefined}
+                aria-describedby={nameError ? "name-error" : undefined}
                 autoFocus
               />
+              {nameError && (
+                <p className="text-xs text-destructive" id="name-error" role="alert">
+                  {nameError}
+                </p>
+              )}
             </div>
 
             {/* Describe your app — this drives everything */}
@@ -545,7 +616,7 @@ export function ProjectCreator({ open, onClose, onProjectCreated, onRuntimeSelec
               <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
               <Button
                 size="sm"
-                disabled={!name.trim() || !description.trim() || isPending}
+                disabled={!name.trim() || !description.trim() || !!nameError || isPending}
                 onClick={handleCreate}
               >
                 {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}

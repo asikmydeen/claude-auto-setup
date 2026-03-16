@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/Toast";
 import {
   Database,
   Cloud,
@@ -13,7 +14,6 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  AlertTriangle,
   XCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,15 +39,31 @@ import {
   refreshAwsCredentials,
   verifyAws,
   type GitHubRepo,
-  type GitHubVerifyResult,
-  type AwsVerifyResult,
 } from "@/api/config";
+
+function validateGitHubPat(value: string): string | null {
+  if (!value || value.includes("****")) return null;
+  if (!value.startsWith("ghp_") && !value.startsWith("github_pat_")) {
+    return "This doesn't look like a GitHub token (expected ghp_... or github_pat_...)";
+  }
+  return null;
+}
+
+function validateSupabaseToken(value: string): string | null {
+  if (!value || value.includes("****")) return null;
+  if (!value.startsWith("sbp_")) {
+    return "This doesn't look like a Supabase access token (expected sbp_...)";
+  }
+  return null;
+}
 
 // --- GitHub Section ---
 function GitHubIntegration() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [pat, setPat] = useState("");
   const [showPat, setShowPat] = useState(false);
+  const [patWarning, setPatWarning] = useState<string | null>(null);
   const [cloning, setCloning] = useState<string | null>(null);
 
   const status = useQuery({ queryKey: ["github-status"], queryFn: fetchGitHubStatus });
@@ -59,12 +75,12 @@ function GitHubIntegration() {
 
   const connectMut = useMutation({
     mutationFn: (token: string) => connectGitHub(token),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["github-status"] }); setPat(""); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["github-status"] }); setPat(""); toast("Connected to GitHub", "success"); },
   });
 
   const disconnectMut = useMutation({
     mutationFn: disconnectGitHub,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["github-status"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["github-status"] }); toast("GitHub disconnected", "info"); },
   });
 
   const cloneMut = useMutation({
@@ -112,6 +128,7 @@ function GitHubIntegration() {
                 className="flex-1"
                 onClick={() => verifyMut.mutate()}
                 disabled={verifyMut.isPending}
+                aria-label="Test connection"
               >
                 {verifyMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
                 Test Connection
@@ -122,6 +139,7 @@ function GitHubIntegration() {
                 className="flex-1 text-destructive hover:text-destructive"
                 onClick={() => disconnectMut.mutate()}
                 disabled={disconnectMut.isPending}
+                aria-label="Disconnect"
               >
                 <Unplug className="h-3.5 w-3.5 mr-1.5" /> Disconnect
               </Button>
@@ -249,22 +267,29 @@ function GitHubIntegration() {
                 type={showPat ? "text" : "password"}
                 value={pat}
                 onChange={(e) => setPat(e.target.value)}
-                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                onBlur={(e) => setPatWarning(validateGitHubPat(e.target.value))}
+                placeholder="ghp_... or github_pat_..."
                 className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <button
                 type="button"
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPat(!showPat)}
+                aria-label={showPat ? "Hide token" : "Show token"}
               >
                 {showPat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {patWarning && (
+              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">
+                {patWarning}
+              </p>
+            )}
             <Button
               size="sm"
               className="w-full"
               disabled={!pat.trim() || connectMut.isPending}
-              onClick={() => connectMut.mutate(pat.trim())}
+              onClick={() => { setPatWarning(validateGitHubPat(pat.trim())); connectMut.mutate(pat.trim()); }}
             >
               {connectMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <GitBranch className="h-3.5 w-3.5 mr-1.5" />}
               Connect
@@ -284,9 +309,11 @@ function GitHubIntegration() {
 // --- Supabase Section ---
 function SupabaseIntegration() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [token, setToken] = useState("");
   const [projects, setProjects] = useState<SupabaseProject[]>([]);
   const [showToken, setShowToken] = useState(false);
+  const [tokenWarning, setTokenWarning] = useState<string | null>(null);
 
   const status = useQuery({ queryKey: ["supabase-status"], queryFn: fetchSupabaseStatus });
 
@@ -296,6 +323,7 @@ function SupabaseIntegration() {
       setProjects(data.projects || []);
       setToken("");
       qc.invalidateQueries({ queryKey: ["supabase-status"] });
+      toast("Supabase projects loaded", "success");
     },
   });
 
@@ -304,12 +332,13 @@ function SupabaseIntegration() {
     onSuccess: () => {
       setProjects([]);
       qc.invalidateQueries({ queryKey: ["supabase-status"] });
+      toast("Supabase project selected", "success");
     },
   });
 
   const disconnectMut = useMutation({
     mutationFn: disconnectSupabase,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["supabase-status"] }); setProjects([]); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["supabase-status"] }); setProjects([]); toast("Supabase disconnected", "info"); },
   });
 
   const testMut = useMutation({ mutationFn: testSupabaseConnection });
@@ -368,11 +397,11 @@ function SupabaseIntegration() {
               <span className="font-mono text-xs">{status.data.anonKey}</span>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => testMut.mutate()} disabled={testMut.isPending}>
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => testMut.mutate()} disabled={testMut.isPending} aria-label="Test connection">
                 {testMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1" />}
                 Test Connection
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={() => disconnectMut.mutate()} disabled={disconnectMut.isPending}>
+              <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={() => disconnectMut.mutate()} disabled={disconnectMut.isPending} aria-label="Disconnect">
                 <Unplug className="h-3.5 w-3.5 mr-1" /> Disconnect
               </Button>
             </div>
@@ -460,6 +489,7 @@ function SupabaseIntegration() {
               className="w-full text-destructive hover:text-destructive"
               onClick={() => disconnectMut.mutate()}
               disabled={disconnectMut.isPending}
+              aria-label="Disconnect"
             >
               <Unplug className="h-3.5 w-3.5 mr-1.5" /> Sign Out
             </Button>
@@ -498,22 +528,29 @@ function SupabaseIntegration() {
                 type={showToken ? "text" : "password"}
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="sbp_xxxxxxxxxxxxxxxxxxxx"
+                onBlur={(e) => setTokenWarning(validateSupabaseToken(e.target.value))}
+                placeholder="sbp_..."
                 className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <button
                 type="button"
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowToken(!showToken)}
+                aria-label={showToken ? "Hide token" : "Show token"}
               >
                 {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {tokenWarning && (
+              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">
+                {tokenWarning}
+              </p>
+            )}
             <Button
               size="sm"
               className="w-full"
               disabled={!token.trim() || connectMut.isPending}
-              onClick={() => connectMut.mutate(token.trim())}
+              onClick={() => { setTokenWarning(validateSupabaseToken(token.trim())); connectMut.mutate(token.trim()); }}
             >
               {connectMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Database className="h-3.5 w-3.5 mr-1.5" />}
               Sign In & List Projects
@@ -657,6 +694,7 @@ function AwsIntegration() {
               className="w-full"
               disabled={verifyMut.isPending}
               onClick={() => verifyMut.mutate()}
+              aria-label="Test connection"
             >
               {verifyMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
               Test Connection

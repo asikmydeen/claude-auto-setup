@@ -236,6 +236,7 @@ export function CopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       className="rounded-md p-1 text-gray-500 opacity-0 transition-all hover:bg-white/10 hover:text-gray-300 group-hover/code:opacity-100"
       title="Copy to clipboard"
+      aria-label="Copy to clipboard"
     >
       {copied ? (
         <ClipboardCheck className="h-3.5 w-3.5 text-green-400" />

@@ -122,7 +122,7 @@ export function useSSE(sessionId: string | null) {
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   return (
-    <Button variant="ghost" size="icon-xs" onClick={toggleTheme} title={theme === "dark" ? "Light mode" : "Dark mode"}>
+    <Button variant="ghost" size="icon-xs" onClick={toggleTheme} title={theme === "dark" ? "Light mode" : "Dark mode"} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
       {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
     </Button>
   );

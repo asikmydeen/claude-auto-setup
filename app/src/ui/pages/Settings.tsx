@@ -226,6 +226,7 @@ function AgentModelsSection() {
                   });
                 }}
                 className="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`Model for ${agent.name || agent.filename.replace(".md", "")} agent`}
               >
                 {MODEL_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -409,6 +410,7 @@ export function Settings() {
                       });
                     }}
                     className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                    aria-label={`Remove allow rule: ${rule}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -452,6 +454,7 @@ export function Settings() {
                     setNewAllowRule("");
                   }
                 }}
+                aria-label="Add allow rule"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -480,6 +483,7 @@ export function Settings() {
                       });
                     }}
                     className="ml-1 rounded-full p-0.5 hover:bg-destructive-foreground/20"
+                    aria-label={`Remove deny rule: ${rule}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -523,6 +527,7 @@ export function Settings() {
                     setNewDenyRule("");
                   }
                 }}
+                aria-label="Add deny rule"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -566,6 +571,7 @@ export function Settings() {
                   updateSettings({ env: updated });
                 }}
                 className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                aria-label={`Remove environment variable ${key}`}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -615,6 +621,7 @@ export function Settings() {
                   setNewEnvValue("");
                 }
               }}
+              aria-label="Add environment variable"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add

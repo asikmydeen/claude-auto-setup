@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "./Toast";
 import {
   Check,
   X,
@@ -20,11 +21,36 @@ import {
 } from "@/api/config";
 import { cn } from "@/lib/utils";
 
+const PROVIDER_KEY_HINTS: Record<string, { placeholder: string; prefix?: string; label: string }> = {
+  anthropic: { placeholder: "sk-ant-api03-...", prefix: "sk-ant-", label: "Anthropic" },
+  openai: { placeholder: "sk-...", prefix: "sk-", label: "OpenAI" },
+  google: { placeholder: "AIza...", prefix: "AIza", label: "Google" },
+  mistral: { placeholder: "Enter API key", label: "Mistral" },
+  xai: { placeholder: "xai-...", prefix: "xai-", label: "xAI" },
+  groq: { placeholder: "gsk_...", prefix: "gsk_", label: "Groq" },
+  deepseek: { placeholder: "sk-...", prefix: "sk-", label: "DeepSeek" },
+  cohere: { placeholder: "Enter API key", label: "Cohere" },
+  togetherai: { placeholder: "Enter API key", label: "Together AI" },
+  openrouter: { placeholder: "sk-or-...", prefix: "sk-or-", label: "OpenRouter" },
+};
+
+function validateKeyFormat(providerId: string, key: string): string | null {
+  if (!key || key.includes("****")) return null;
+  const hint = PROVIDER_KEY_HINTS[providerId];
+  if (!hint?.prefix) return null;
+  if (!key.startsWith(hint.prefix)) {
+    return `This doesn't look like a ${hint.label} key (expected ${hint.prefix}...)`;
+  }
+  return null;
+}
+
 export function AIProviders() {
   const qc = useQueryClient();
   const [editingKeys, setEditingKeys] = useState<Record<string, string>>({});
+  const { toast } = useToast();
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [keyWarnings, setKeyWarnings] = useState<Record<string, string | null>>({});
   const [bedrockMode, setBedrockMode] = useState<"profile" | "apikey">("profile");
   const [bedrockProfile, setBedrockProfile] = useState("default");
 
@@ -38,6 +64,10 @@ export function AIProviders() {
       qc.invalidateQueries({ queryKey: ["llm-keys"] });
       qc.invalidateQueries({ queryKey: ["llm-models"] });
       setEditingKeys({});
+      toast("API key saved", "success");
+    },
+    onError: (err) => {
+      toast(`Failed to save: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
     },
   });
 
@@ -64,6 +94,8 @@ export function AIProviders() {
   function handleSaveKey(provider: LLMProvider) {
     const key = editingKeys[provider.apiKeyField];
     if (key !== undefined) {
+      const warning = validateKeyFormat(provider.id, key);
+      setKeyWarnings((prev) => ({ ...prev, [provider.id]: warning }));
       saveMut.mutate({ [provider.apiKeyField]: key });
     }
   }
@@ -180,10 +212,10 @@ export function AIProviders() {
                         />
                         <span className="text-[10px] text-muted-foreground">Profile name from ~/.aws/credentials</span>
                         <div className="ml-auto flex gap-1">
-                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleSaveBedrockProfile} disabled={saveMut.isPending}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleSaveBedrockProfile} disabled={saveMut.isPending} aria-label="Save API key">
                             {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                           </Button>
-                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleTest(provider)} disabled={isTesting}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleTest(provider)} disabled={isTesting} aria-label="Test connection">
                             {isTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test"}
                           </Button>
                         </div>
@@ -204,14 +236,15 @@ export function AIProviders() {
                             className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
                           />
                           <button type="button" onClick={() => setShowKeys((prev) => ({ ...prev, bedrock: !prev.bedrock }))}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            aria-label={showKeys.bedrock ? "Hide API key" : "Show API key"}>
                             {showKeys.bedrock ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                           </button>
                         </div>
-                        <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!isEditing || saveMut.isPending} onClick={() => handleSaveKey(provider)}>
+                        <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!isEditing || saveMut.isPending} onClick={() => handleSaveKey(provider)} aria-label="Save API key">
                           {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                         </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-xs" disabled={(!hasKey && !isEditing) || isTesting} onClick={() => handleTest(provider)}>
+                        <Button variant="outline" size="sm" className="h-7 text-xs" disabled={(!hasKey && !isEditing) || isTesting} onClick={() => handleTest(provider)} aria-label="Test connection">
                           {isTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test"}
                         </Button>
                       </div>
@@ -257,21 +290,31 @@ export function AIProviders() {
                     type={showKeys[provider.id] ? "text" : "password"}
                     value={isEditing ? editingKeys[provider.apiKeyField] : (savedKeys[provider.apiKeyField] || "")}
                     onChange={(e) => setEditingKeys((prev) => ({ ...prev, [provider.apiKeyField]: e.target.value }))}
-                    placeholder={`${provider.name} API key`}
+                    onBlur={(e) => {
+                      const warning = validateKeyFormat(provider.id, e.target.value);
+                      setKeyWarnings((prev) => ({ ...prev, [provider.id]: warning }));
+                    }}
+                    placeholder={PROVIDER_KEY_HINTS[provider.id]?.placeholder || `${provider.name} API key`}
                     className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
                   />
                   <button type="button" onClick={() => setShowKeys((prev) => ({ ...prev, [provider.id]: !prev[provider.id] }))}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showKeys[provider.id] ? "Hide API key" : "Show API key"}>
                     {showKeys[provider.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                 </div>
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!isEditing || saveMut.isPending} onClick={() => handleSaveKey(provider)}>
+                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!isEditing || saveMut.isPending} onClick={() => handleSaveKey(provider)} aria-label="Save API key">
                   {saveMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={(!hasKey && !isEditing) || isTesting} onClick={() => handleTest(provider)}>
+                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={(!hasKey && !isEditing) || isTesting} onClick={() => handleTest(provider)} aria-label="Test connection">
                   {isTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test"}
                 </Button>
               </div>
+              {keyWarnings[provider.id] && (
+                <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">
+                  {keyWarnings[provider.id]}
+                </p>
+              )}
 
               <TestResultBadge providerId={provider.id} />
             </div>
