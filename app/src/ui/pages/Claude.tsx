@@ -2493,6 +2493,35 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     []
   );
 
+  /** Start dev server for a project and open browser panel */
+  const autoStartAndPreview = useCallback(async (projectPath: string) => {
+    try {
+      // Check if already running
+      const status = await fetchDevServerStatus(projectPath);
+      if (status.running && status.port) {
+        setBrowserInitialUrl(`http://localhost:${status.port}`);
+        setBrowserPanelOpen(true);
+        return;
+      }
+      // Start dev server
+      setBrowserPanelOpen(true);
+      const result = await startDevServer(projectPath);
+      if (result.ok) {
+        // Poll until running
+        const poll = setInterval(async () => {
+          try {
+            const s = await fetchDevServerStatus(projectPath);
+            if (s.running && s.port) {
+              clearInterval(poll);
+              setBrowserInitialUrl(`http://localhost:${s.port}`);
+            }
+          } catch {}
+        }, 3000);
+        setTimeout(() => clearInterval(poll), 300000);
+      }
+    } catch {}
+  }, []);
+
   /** Open a project folder and add it to the sidebar */
   const handleOpenProject = useCallback(
     (path: string) => {
@@ -2500,9 +2529,12 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       setOpenProjects((prev) =>
         prev.includes(path) ? prev : [...prev, path]
       );
+      setActiveProjectPath(path);
       setFolderBrowserOpen(false);
+      // Auto-start dev server and open browser preview
+      autoStartAndPreview(path);
     },
-    []
+    [autoStartAndPreview]
   );
 
   /** Toggle collapse state for a project group */
@@ -2644,7 +2676,15 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               )}
               activeSessionId={activeId}
               isCollapsed={collapsedProjects.has(projectPath)}
-              onToggle={() => { toggleProjectCollapse(projectPath); setActiveProjectPath(projectPath); }}
+              onToggle={() => {
+                toggleProjectCollapse(projectPath);
+                setActiveProjectPath(projectPath);
+                // Auto-start dev server and show preview when selecting a project
+                if (collapsedProjects.has(projectPath)) {
+                  // Expanding this project — start preview
+                  autoStartAndPreview(projectPath);
+                }
+              }}
               onNewChat={(path) => { setActiveProjectPath(path); handleNewChatInProject(path); }}
               onSelectSession={(id) => {
                 setActiveId(id);
