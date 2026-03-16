@@ -165,6 +165,38 @@ app/
 
 ---
 
+## Credential Bridging (AI Models → CLI Agents)
+
+API keys configured in Settings → AI Models automatically flow into CLI agent environments
+via `buildProjectEnv()`. This is the core integration that makes everything work together.
+
+| AI Models Credential | Environment Variable | Effect |
+|---|---|---|
+| Anthropic API key | `ANTHROPIC_API_KEY` | Claude Code works without subscription |
+| Bedrock (no Anthropic) | `CLAUDE_CODE_USE_BEDROCK=1` + `AWS_PROFILE` | Claude Code via Bedrock |
+| OpenAI key | `OPENAI_API_KEY` | Available to dispatch/tools/Codex |
+| Google key | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini CLI + tools |
+| Groq key | `GROQ_API_KEY` | Fast inference tools |
+| OpenRouter key | `OPENROUTER_API_KEY` | Multi-model routing |
+
+**Key scenario**: User with only Bedrock credentials → configures Bedrock profile in AI Models →
+Claude Code gets `CLAUDE_CODE_USE_BEDROCK=1` → full multi-agent system works via Bedrock.
+
+Health endpoint shows `bridgedCredentials` array for visibility.
+
+## CLI Agent Setup Instructions (Providers Tab)
+
+Each uninstalled provider shows install + auth commands:
+- Claude: `npm install -g @anthropic-ai/claude-code` → `claude login`
+- Codex: `npm install -g @openai/codex` → `codex login`
+- Gemini: `npm install -g @anthropic-ai/gemini-cli` → `gemini auth`
+- Amp: `npm install -g @anthropic-ai/amp` → `amp login`
+- Kiro: `npm install -g @anthropic-ai/kiro-cli` → `kiro auth`
+
+Alternative: just add API keys in AI Models tab — credentials bridge into CLI agents automatically.
+
+---
+
 ## Known Gotchas
 
 1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
@@ -180,7 +212,10 @@ app/
 11. **`--dangerously-skip-permissions`** — on all 4 Claude spawn locations
 12. **Template `--openssl-legacy-provider`** — needed for older React/Vue templates
 13. **findDistDir()** — check `../views/ui` first for Electrobun bundle path
-14. **Container stop** — SIGTERM process first, then delayed `rm -f` as safety net
+14. **Container reuse** — `podman inspect` before create; reattach log follower if running
+15. **Sidebar delete hang** — reset activeProjectPath + activeId when removing last project
+16. **Clean Electrobun build** — `rm -rf dist/ build/` to avoid stale cache
+17. **autoStartAndPreview on every click** — not just expand; handles "already running" gracefully
 
 ---
 
