@@ -77,6 +77,7 @@ import {
   fetchSuggestions,
   fetchFollowUpSuggestions,
   startDevServer,
+  fetchDevServerStatus,
   fetchProjectType,
   deleteProject,
   revealProject,
@@ -2116,30 +2117,53 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
       const projectDir = buildingProjectDir;
       const runtime = preferredRuntime;
-      // Don't clear buildingProjectDir yet — keep building animation until ready
-      setTimeout(async () => {
+
+      // Wait a moment for files to settle, then start dev server
+      const timer = setTimeout(async () => {
         try {
-          // Detect project type to decide what to open
           const { type } = await fetchProjectType(projectDir);
 
           if (type === "cli") {
-            // CLI projects: open terminal, no dev server
             setTerminalPanelOpen(true);
             setBrowserPanelOpen(false);
-          } else {
-            // Frontend, backend, fullstack, static: start dev server
-            const result = await startDevServer(projectDir, runtime !== "native" ? runtime : undefined);
-            if (result.ok && result.port) {
-              setBrowserInitialUrl(`http://localhost:${result.port}`);
-            }
-            // Backend projects: also open terminal for logs
-            if (type === "backend") {
-              setTerminalPanelOpen(true);
-            }
+            setBuildingProjectDir(null);
+            return;
           }
-        } catch {}
-        setBuildingProjectDir(null);
+
+          // Start dev server (may return "installing" if deps need install)
+          const result = await startDevServer(projectDir, runtime !== "native" ? runtime : undefined);
+          if (type === "backend") setTerminalPanelOpen(true);
+
+          // Poll until dev server is actually running, then navigate
+          let attempts = 0;
+          const maxAttempts = 60; // 5 minutes max
+          const poll = setInterval(async () => {
+            attempts++;
+            try {
+              const status = await fetchDevServerStatus(projectDir);
+              if (status.running && status.status === "running" && status.port) {
+                clearInterval(poll);
+                setBrowserInitialUrl(`http://localhost:${status.port}`);
+                setBuildingProjectDir(null);
+              } else if (status.status === "error" || status.status === "stopped" || attempts >= maxAttempts) {
+                clearInterval(poll);
+                // Still clear building state even on failure
+                if (result.port) setBrowserInitialUrl(`http://localhost:${result.port}`);
+                setBuildingProjectDir(null);
+              }
+            } catch {
+              if (attempts >= maxAttempts) {
+                clearInterval(poll);
+                setBuildingProjectDir(null);
+              }
+            }
+          }, 5000);
+        } catch {
+          setBuildingProjectDir(null);
+        }
       }, 2000);
+
+      return () => clearTimeout(timer);
     }
   }, [activeSession?.status, activeSession?.cwd, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2897,11 +2921,20 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                   setBrowserPanelOpen(false);
                 } else {
                   const runtime = preferredRuntime !== "native" ? preferredRuntime : undefined;
-                  const result = await startDevServer(projectDir, runtime);
-                  if (result.ok && result.port) {
-                    setBrowserInitialUrl(`http://localhost:${result.port}`);
-                  }
+                  await startDevServer(projectDir, runtime);
                   if (type === "backend") setTerminalPanelOpen(true);
+                  // Poll until running
+                  const poll = setInterval(async () => {
+                    try {
+                      const status = await fetchDevServerStatus(projectDir);
+                      if (status.running && status.port) {
+                        clearInterval(poll);
+                        setBrowserInitialUrl(`http://localhost:${status.port}`);
+                      }
+                    } catch { /* keep polling */ }
+                  }, 3000);
+                  // Stop after 5 min
+                  setTimeout(() => clearInterval(poll), 300000);
                 }
               } catch {}
             })();
