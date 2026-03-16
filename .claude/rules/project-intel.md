@@ -16,7 +16,8 @@
 **Core Technologies:**
 - **Electrobun** - Native desktop app framework (Bun + system WebView)
 - **React 19 + Vite + Tailwind v4 + shadcn/ui** - Desktop app UI
-- **Express** - API server (65+ endpoints, ~4,500+ lines, embedded in Electrobun main process)
+- **Elysia** - Bun-native API server (90+ endpoints, 12 route modules, ~18x faster than Express)
+- **bun:sqlite** - Persistent storage for sessions, messages, projects (WAL mode, zero deps)
 - **Vercel AI SDK v6** - Multi-provider LLM integration (11 providers, 29+ models)
 - **claude-mem** - Persistent cross-session memory (SQLite + Chroma, worker on port 37777)
 - **Podman/Docker** - Default container runtime for dev server isolation (with HMR polling)
@@ -280,7 +281,9 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 - **11** LLM providers (29+ models)
 - **6** agent adapters + 8 native agents (including memory-observer)
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
-- **10** universal rule files, 56 command definitions (including mem-search)
+- **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
+- **9** universal rule files, 56 command definitions (including mem-search)
+- **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
 ### Container Runtimes on This Machine

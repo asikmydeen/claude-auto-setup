@@ -2,7 +2,7 @@
 
 ## Stack
 - Language: Bash 3.2+ (shell scripts) + TypeScript (desktop app)
-- Desktop App: Electrobun + React 19 + Vite + Tailwind v4 + shadcn/ui + Express
+- Desktop App: Electrobun + React 19 + Vite + Tailwind v4 + shadcn/ui + Elysia + bun:sqlite
 - Build: `make test` (shell), `cd app && npx vite build` (app), `cd app && bunx electrobun dev` (native)
 - Test: `make test` or `./tests/run.sh` (31 smoke tests)
 - Lint: `make lint` (shellcheck, error-level)
@@ -12,7 +12,7 @@ Universal AI agent orchestration system with a native desktop app.
 
 **Shell layer:** Adapter pattern — `universal/` is the single source of truth, `agents/*/adapter.sh` translates to agent-specific formats. Native agents defined in `agents/claude-code/agents/`.
 
-**Desktop app (`app/`):** Electrobun native macOS app. Express server (25+ endpoints, 1500+ lines) embedded in the Bun main process. React 19 UI with SSE streaming, markdown rendering, multi-project support, tool/agent activity visibility.
+**Desktop app (`app/`):** Electrobun native macOS app. Elysia server (90+ endpoints, 12 route modules) embedded in the Bun main process. SQLite database (bun:sqlite) for persistent sessions/projects. React 19 UI (9 component modules) with SSE streaming, WebSocket terminal, markdown rendering, multi-project support.
 
 ## Key Directories
 - Source: `install.sh`, `dispatch.sh`, `project-init.sh` (top-level entry points)
@@ -35,8 +35,10 @@ Universal AI agent orchestration system with a native desktop app.
 
 ## Desktop App Notes
 - Requires bun + node 24 (both via mise.toml in app/)
-- Express API on port 3201 serves both API + built React files
+- Elysia API on port 3201 serves both API + built React files (static via Bun.file(), NOT @elysiajs/static)
+- SQLite DB at `~/.claude/data/sidekick.db` (sessions, messages, projects)
 - Claude CLI spawned with `--output-format stream-json --verbose` for streaming
+- Follow-ups use `--resume <claude_session_id>` (falls back: --continue → new session)
 - `stdio: ['ignore', 'pipe', 'pipe']` — Claude blocks if stdin is piped
 - `CLAUDECODE=""` + `CLAUDE_CODE_ENTRYPOINT=""` must both be cleared for nested sessions
 - Keep `CLAUDE_CODE_USE_BEDROCK` and other auth vars
