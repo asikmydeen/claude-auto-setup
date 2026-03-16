@@ -3978,17 +3978,23 @@ app.get("/api/memory/status", async (_req, res) => {
   }
 
   try {
-    const health = await healthRes.json() as Record<string, unknown>;
-    // Try to get stats from the worker
+    // Try to get stats from the worker — response is nested: { worker: {...}, database: {...} }
     const statsRes = await fetchClaudeMemWorker("/api/stats");
-    const stats = statsRes?.ok ? (await statsRes.json() as Record<string, unknown>) : {};
+    if (statsRes?.ok) {
+      const stats = await statsRes.json() as { database?: { observations?: number; sessions?: number; size?: number; summaries?: number }; worker?: Record<string, unknown> };
+      const db = stats.database || {};
+      const sizeBytes = db.size ?? 0;
+      const dbSize = sizeBytes > 1048576 ? `${(sizeBytes / 1048576).toFixed(1)} MB` : sizeBytes > 1024 ? `${(sizeBytes / 1024).toFixed(0)} KB` : `${sizeBytes} B`;
 
-    res.json({
-      workerHealthy: true,
-      observations: stats.observations ?? health.observations ?? null,
-      sessions: stats.sessions ?? health.sessions ?? null,
-      dbSize: stats.dbSize ?? null,
-    });
+      res.json({
+        workerHealthy: true,
+        observations: db.observations ?? 0,
+        sessions: db.sessions ?? 0,
+        dbSize,
+      });
+    } else {
+      res.json({ workerHealthy: true, observations: null, sessions: null, dbSize: null });
+    }
   } catch {
     res.json({ workerHealthy: true, observations: null, sessions: null, dbSize: null });
   }
