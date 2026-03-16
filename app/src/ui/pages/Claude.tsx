@@ -2212,58 +2212,19 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     return grouped;
   }, [sessions, openProjects]);
 
-  // --------------- Auto-start dev environment when build completes (type-aware) ---------------
+  // --------------- Fallback: auto-start if SSE done handler missed it ---------------
   useEffect(() => {
     if (!buildingProjectDir || !activeSession) return;
     if (activeSession.status === "done" && activeSession.cwd === buildingProjectDir) {
-      const projectDir = buildingProjectDir;
-      const runtime = preferredRuntime;
-
-      // Wait a moment for files to settle, then start dev server
-      const timer = setTimeout(async () => {
-        try {
-          const { type } = await fetchProjectType(projectDir);
-
-          if (type === "cli") {
-            setTerminalPanelOpen(true);
-            setBrowserPanelOpen(false);
-            setBuildingProjectDir(null);
-            return;
-          }
-
-          // Start dev server (may return "installing" if deps need install)
-          const result = await startDevServer(projectDir, runtime !== "native" ? runtime : undefined);
-          if (type === "backend") setTerminalPanelOpen(true);
-
-          // Poll until dev server is actually running, then navigate
-          let attempts = 0;
-          const maxAttempts = 60; // 5 minutes max
-          const poll = setInterval(async () => {
-            attempts++;
-            try {
-              const status = await fetchDevServerStatus(projectDir);
-              if (status.running && status.status === "running" && status.port) {
-                clearInterval(poll);
-                setBrowserInitialUrl(`http://localhost:${status.port}`);
-                setBuildingProjectDir(null);
-              } else if (status.status === "error" || status.status === "stopped" || attempts >= maxAttempts) {
-                clearInterval(poll);
-                // Still clear building state even on failure
-                if (result.port) setBrowserInitialUrl(`http://localhost:${result.port}`);
-                setBuildingProjectDir(null);
-              }
-            } catch {
-              if (attempts >= maxAttempts) {
-                clearInterval(poll);
-                setBuildingProjectDir(null);
-              }
-            }
-          }, 5000);
-        } catch {
+      // SSE done handler should have already triggered autoStartAndPreview
+      // This is a fallback in case it was missed (e.g. session query loaded after SSE)
+      const timer = setTimeout(() => {
+        if (buildingProjectDir) {
+          const projectDir = buildingProjectDir;
           setBuildingProjectDir(null);
+          autoStartAndPreview(projectDir);
         }
-      }, 2000);
-
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [activeSession?.status, activeSession?.cwd, buildingProjectDir]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -2311,9 +2272,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     : (!activeSession && activeId ? activeId : null);
   const sse = useSSE(sseSessionId);
 
-  // When SSE completes, clear pending messages and refresh session data + suggestions
+  // When SSE completes, clear pending messages, refresh data, and auto-start dev server
   useEffect(() => {
-    if (sse.done && activeSession?.status === "running") {
+    if (sse.done && (activeSession?.status === "running" || (!activeSession && activeId))) {
       setPendingMessages([]);
       queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["suggestions"] });
@@ -2322,8 +2283,15 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       if (filesPanelOpen) {
         queryClient.invalidateQueries({ queryKey: ["file-changes"] });
       }
+
+      // Auto-start dev server + open BrowserPanel when a build completes
+      if (buildingProjectDir) {
+        const projectDir = buildingProjectDir;
+        setBuildingProjectDir(null);
+        autoStartAndPreview(projectDir);
+      }
     }
-  }, [sse.done, activeSession?.status, queryClient, filesPanelOpen]);
+  }, [sse.done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --------------- Mutations ---------------
 
