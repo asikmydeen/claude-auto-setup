@@ -9,7 +9,6 @@
  */
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import { staticPlugin } from "@elysiajs/static";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { PROJECT_ROOT, CLAUDE_DIR, getLLMKeys } from "./lib/shared";
@@ -81,11 +80,6 @@ const app = new Elysia()
     ],
     maxAge: 86400,
   }))
-  // Static files
-  .use(distPath
-    ? staticPlugin({ assets: distPath, prefix: "/" })
-    : (app: Elysia) => app
-  )
   // Route plugins
   .use(claudeRoutes)
   .use(dashboardRoutes)
@@ -147,10 +141,22 @@ const app = new Elysia()
       claudeDir: CLAUDE_DIR,
     };
   })
-  // SPA fallback
-  .get("*", ({ set }) => {
-    if (distPath && existsSync(join(distPath, "index.html"))) {
-      return Bun.file(join(distPath, "index.html"));
+  // Static files + SPA fallback — serve built React app
+  // Must use Bun.file() for correct MIME types (Elysia staticPlugin conflicts with wildcard)
+  .get("/*", ({ path, set }) => {
+    if (!distPath) {
+      set.status = 404;
+      return { error: "Not found" };
+    }
+    // Try to serve the exact file first (assets, CSS, JS, images)
+    const filePath = join(distPath, path);
+    if (path !== "/" && existsSync(filePath) && !filePath.includes("..")) {
+      return Bun.file(filePath);
+    }
+    // SPA fallback — serve index.html for all non-file routes
+    const indexPath = join(distPath, "index.html");
+    if (existsSync(indexPath)) {
+      return Bun.file(indexPath);
     }
     set.status = 404;
     return { error: "Not found" };
