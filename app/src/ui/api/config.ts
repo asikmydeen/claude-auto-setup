@@ -142,8 +142,8 @@ export const fetchClaudeSessions = () =>
 export const fetchClaudeSession = (id: string) =>
   api.get<ClaudeSession>(`/claude/sessions/${id}`);
 
-export const createClaudeSession = (prompt: string, cwd?: string) =>
-  api.post<ClaudeSession>("/claude/sessions", { prompt, cwd });
+export const createClaudeSession = (prompt: string, cwd?: string, imagePaths?: string[]) =>
+  api.post<ClaudeSession>("/claude/sessions", { prompt, cwd, imagePaths });
 
 export const stopClaudeSession = (id: string) =>
   api.post<{ ok: boolean }>(`/claude/stop/${id}`, {});
@@ -158,8 +158,8 @@ export const deleteClaudeSessionFn = async (id: string) => {
 
 // --- Follow-up / File changes ---
 
-export const sendFollowUp = (sessionId: string, prompt: string) =>
-  api.post<ClaudeSession>(`/claude/sessions/${sessionId}/message`, { prompt });
+export const sendFollowUp = (sessionId: string, prompt: string, imagePaths?: string[]) =>
+  api.post<ClaudeSession>(`/claude/sessions/${sessionId}/message`, { prompt, imagePaths });
 
 export const fetchFileChanges = () =>
   api.get<FileChangesResponse>("/files/changes");

@@ -58,6 +58,7 @@ import {
   FolderSearch,
   Clipboard,
   Play as PlayIcon,
+  ImageIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1526,7 +1527,16 @@ function ChatArea({ session, streamContent, isStreaming, pendingMessages, follow
       const outputText = session.output.join("\n");
       if (outputText) result.push({ role: "assistant", content: outputText });
     }
-    for (const pending of pendingMessages) result.push(pending);
+    // Only append pending messages not already in session.messages (avoids duplicates
+    // when server adds user message before pendingMessages is cleared on sse.done)
+    const existingContents = new Set(
+      session.messages.filter((m) => m.role === "user").map((m) => m.content),
+    );
+    for (const pending of pendingMessages) {
+      if (!existingContents.has(pending.content)) {
+        result.push(pending);
+      }
+    }
     return result;
   }, [session.messages, session.output, session.prompt, pendingMessages]);
 
@@ -1701,6 +1711,11 @@ function ErrorBanner({
 // Prompt Input Bar
 // ---------------------------------------------------------------------------
 
+interface AttachedImage {
+  file: File;
+  preview: string; // object URL for thumbnail
+}
+
 interface PromptInputProps {
   value: string;
   onChange: (v: string) => void;
@@ -1717,6 +1732,8 @@ interface PromptInputProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   availableModels: LLMAvailableModel[];
+  images?: AttachedImage[];
+  onImagesChange?: (images: AttachedImage[]) => void;
 }
 
 function PromptInput({
@@ -1735,9 +1752,12 @@ function PromptInput({
   selectedModel,
   onModelChange,
   availableModels,
+  images,
+  onImagesChange,
 }: PromptInputProps) {
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const prevDisabledRef = useRef(disabled);
 
   // Auto-focus on mount
@@ -1803,40 +1823,99 @@ function PromptInput({
           </div>
         )}
 
-        <div className="relative flex items-end gap-2 rounded-xl border border-border bg-card p-2 shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(var(--color-primary),0.08)]">
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={resolvedPlaceholder}
-            disabled={disabled}
-            rows={1}
-            className="max-h-[168px] min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          {/* Clear button */}
-          {value.length > 0 && !disabled && (
+        <div className="relative flex flex-col gap-2 rounded-xl border border-border bg-card p-2 shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(var(--color-primary),0.08)]">
+          {/* Image previews */}
+          {images && images.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-1">
+              {images.map((img, i) => (
+                <div key={i} className="group relative">
+                  <img
+                    src={img.preview}
+                    alt={img.file.name}
+                    className="h-16 w-16 rounded-lg border border-border object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(img.preview);
+                      onImagesChange?.(images.filter((_, idx) => idx !== i));
+                    }}
+                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                  <span className="absolute bottom-0.5 left-0.5 right-0.5 truncate rounded-b-md bg-black/60 px-1 text-[8px] text-white">
+                    {img.file.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-end gap-2">
+            {/* Image attach button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                const newImages: AttachedImage[] = files.map((f) => ({
+                  file: f,
+                  preview: URL.createObjectURL(f),
+                }));
+                onImagesChange?.([...(images || []), ...newImages]);
+                e.target.value = ""; // reset so same file can be re-selected
+              }}
+            />
             <Button
               size="icon-xs"
               variant="ghost"
-              onClick={() => {
-                onChange("");
-                textareaRef.current?.focus();
-              }}
-              className="flex-shrink-0 text-muted-foreground hover:text-foreground"
-              title="Clear input"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled}
+              className="flex-shrink-0 text-muted-foreground hover:text-foreground mb-0.5"
+              title="Attach image"
             >
-              <X className="h-3 w-3" />
+              <ImageIcon className="h-3.5 w-3.5" />
             </Button>
-          )}
-          <Button
-            size="icon-sm"
-            disabled={!value.trim() || disabled}
-            onClick={onSend}
-            className="flex-shrink-0 rounded-lg"
-          >
-            <ArrowUp className="h-4 w-4" />
-          </Button>
+
+            <textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={resolvedPlaceholder}
+              disabled={disabled}
+              rows={1}
+              className="max-h-[168px] min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            {/* Clear button */}
+            {value.length > 0 && !disabled && (
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => {
+                  onChange("");
+                  textareaRef.current?.focus();
+                }}
+                className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+                title="Clear input"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+            <Button
+              size="icon-sm"
+              disabled={(!value.trim() && (!images || images.length === 0)) || disabled}
+              onClick={onSend}
+              className="flex-shrink-0 rounded-lg"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -2065,6 +2144,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
+  const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([]);
   /** Selected LLM model — "claude-cli" for CLI mode, or "provider:model" for API mode */
   const [selectedModel, setSelectedModel] = useState("claude-cli");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -2299,9 +2379,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const createMutation = useMutation<
     ClaudeSession,
     Error,
-    { prompt: string; cwd?: string }
+    { prompt: string; cwd?: string; imagePaths?: string[] }
   >({
-    mutationFn: ({ prompt: p, cwd }) => createClaudeSession(p, cwd),
+    mutationFn: ({ prompt: p, cwd, imagePaths: imgs }) => createClaudeSession(p, cwd, imgs),
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
       setActiveId(session.id);
@@ -2315,9 +2395,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   const followUpMutation = useMutation<
     ClaudeSession,
     Error,
-    { sessionId: string; prompt: string }
+    { sessionId: string; prompt: string; imagePaths?: string[] }
   >({
-    mutationFn: ({ sessionId, prompt: p }) => sendFollowUp(sessionId, p),
+    mutationFn: ({ sessionId, prompt: p, imagePaths: imgs }) => sendFollowUp(sessionId, p, imgs),
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
       setPrompt("");
@@ -2362,24 +2442,56 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     return currentProjectCwd;
   }, [newChatProjectCwd, currentProjectCwd]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const text = prompt.trim();
-    if (!text || isInputDisabled) return;
+    const hasImages = attachedImages.length > 0;
+    if ((!text && !hasImages) || isInputDisabled) return;
+
+    // Upload images to server temp dir if any
+    let imagePaths: string[] = [];
+    if (hasImages) {
+      try {
+        const imageData = await Promise.all(
+          attachedImages.map(async (img) => {
+            const buf = await img.file.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+            return { name: img.file.name, data: base64 };
+          }),
+        );
+        const res = await fetch("/api/images/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images: imageData }),
+        });
+        const data = (await res.json()) as { paths?: string[] };
+        imagePaths = data.paths || [];
+      } catch {
+        // Images failed to upload — send without them
+      }
+      // Clean up previews
+      for (const img of attachedImages) URL.revokeObjectURL(img.preview);
+      setAttachedImages([]);
+    }
+
+    const sendText = text || (hasImages ? "Describe and analyze the attached image(s)" : "");
 
     if (canFollowUp && activeSession) {
       // Follow-up in existing session
       setPendingMessages((prev) => [
         ...prev,
-        { role: "user", content: text },
+        { role: "user", content: sendText + (hasImages ? ` [${imagePaths.length} image(s) attached]` : "") },
       ]);
-      followUpMutation.mutate({ sessionId: activeSession.id, prompt: text });
+      followUpMutation.mutate({ sessionId: activeSession.id, prompt: sendText, imagePaths });
     } else if (!activeSession) {
       // New session -- use the resolved project cwd
       const cwd = getActiveProjectCwd();
-      createMutation.mutate({ prompt: text, cwd: cwd || undefined });
+      createMutation.mutate({ prompt: sendText, cwd: cwd || undefined, imagePaths });
     }
+
+    setPrompt("");
   }, [
     prompt,
+    attachedImages,
     isInputDisabled,
     canFollowUp,
     activeSession,
@@ -2980,6 +3092,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               selectedModel={selectedModel}
               onModelChange={setSelectedModel}
               availableModels={llmModels}
+              images={attachedImages}
+              onImagesChange={setAttachedImages}
             />
 
             {/* Bottom panel — Dev Server Logs or Terminal */}

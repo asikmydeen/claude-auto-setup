@@ -31,6 +31,7 @@ const AGENTS_DIR = join(CLAUDE_DIR, "agents");
 const SCRATCH_DIR = join(CLAUDE_DIR, "scratch");
 const SETTINGS_PATH = join(CLAUDE_DIR, "settings.json");
 const INTEGRATIONS_PATH = join(CLAUDE_DIR, "integrations.json");
+const TMP_IMAGES_DIR = join(CLAUDE_DIR, "tmp-images");
 
 // --- Integrations storage (secure, local-only) ---
 interface IntegrationsConfig {
@@ -338,6 +339,34 @@ app.get("/api/skills", (_req, res) => {
     }
   }
   res.json(skills);
+});
+
+// ============================================================
+// IMAGE UPLOAD (for attaching images to Claude sessions)
+// ============================================================
+
+app.post("/api/images/upload", express.json({ limit: "50mb" }), (req, res) => {
+  const { images } = req.body;
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    return res.status(400).json({ error: "No images provided" });
+  }
+  if (images.length > 10) {
+    return res.status(400).json({ error: "Maximum 10 images per upload" });
+  }
+
+  mkdirSync(TMP_IMAGES_DIR, { recursive: true });
+
+  const paths: string[] = [];
+  for (const img of images) {
+    if (!img.name || !img.data) continue;
+    const ext = (img.name as string).split(".").pop()?.toLowerCase() || "png";
+    if (!["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) continue;
+    const filePath = join(TMP_IMAGES_DIR, `${randomUUID()}.${ext}`);
+    writeFileSync(filePath, Buffer.from(img.data as string, "base64"));
+    paths.push(filePath);
+  }
+
+  res.json({ paths });
 });
 
 // ============================================================
@@ -804,7 +833,7 @@ app.get("/api/claude/sessions/:id", (req, res) => {
 
 // Launch new session
 app.post("/api/claude/sessions", (req, res) => {
-  const { prompt, cwd } = req.body;
+  const { prompt, cwd, imagePaths } = req.body;
   if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
     return res.status(400).json({ error: "Prompt is required" });
   }
@@ -817,6 +846,15 @@ app.post("/api/claude/sessions", (req, res) => {
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
+
+    // Attach images if provided
+    if (Array.isArray(imagePaths)) {
+      for (const imgPath of imagePaths) {
+        if (typeof imgPath === "string" && existsSync(imgPath)) {
+          args.push("--image", imgPath);
+        }
+      }
+    }
     const sessionCwd = cwd || activeProject;
     const env = buildProjectEnv(sessionCwd);
 
@@ -949,7 +987,7 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
     return res.status(409).json({ error: "Session is still running" });
   }
 
-  const { prompt } = req.body;
+  const { prompt, imagePaths } = req.body;
   if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
     return res.status(400).json({ error: "Prompt is required" });
   }
@@ -961,6 +999,16 @@ app.post("/api/claude/sessions/:id/message", (req, res) => {
     if (!claudePath) return res.status(404).json({ error: "Claude CLI not found" });
 
     const args = ["-p", prompt.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions", "--continue"];
+
+    // Attach images if provided
+    if (Array.isArray(imagePaths)) {
+      for (const imgPath of imagePaths) {
+        if (typeof imgPath === "string" && existsSync(imgPath)) {
+          args.push("--image", imgPath);
+        }
+      }
+    }
+
     const env = buildProjectEnv(session.cwd);
 
     const child = spawn(claudePath, args, {
