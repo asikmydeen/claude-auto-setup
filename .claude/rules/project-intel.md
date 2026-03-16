@@ -1,7 +1,7 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-14
-> **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app
+> **Last updated**: 2026-03-16
+> **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
 ---
@@ -16,443 +16,199 @@
 **Core Technologies:**
 - **Electrobun** - Native desktop app framework (Bun + system WebView)
 - **React 19 + Vite + Tailwind v4 + shadcn/ui** - Desktop app UI
-- **Express** - API server (40+ endpoints, ~2,500 lines, embedded in Electrobun main process)
-- **SSE (Server-Sent Events)** - Real-time Claude output streaming to UI
-- **Toast notifications** - Non-blocking UI feedback system
-- **Link interception (WKWebView)** - External links open in system browser, local links stay in-app
-- **Session persistence (JSON file-based)** - Completed sessions saved to `~/.claude/scratch/sessions.json`
+- **Express** - API server (60+ endpoints, ~4,000+ lines, embedded in Electrobun main process)
+- **Vercel AI SDK v6** - Multi-provider LLM integration (11 providers, 29+ models)
+- **Podman/Docker** - Default container runtime for dev server isolation
+- **SSE (Server-Sent Events)** - Real-time Claude output + dev server logs streaming
 - **stream-json** - Claude CLI streaming format for progressive tool/agent visibility
+- **Template system** - 22 curated, verified design templates across 6 styles
+- **Auto-pick engine** - Keyword-based template selection from user description
+- **Port manager** - Auto-assign unique ports (4100+), no conflicts
+- **Container reuse** - Detect and reattach to existing Podman containers
 - **MCP (Model Context Protocol)** - Plugin integration
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
-- **Agent teams** (experimental) - Multi-session parallel agent coordination
-- **Context preservation** - Checkpoint system surviving context compaction
-- **Cross-provider dispatch** - Routes tasks to best available AI agent
-- **PUA persistence engine** - Prevents AI from giving up; escalating pressure (L1-L4) on build/test failures
-- **OpenViking integration** (optional) - Context database for persistent memory, semantic search, tiered loading (L0/L1/L2)
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
 
-## Entry Points
+## Desktop App (`app/`)
 
-### Primary Entry Points
-
-1. **`install.sh`** (569 lines)
-   - Main installer that auto-detects and configures 6 AI coding agents
-   - Modes: `--update`, `--self-update`, `--agents=<list>`, `--force`, `--dry-run`, `--uninstall`
-   - Also installs native agents to `~/.claude/agents/` and dashboard service
-
-2. **`project-init.sh`** (239 lines)
-   - Per-project initializer for `.ai/` shared directory
-   - Creates symlinks/copies based on detected agents
-
-3. **`dispatch.sh`** (265 lines)
-   - Cross-provider task dispatcher
-   - Routes tasks to best available AI agent based on task type
-   - Reads `universal/providers.json` for routing preferences
-
-### Secondary Entry Points
-
-4. **`dashboard/server.js`** (431 lines)
-   - Express server on port 3200 for real-time agent monitoring
-   - SSE-based agent state broadcasting, file watching via chokidar
-   - Steering commands (pause, instruct) from UI to agents
-
-5. **`orchestration-intel.sh`** (169 lines) - Orchestration intelligence demo/helper
-6. **`demo-intelligence.sh`** (143 lines) - Intelligence system demonstration
-7. **`dashboard/report.sh`** (68 lines) - Agent state reporter (curl-based)
-8. **`dashboard/install-service.sh`** (146 lines) - systemd/launchd service installer
-
-9. **Agent adapters** - `agents/*/adapter.sh` - Translates universal config to agent-specific format
-
----
-
-## Build/Test/Lint Commands
-
-### Build
-- **No build process** - Shell script project, no compilation
-- Dashboard: `cd dashboard && npm install` (only if running dashboard)
-
-### Test
-- `make test` or `./tests/run.sh` — 31 smoke tests (CLI flags, structure, PUA escalation, shellcheck)
-- `./install.sh --dry-run` — preview install without changes
-
-### Lint
-- `make lint` — shellcheck (error-level) on all main scripts
-- `make lint-warn` — shellcheck (warning-level) for stricter check
-
-### Run
-- Installation: `./install.sh` (or `make install`)
-- Update only: `./install.sh --update` (or `make update`)
-- Self-update: `./install.sh --self-update` (or `make self-update`)
-- Project init: `./project-init.sh`
-- Dispatch: `./dispatch.sh --task "prompt" --type <task-type>`
-- Dashboard: `cd dashboard && npm start`
-- Health check: `./install.sh --doctor` (or `make doctor`)
-- Version: `./install.sh --version` (or `make version` / `cat VERSION`)
-- Clean worktrees: `make clean`
-
----
-
-## Architecture Overview
-
-### Design Pattern: **Adapter + Single Source of Truth + Native Agents**
+### Architecture
 
 ```
-universal/                      # Single source of truth (agent-agnostic)
-├── rules/                      # 8 shared global rules (incl. pua.md)
-├── commands/                   # 54 command definitions (incl. pua.md)
-├── skills/pua/SKILL.md        # Full PUA skill (32KB, all corporate flavors)
-├── intel-template.md          # Template for cached codebase intelligence
-└── providers.json             # Cross-provider routing config (5 providers)
-
-agents/                         # Agent-specific adapters
-├── claude-code/               # Translates universal → Claude format
-│   ├── agents/                # 6 native agent definitions (incl. pua-enforcer)
-│   ├── settings.json          # 14 plugins, hooks, permissions, env vars
-│   └── CLAUDE.md              # Global rules + auto-role
-├── gemini-cli/                # → Gemini format
-├── kiro-cli/                  # → Kiro format
-├── codex-cli/                 # → Codex format
-├── cursor/                    # → Cursor format
-└── ampcode/                   # → Amp format
+app/
+├── src/
+│   ├── server/index.ts          # Express API (4000+ lines, 60+ endpoints)
+│   ├── bun/index.ts             # Electrobun bootstrap, starts Express + WKWebView
+│   └── ui/
+│       ├── pages/
+│       │   ├── Claude.tsx       # Main chat UI (3000+ lines)
+│       │   ├── Settings.tsx     # Settings, plugins, agent models
+│       │   └── Integrations.tsx # GitHub + Supabase + AWS config
+│       ├── components/
+│       │   ├── ProjectCreator.tsx    # Create project (template auto-pick + from scratch)
+│       │   ├── AIProviders.tsx       # LLM provider API key management (11 providers)
+│       │   ├── DevServerLogs.tsx     # Real-time container/dev server log viewer
+│       │   ├── BrowserPanel.tsx      # Embedded browser with port detection
+│       │   ├── TerminalPanel.tsx     # Integrated terminal
+│       │   ├── SettingsDrawer.tsx    # Settings drawer (5 tabs)
+│       │   ├── ProjectIntel.tsx      # Intel panel
+│       │   ├── OpsPanel.tsx          # Terminal-like ops
+│       │   ├── FolderBrowser.tsx     # Project folder picker
+│       │   └── Toast.tsx             # Toast notification system
+│       ├── api/
+│       │   └── config.ts            # All API client functions + types
+│       └── context/
+│           └── LinkContext.tsx       # External link interception for WKWebView
+├── electrobun.config.ts         # Electrobun build config (copies dist → views/ui)
+├── scripts/postbuild.ts         # Vite build + copy to views/ui
+└── install.sh                   # Build & install to /Applications
 ```
 
-### Key Architectural Principles
+### Key Features
 
-1. **Single source of truth** - `universal/` directory is authoritative
-2. **Adapter pattern** - Each agent has an adapter that translates universal → agent-specific
-3. **Native agents** - Claude Code agents with model/tool/memory config (preferred over commands)
-4. **Auto-detection** - Agents detected via `command -v <agent>`
-5. **Merge don't overwrite** - Settings merged intelligently (requires python3)
-6. **Graceful degradation** - Works when optional tools unavailable
-7. **Context preservation** - Checkpoint system at `.claude/scratch/task-state.md`
-8. **Idempotent operations** - Safe to run multiple times
+**Project Creation Flow:**
+1. User enters name + description
+2. Server auto-picks best template from 22 curated designs (keyword matching)
+3. Template copied → Claude customizes using the design as base
+4. SSE streams Claude's progress in chat
+5. On completion: dev server auto-starts in Podman container
+6. BrowserPanel shows "Starting..." animation → auto-navigates when ready
+7. DevServerLogs panel shows real-time container output
 
-### Data Flow
+**Template System:**
+- 22 verified templates (all pass npm install + build)
+- 6 design styles: Clean/Classic, Material, Dark, Soft/Glass, Modern, Landing
+- Frameworks: React, Next.js, Vue, Angular, Nuxt, HTML
+- Auto-pick by keywords: "dark" → Black Dashboard, "material" → Material Tailwind, "landing" → Astro Launch UI
+- Templates stored in `extracted_templates/`, curated manifest at `extracted_templates/curated.json`
 
-**Installation:**
-```
-install.sh → detect_agents() → backup() → For each agent: adapter.sh install → install native agents → install dashboard service → summary()
-```
+**Dev Server Management:**
+- Default runtime: Podman (auto-detected at startup: Podman > Docker > Finch)
+- Auto-assign unique ports starting from 4100 (no conflicts)
+- Container reuse: detects existing running containers via `podman inspect`
+- Async dep install: `npm install` runs in background, server returns "installing" immediately
+- Port detection from framework output (localhost:XXXX regex)
+- Container cleanup on stop + graceful shutdown handler
+- PATH augmented with mise shims, homebrew, .local/bin for Electrobun bundles
 
-**Orchestration:**
-```
-User request → Coordinator → Load intel → Classify task → Select team (native agents first) → Explore → Plan → Implement (parallel) → Review → Verify → Update intel
-```
+**Multi-Provider LLM Integration (Vercel AI SDK v6):**
+- 11 providers: Anthropic, OpenAI, AWS Bedrock, Google, Mistral, xAI, Groq, DeepSeek, Cohere, Together AI, OpenRouter
+- 29+ models total
+- Bedrock: dual auth (AWS Profile with name input OR Bedrock API key)
+- Streaming chat via SSE (textStream)
+- API key validation via generateText() — proper error messages
+- Settings → AI Models tab with per-provider config, test connection
+- Model selector in chat input bar (grouped by provider)
+- API keys stored in `~/.claude/integrations.json`
 
-**Dashboard:**
-```
-Agent work → report.sh / curl POST → server.js → SSE → Dashboard UI → Steering commands → Agents
-```
-
-**Cross-Provider Dispatch:**
-```
-dispatch.sh → read providers.json → detect installed providers → select best match → invoke non-interactive → return output
-```
-
----
-
-## Directory Map
-
-```
-claude-code-setup/
-├── universal/                      # Agent-agnostic shared content
-│   ├── rules/                      # 8 global rule files
-│   │   ├── code-quality.md         # TypeScript/React standards
-│   │   ├── git-workflow.md         # Commit format, branch naming
-│   │   ├── security.md             # OWASP Top 10, secrets
-│   │   ├── testing.md              # Test-first approach
-│   │   ├── aws-development.md      # AWS-specific patterns
-│   │   ├── orchestration.md        # Multi-agent protocol (expanded w/ checkpoints)
-│   │   ├── multi-agent.md          # Multi-agent enforcement mandate
-│   │   ├── pua.md                  # PUA persistence engine (auto-loaded by all agents)
-│   │   └── context-management.md   # OpenViking context database integration
-│   ├── commands/                   # 54 command definitions
-│   │   ├── init.md                 # Smart project initializer
-│   │   ├── deep-research.md        # 6-agent parallel analysis
-│   │   ├── build.md                # Multi-agent feature implementation
-│   │   ├── debug.md                # Multi-agent debugging
-│   │   ├── review.md               # Multi-agent code review
-│   │   ├── quick.md                # Fast single-file changes
-│   │   ├── pua.md                  # Manual PUA activation trigger
-│   │   ├── multi-provider-build.md # Cross-provider feature builder
-│   │   ├── intel-refresh.md        # Targeted intel refresh
-│   │   ├── coordinator.md          # Coordinator role
-│   │   ├── add-resource.md          # OpenViking resource ingestion
-│   │   ├── [7 role commands]       # developer, reviewer, shepherd, etc.
-│   │   └── [37 specialist commands]# api-designer, backend-developer, etc.
-│   ├── skills/pua/SKILL.md        # Full PUA skill (corporate flavors, team integration)
-│   ├── intel-template.md           # Template for project-intel.md
-│   └── providers.json              # 5 providers, 18 task routes
-│
-├── agents/                         # Agent-specific adapters
-│   ├── claude-code/
-│   │   ├── adapter.sh              # Install/uninstall + native agent install
-│   │   ├── CLAUDE.md               # Global rules + auto-role
-│   │   ├── settings.json           # 14 plugins, hooks, permissions, env
-│   │   └── agents/                 # 6 native agent definitions
-│   │       ├── code-reviewer.md    # Sonnet, read-only, persistent memory
-│   │       ├── debugger.md         # Full tools, 40 turns, PUA methodology
-│   │       ├── test-writer.md      # Background execution
-│   │       ├── explorer.md         # Haiku (fast/cheap), read-only, 20 turns
-│   │       ├── security-auditor.md # Persistent memory for patterns
-│   │       └── pua-enforcer.md     # Team watchdog, detects slacking patterns
-│   ├── gemini-cli/
-│   ├── kiro-cli/
-│   ├── codex-cli/
-│   ├── cursor/
-│   └── ampcode/
-│
-│
-├── app/                               # Electrobun desktop app
-│   └── src/
-│       ├── server/index.ts            # Express API (2500+ lines, 40+ endpoints)
-│       └── ui/
-│           ├── pages/
-│           │   ├── Claude.tsx         # Main chat UI (2400+ lines)
-│           │   └── Integrations.tsx   # GitHub + Supabase + AWS config
-│           ├── components/
-│           │   ├── ProjectIntel.tsx    # Intel panel
-│           │   ├── ProjectCreator.tsx  # Lovable-style creator with backend/repo options
-│           │   ├── OpsPanel.tsx        # Terminal-like ops
-│           │   ├── BrowserPanel.tsx    # Embedded browser (local dev servers)
-│           │   ├── TerminalPanel.tsx   # Integrated terminal
-│           │   └── Toast.tsx          # Toast notification system
-│           └── context/
-│               └── LinkContext.tsx     # External link interception for WKWebView
-│
-├── dashboard/                      # Real-time monitoring dashboard
-│   ├── server.js                   # Express + SSE (431 lines)
-│   ├── package.json                # express ^4.21, chokidar ^4.0
-│   ├── public/index.html           # Dashboard UI (vanilla JS, 699 lines)
-│   ├── install-service.sh          # systemd/launchd service installer
-│   └── report.sh                   # Agent state reporter
-│
-├── lib/                            # Shared shell utilities
-│   └── common.sh                   # Colors, logging, has_cmd helper
-│
-├── tests/                          # Smoke tests
-│   └── run.sh                      # 31 tests (CLI flags, doctor, version, structure, PUA, shellcheck)
-│
-├── Makefile                        # Task runner (install, test, lint, clean, etc.)
-├── VERSION                         # Centralized version (single source of truth)
-├── CHANGELOG.md                    # Release changelog
-├── install.sh                      # Main installer (~770 lines, includes --doctor)
-├── project-init.sh                 # Per-project initializer (238 lines)
-├── dispatch.sh                     # Cross-provider dispatcher with fallback (340 lines)
-├── orchestration-intel.sh          # Orchestration intelligence helper (155 lines)
-├── demo-intelligence.sh            # Intelligence system demo (143 lines)
-├── ORCHESTRATION-INTEL.md          # Orchestration intelligence docs
-├── ANALYSIS.md                     # Architecture and roadmap
-├── README.md                       # Project overview
-└── .claude/rules/project-intel.md  # THIS FILE
-```
-
----
-
-## API Surface
-
-### Shell Script APIs
-
-**install.sh:**
-```bash
-./install.sh                    # Fresh install (auto-detect)
-./install.sh --update           # Update commands/rules only (preserves settings)
-./install.sh --self-update      # Git pull + update
-./install.sh --agents=claude,gemini  # Specific agents only
-./install.sh --agents=all       # All adapters regardless of detection
-./install.sh --force            # Overwrite ALL config including settings
-./install.sh --dry-run          # Preview changes
-./install.sh --uninstall        # Remove all config
-```
-
-**dispatch.sh:**
-```bash
-./dispatch.sh --task "prompt" --type test-writing
-./dispatch.sh --task "prompt" --type code-review-security --provider claude
-./dispatch.sh --task "prompt" --context src/file.ts  # Include file context
-./dispatch.sh --list-providers
-./dispatch.sh --list-routes
-```
-
-### Dashboard HTTP API (port 3200)
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/` | Dashboard UI |
-| GET | `/events` | SSE real-time updates |
-| POST | `/api/sessions` | Register new session |
-| GET | `/api/sessions` | List all sessions |
-| GET | `/api/sessions/:id` | Get session details |
-| POST | `/api/sessions/:id/agents` | Report agent state |
-| POST | `/api/sessions/:id/steering` | Inject steering command |
-| GET | `/api/sessions/:id/commands` | Get pending steering commands |
+**Context-Aware Suggestions:**
+- Detect conversation topics (testing, debugging, refactoring, API, UI, database)
+- Topic-based follow-up suggestions (higher priority than git-based)
+- Cache with 10s TTL, keyed by cwd + sessionId
 
 ### Desktop App HTTP API (port 3201)
 
-**Integrations:**
-
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/integrations/github` | Get GitHub integration config |
-| PUT | `/api/integrations/github` | Save GitHub integration config |
-| DELETE | `/api/integrations/github` | Remove GitHub integration |
-| GET | `/api/integrations/supabase` | Get Supabase config (Management API flow) |
-| PUT | `/api/integrations/supabase` | Save Supabase config |
-| DELETE | `/api/integrations/supabase` | Remove Supabase integration |
-| GET | `/api/integrations/aws` | Get AWS integration config |
-| PUT | `/api/integrations/aws` | Save AWS integration config |
-| DELETE | `/api/integrations/aws` | Remove AWS integration |
-
-**Ops Panel:**
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/ops/run` | Execute an ops command |
-| GET | `/api/ops/stream/:id` | SSE stream for ops output |
-| POST | `/api/ops/stop/:id` | Kill a running ops process |
-
-**Browser Proxy:**
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/browser/proxy` | Proxy localhost URLs for WKWebView |
-| POST | `/api/browser/open-external` | Open URL in system browser |
-| GET | `/api/browser/local` | List local dev server ports |
-
-**Project Intel:**
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/projects/intel` | Read project intelligence file |
-| POST | `/api/projects/init` | Initialize project (run project-init.sh) |
-| POST | `/api/projects/create` | Create new project (Lovable-style creator) |
+| **Claude Sessions** | | |
+| POST | `/api/claude/sessions` | New session (--dangerously-skip-permissions) |
+| POST | `/api/claude/sessions/:id/message` | Follow-up message (--continue) |
+| GET | `/api/claude/sessions/:id` | Get session |
+| DELETE | `/api/claude/sessions/:id` | Delete session |
+| POST | `/api/claude/sessions/:id/stop` | Stop session |
+| GET | `/api/claude/stream/:id` | SSE stream |
+| POST | `/api/claude/launch` | Backwards-compatible launch |
+| **Templates** | | |
+| GET | `/api/templates` | Curated templates by design style |
+| POST | `/api/projects/create-from-template` | Copy template + Claude customizes |
+| POST | `/api/projects/create` | From-scratch (Claude builds all) |
+| GET | `/api/projects/type` | Detect project type |
+| **Dev Server** | | |
+| POST | `/api/dev-server/start` | Start (Podman default, auto port) |
+| GET | `/api/dev-server/status` | Status + container info + output |
+| POST | `/api/dev-server/stop` | Stop + release port |
+| GET | `/api/dev-server/logs` | SSE stream of dev server output |
+| **LLM Providers** | | |
+| GET | `/api/llm/providers` | All providers + config status |
+| GET | `/api/llm/models` | Configured models only |
+| PUT | `/api/llm/keys` | Save API keys |
+| GET | `/api/llm/keys` | Get masked keys |
+| POST | `/api/llm/chat` | Streaming chat (any provider) |
+| POST | `/api/llm/test` | Test provider connection |
+| **Suggestions** | | |
+| GET | `/api/suggestions` | Context-aware suggestions |
+| GET | `/api/suggestions/followup/:id` | Post-session follow-ups |
+| **Runtime** | | |
+| GET | `/api/runtime/detect` | Container runtimes (Docker/Podman/Finch) |
+| GET | `/api/health` | Server health + runtime info |
+| **Integrations** | | |
+| GET/PUT/DELETE | `/api/integrations/github` | GitHub PAT |
+| GET/PUT/DELETE | `/api/integrations/supabase` | Supabase config |
+| GET/PUT/DELETE | `/api/integrations/aws` | AWS profile |
 
 ---
 
-## Settings Structure (Claude Code)
+## Build/Test/Run
 
-```json
-{
-  "permissions": { "allow": ["Bash(git *)", "Bash(npm *)..."], "deny": ["Read(.env*)..."] },
-  "model": "claude-opus-4-6",
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80"
-  },
-  "hooks": {
-    "SessionStart": [{ "command": "register with dashboard + enforce.sh session-start" }],
-    "PreToolUse": [{ "matcher": "Edit|Write", "command": "enforce.sh pre-edit (first-edit agent check)" }],
-    "PostToolUse": [{ "matcher": "Edit|Write", "command": "eslint + enforce.sh track-edit" },
-                    { "matcher": "Bash", "command": "detect tests/review/kiro + PUA failure escalation" },
-                    { "matcher": "Agent", "command": "mark agent spawned" }],
-    "Stop": [{ "command": "enforce.sh session-stop (enforcement report)" }]
-  },
-  "enabledPlugins": {
-    "typescript-lsp": true, "pyright-lsp": true, "context7": true,
-    "serena": true, "code-review": true, "code-simplifier": true,
-    "pr-review-toolkit": true, "security-guidance": true,
-    "commit-commands": true, "feature-dev": true,
-    "claude-md-management": true, "hookify": true,
-    "skill-creator": true, "github": true
-  }
-}
-```
+### Desktop App
+- **Build**: `cd app && eval "$(mise activate zsh)" && bunx electrobun build`
+- **Build (browser dev)**: `cd app && npm run dev` (Vite on 5173, Express on 3201)
+- **Build (native dev)**: `cd app && bunx electrobun dev`
+- **Install to /Applications**: `./app/install.sh`
+- **IMPORTANT**: `mise exec --` prefix needed for node 24 (Vite build)
 
-**Integrations storage:** `~/.claude/integrations.json` — persists GitHub, Supabase, and AWS integration configs.
-
----
-
-## Native Agents (Claude Code)
-
-| Agent | Model | Tools | Memory | Special |
-|-------|-------|-------|--------|---------|
-| code-reviewer | Sonnet 4.6 | Read + Bash (no Edit/Write) | Persistent | — |
-| debugger | Opus 4.6 | Full access | Persistent | 40 turn limit |
-| test-writer | Sonnet 4.6 | Full access | Persistent | Background exec |
-| explorer | Haiku 4.5 | Read + Bash (no Edit/Write) | — | 20 turns, background, fast/cheap |
-| security-auditor | Opus 4.6 | Read + Bash (no Edit/Write) | Persistent | Learns patterns |
-| pua-enforcer | Sonnet 4.6 | Read + Grep + Glob + Bash | Persistent | Team watchdog, detects slacking |
-
-**Priority**: Native agents > Command agents > Agent teams
+### Shell Scripts
+- `make test` or `./tests/run.sh` — 31 smoke tests
+- `make lint` — shellcheck (error-level)
+- `./install.sh --dry-run` — preview install
 
 ---
 
 ## Known Gotchas
 
-1. **Python 3 for settings merge** - Falls back silently if missing
-2. **Plugin installation** - Relies on external `claude plugin install` command
-3. **Symlink vs copy** - Cursor requires copies, Claude uses symlinks
-4. **Context compaction** - Use checkpoint system (`.claude/scratch/task-state.md`)
-5. **CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80** - Triggers compaction earlier for more working room
-6. **Agent teams experimental** - Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-7. **Dashboard optional** - File-based fallback if server not running; `--connect-timeout 1` prevents blocking
-8. **macOS bash 3.2** - All scripts compatible (no `declare -A`, no bash 4+ features)
-10. **Hook ESLint** - PostToolUse hook runs eslint on JS/TS files after Edit/Write; may slow workflow
-11. **PreToolUse enforcement** - PreToolUse hook fires `enforce.sh pre-edit` before EVERY Edit/Write, warns if no agents spawned
-12. **File paths with quotes** - enforce.sh passes file paths via env vars (ENFORCE_FILE) to avoid Python injection
-13. **PUA auto-escalation** - hook-handler detects `exit_code != 0` from build/test/lint → triggers `enforce.sh mark failure` → escalates PUA level (L1-L4)
-14. **PUA state file** - enforce.sh tracks `failure_count` and `pua_level` in `~/.claude/scratch/enforce-state.json`; reset with `enforce.sh reset`
-15. **Installed vs source enforce.sh** - Hooks run the installed version at `~/.claude/scripts/enforce.sh`, not the repo source; must re-install after changes
-16. **OpenViking optional** - All features degrade gracefully when OpenViking is not installed; never block workflows
-17. **OpenViking HTTP mode** - Use HTTP transport (port 1933) for multi-agent; stdio causes contention with concurrent agents
-18. **Intel template L0/L1/L2** - New intel template uses tiered loading; L0 for prompts, L1 for planning, L2 on demand
-19. **Supabase Management API** - Uses Management API access tokens, not project keys directly
-20. **Browser panel localhost only** - Only works with localhost URLs; external sites open in system browser
-21. **Session persistence** - Saves last 50 completed sessions to `~/.claude/scratch/sessions.json`
-22. **SIGTERM handler** - Kills orphaned Claude processes on shutdown
-23. **SSE heartbeat** - Every 30s to detect dead clients
-24. **Platform-detect MOD key** - MOD = Cmd on Mac, Ctrl+ elsewhere
+1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
+2. **Tailwind v4 arbitrary values** — `translate-x-[22px]` doesn't generate; use inline styles
+3. **Podman container names persist** — use `podman inspect` to detect + reuse running containers
+4. **npm install blocks event loop** — must use spawn (async), not execFileSync
+5. **Double response crash** — never call `waitForReady(res)` after already sending `res.json()`
+6. **Bedrock inference profiles** — use `us.anthropic.*` prefix, not raw model IDs
+7. **AI SDK streamText swallows errors** — use `generateText()` for testing/validation
+8. **BrowserPanel port scanning** — `initialUrl` must take priority over auto-scan
+9. **SSE done event** — most reliable signal for build completion (not session query)
+10. **Default to npm** — bun not globally available via mise in Electrobun bundles
+11. **`--dangerously-skip-permissions`** — on all 4 Claude spawn locations
+12. **Template `--openssl-legacy-provider`** — needed for older React/Vue templates
+13. **findDistDir()** — check `../views/ui` first for Electrobun bundle path
+14. **Container stop** — SIGTERM process first, then delayed `rm -f` as safety net
 
 ---
 
 ## Quick Reference
 
-### Supported Agents
-
-| Agent | CLI | Config Location |
-|-------|-----|-----------------|
-| Claude Code | `claude` | `~/.claude/` |
-| Gemini CLI | `gemini` | `~/.gemini/` |
-| Codex CLI | `codex` | `~/.codex/` |
-| Cursor | `cursor` | `~/.cursor/` |
-| Kiro CLI | `kiro` | `~/.kiro/` |
-| Amp Code | `amp` | `~/.config/agents/` |
-
-### Key Workflows
-
-| Command | Purpose |
-|---------|---------|
-| `/init` | Smart project initializer + auto deep-research |
-| `/deep-research` | 6-agent parallel codebase analysis |
-| `/build <feature>` | End-to-end multi-agent feature implementation |
-| `/review [target]` | Multi-agent code review |
-| `/debug <problem>` | Multi-agent debugging |
-| `/quick <task>` | Fast no-spec single-file changes |
-| `/intel-refresh` | Targeted intel update |
-| `/multi-provider-build` | Cross-provider feature builder |
-| `/pua` | Manual PUA persistence engine activation |
-| `/add-resource` | Ingest docs/repos into OpenViking context DB |
-
 ### File Counts
+- **60+** API endpoints (~4,000 line server)
+- **12+** UI components (AIProviders, DevServerLogs, BrowserPanel, etc.)
+- **22** curated templates (6 design styles, all verified)
+- **11** LLM providers (29+ models)
+- **6** agent adapters + 6 native agents
+- **9** universal rule files, 55 command definitions
+- **3** container runtimes supported (Podman, Docker, Finch)
 
-- **9** universal rule files (incl. pua.md, multi-agent.md, context-management.md)
-- **55** command definitions (incl. pua.md, add-resource.md)
-- **6** agent adapters
-- **6** native agents (Claude Code, incl. pua-enforcer)
-- **5** main shell scripts (1,883 lines total)
-- **14** enabled plugins
-- **40+** desktop app API endpoints (~2,500 line server)
-- **8+** desktop app UI pages/components (Integrations, ProjectIntel, OpsPanel, BrowserPanel, etc.)
+### Container Runtimes on This Machine
+- Podman 5.7.1 (preferred)
+- Docker 5.7.1
+- Finch 1.15.1
 
-### Providers on This Machine
-
-- Claude: installed (`~/.local/bin/claude`)
-- Kiro CLI: installed (`~/.local/bin/kiro-cli` v1.27.1) — binary is `kiro-cli` not `kiro`
-  - MCP tools: `@builder-mcp/ReadRemoteTestRun`, `InternalCodeSearch`, `ReadInternalWebsites`
-  - Models: claude-sonnet-4.5, claude-sonnet-4, claude-haiku-4.5, deepseek-3.2, minimax-m2.1, qwen3-coder-next
-- Codex: not installed
-- Gemini: not installed
-- Amp: not installed
-- Dispatch script: available at `~/claude-code-setup/dispatch.sh`
+### LLM Providers
+- Anthropic: Claude Opus/Sonnet 4.6, Haiku 4.5
+- OpenAI: GPT-4o, GPT-4o-mini, o3-mini
+- AWS Bedrock: Claude Sonnet 4.6, Haiku 4.5, Sonnet 4, Opus 4.5 (inference profiles)
+- Google: Gemini 2.5 Pro/Flash
+- Mistral: Large, Small
+- xAI: Grok-3, Grok-3 Mini
+- Groq: Llama 3.3, DeepSeek R1 (fast inference)
+- DeepSeek: Chat, Reasoner
+- Cohere: Command R+, Command R
+- Together AI: Llama 405B, Qwen 72B
+- OpenRouter: 100+ models (single key, @ai-sdk/openai with custom baseURL)
