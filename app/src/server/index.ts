@@ -3105,10 +3105,15 @@ app.post("/api/dev-server/start", (req, res) => {
     return res.status(400).json({ error: "Invalid project path" });
   }
 
-  // Check if already running
+  // Check if already running in our map
   const existing = devServers.get(projectCwd);
   if (existing && existing.status === "running") {
     return res.json({ ok: true, port: existing.port, status: "already-running", runtime: existing.runtime });
+  }
+  // Clean up stale entry
+  if (existing && existing.status !== "running" && existing.status !== "installing" && existing.status !== "starting") {
+    releasePort(existing.port);
+    devServers.delete(projectCwd);
   }
 
   const devCmd = detectDevCommand(projectCwd);
@@ -3143,8 +3148,9 @@ app.post("/api/dev-server/start", (req, res) => {
       const sanitized = projectCwd.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       const containerName = `sidekick-dev-${sanitized.slice(-40)}`;
 
-      // Kill any existing container with same name
-      try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 10000 }); } catch {}
+      // Force-stop and remove any existing container with same name (survives app restart)
+      try { execFileSync(containerRuntime, ["stop", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
+      try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
 
       // Install deps inside container first (if node_modules doesn't exist)
       const installStep = !existsSync(join(projectCwd, "node_modules"))
