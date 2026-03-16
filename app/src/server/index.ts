@@ -3287,6 +3287,11 @@ app.post("/api/dev-server/start", (req, res) => {
         "-e", `PORT=${port}`,
         "-e", "BROWSER=none",
         "-e", "HOST=0.0.0.0",
+        // File watching: macOS volume mounts don't propagate inotify events,
+        // so dev servers must use polling to detect file changes for HMR
+        "-e", "CHOKIDAR_USEPOLLING=true",
+        "-e", "WATCHPACK_POLLING=true",
+        "-e", "FAST_REFRESH=true",
         image,
         "sh", "-c", `${installStep}${cmd} ${args.join(" ")}`,
       ];
