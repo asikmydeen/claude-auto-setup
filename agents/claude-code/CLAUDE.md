@@ -21,8 +21,6 @@ This is not optional. This is not role-dependent. This applies to EVERY role: De
 - `Agent(subagent_type="code-reviewer", prompt="...")` — review
 - `Agent(subagent_type="test-writer", run_in_background=true, prompt="...")` — tests
 
-**The enforcement engine tracks your edits.** If you make edits without agents, you WILL receive escalating warnings via hooks. At 3+ files with 0 agents, you'll be blocked.
-
 **Only exception:** Single-file changes under 30 lines. Everything else = multi-agent.
 
 ---

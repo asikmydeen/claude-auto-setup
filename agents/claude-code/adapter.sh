@@ -38,11 +38,13 @@ install() {
 
   # Merge settings (don't overwrite — merge plugins, permissions, hooks)
   if [ -f "$CLAUDE_HOME/settings.json" ] && command -v python3 &>/dev/null; then
-    python3 -c "
-import json
-with open('$CLAUDE_HOME/settings.json', 'r') as f:
+    CLAUDE_HOME_PATH="$CLAUDE_HOME" AGENT_DIR_PATH="$AGENT_DIR" python3 -c "
+import json, os
+claude_home = os.environ['CLAUDE_HOME_PATH']
+agent_dir = os.environ['AGENT_DIR_PATH']
+with open(claude_home + '/settings.json', 'r') as f:
     existing = json.load(f)
-with open('$AGENT_DIR/settings.json', 'r') as f:
+with open(agent_dir + '/settings.json', 'r') as f:
     new = json.load(f)
 for k in ['enabledPlugins']:
     existing.setdefault(k, {})
@@ -76,7 +78,7 @@ for event, entries in new.get('hooks', {}).items():
                 break
         if not already:
             existing['hooks'][event].append(new_entry)
-with open('$CLAUDE_HOME/settings.json', 'w') as f:
+with open(claude_home + '/settings.json', 'w') as f:
     json.dump(existing, f, indent=2)
     f.write('\n')
 "
@@ -183,22 +185,6 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     fi
   fi
 
-  # Register OpenViking MCP server (if installed)
-  if command -v claude &>/dev/null && command -v ov &>/dev/null; then
-    # Prefer HTTP mode for multi-agent safety (avoids stdio contention)
-    local ov_url="http://localhost:1933"
-    if curl -s --connect-timeout 1 "$ov_url/status" &>/dev/null; then
-      claude mcp remove -s user openviking 2>/dev/null || true
-      claude mcp add -s user --transport http openviking "$ov_url" 2>/dev/null \
-        && echo "    OpenViking MCP: registered (HTTP mode)" \
-        || echo "    OpenViking MCP: registration failed"
-    else
-      echo "    OpenViking: detected but server not running (start with: openviking-server)"
-      echo "    Tip: openviking-server --config ~/.openviking/config.yaml"
-    fi
-  elif command -v ov &>/dev/null; then
-    echo "    OpenViking: installed (register MCP after claude CLI is available)"
-  fi
 }
 
 uninstall() {

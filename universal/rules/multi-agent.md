@@ -32,15 +32,15 @@ Agent(subagent_type="security-auditor", prompt="Security audit of [files]: OWASP
 Agent(subagent_type="test-writer", run_in_background=true, prompt="Write tests for [files]...")
 ```
 
-## Enforcement Hooks (automatic — no action needed)
+## Why Multi-Agent Matters
 
-The enforcement engine runs via PreToolUse and PostToolUse hooks:
-- **Edit #1 with 0 agents**: Warning injected into your context
-- **2+ files with 0 agents**: Escalating warning
-- **3+ files with 0 agents**: Hard enforcement — you must spawn agents
-- **6+ edits with 0 agents**: Forced delegation
+Using agents for non-trivial tasks produces better results:
+- **Explorer agents** gather context you'd otherwise miss
+- **Parallel implementation** saves time on multi-file changes
+- **Review agents** catch bugs and security issues before commit
+- **Test agents** ensure coverage without context switching
 
-The hooks track: edit count, unique files, agents spawned, tests run, review run.
+Self-check: if you're editing 3+ files without having spawned any agents, pause and consider whether delegation would improve quality.
 
 ## Dispatch Priority
 

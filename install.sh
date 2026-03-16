@@ -648,19 +648,6 @@ doctor() {
     check_warn "claude-mem: not installed (install: claude plugin marketplace add thedotmack/claude-mem)"
   fi
 
-  # --- OpenViking ---
-  step "OpenViking (context database)"
-  if command -v ov &>/dev/null; then
-    check_pass "OpenViking CLI: installed"
-    if curl -s --connect-timeout 1 http://localhost:1933/status &>/dev/null; then
-      check_pass "OpenViking server: running (port 1933)"
-    else
-      check_warn "OpenViking server: not running (start with: openviking-server)"
-    fi
-  else
-    check_warn "OpenViking: not installed (optional — pip install openviking)"
-  fi
-
   # --- Dependencies ---
   step "Dependencies"
   command -v git &>/dev/null && check_pass "git: $(git --version 2>/dev/null | head -1)" || check_fail "git not found"
@@ -768,15 +755,16 @@ else
       # Register MCP server with Kiro
       kiro_mcp="$HOME/.kiro/settings/mcp.json"
       if [ -f "$kiro_mcp" ] && command -v python3 &>/dev/null; then
-        python3 -c "
-import json
-mcp_path = '$kiro_mcp'
+        KIRO_MCP_PATH="$kiro_mcp" ORCH_DEST="$orch_dest" python3 -c "
+import json, os
+mcp_path = os.environ['KIRO_MCP_PATH']
+orch_dest = os.environ['ORCH_DEST']
 with open(mcp_path) as f:
     data = json.load(f)
 data.setdefault('mcpServers', {})
 data['mcpServers']['orchestration'] = {
     'command': 'node',
-    'args': ['$orch_dest/server.js']
+    'args': [orch_dest + '/server.js']
 }
 with open(mcp_path, 'w') as f:
     json.dump(data, f, indent=2)

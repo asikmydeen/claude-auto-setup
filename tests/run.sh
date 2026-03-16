@@ -66,15 +66,17 @@ assert_file_exists() {
 echo "=== install.sh ==="
 
 echo "  --- --help ---"
-output=$(bash "$ROOT_DIR/install.sh" --help 2>&1) || true
-assert_exit_code "install.sh --help exits 0" "0" "$?"
+rc=0
+output=$(bash "$ROOT_DIR/install.sh" --help 2>&1) || rc=$?
+assert_exit_code "install.sh --help exits 0" "0" "$rc"
 assert_contains "help shows usage" "Usage:" "$output"
 assert_contains "help shows --dry-run" "--dry-run" "$output"
 assert_contains "help shows --agents" "--agents" "$output"
 
 echo "  --- --dry-run ---"
-output=$(bash "$ROOT_DIR/install.sh" --dry-run 2>&1) || true
-assert_exit_code "install.sh --dry-run exits 0" "0" "$?"
+rc=0
+output=$(bash "$ROOT_DIR/install.sh" --dry-run 2>&1) || rc=$?
+assert_exit_code "install.sh --dry-run exits 0" "0" "$rc"
 assert_contains "dry-run mentions DRY RUN" "DRY RUN" "$output"
 
 # ============================================================================
@@ -82,13 +84,15 @@ echo ""
 echo "=== dispatch.sh ==="
 
 echo "  --- --list-providers ---"
-output=$(bash "$ROOT_DIR/dispatch.sh" --list-providers 2>&1) || true
-assert_exit_code "dispatch.sh --list-providers exits 0" "0" "$?"
+rc=0
+output=$(bash "$ROOT_DIR/dispatch.sh" --list-providers 2>&1) || rc=$?
+assert_exit_code "dispatch.sh --list-providers exits 0" "0" "$rc"
 assert_contains "lists available providers" "Available providers" "$output"
 
 echo "  --- --list-routes ---"
-output=$(bash "$ROOT_DIR/dispatch.sh" --list-routes 2>&1) || true
-assert_exit_code "dispatch.sh --list-routes exits 0" "0" "$?"
+rc=0
+output=$(bash "$ROOT_DIR/dispatch.sh" --list-routes 2>&1) || rc=$?
+assert_exit_code "dispatch.sh --list-routes exits 0" "0" "$rc"
 
 echo "  --- missing --task ---"
 rc=0
@@ -154,10 +158,12 @@ assert_file_exists "universal/commands/pua.md exists" "$ROOT_DIR/universal/comma
 assert_file_exists "universal/skills/pua/SKILL.md exists" "$ROOT_DIR/universal/skills/pua/SKILL.md"
 assert_file_exists "pua-enforcer agent exists" "$ROOT_DIR/agents/claude-code/agents/pua-enforcer.md"
 
-# Test PUA escalation in enforce.sh
-pua_output=$(bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" reset 2>&1 && bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1 && bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1)
+# Test PUA escalation in enforce.sh (always clean up, even on failure)
+cleanup_pua() { bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" reset >/dev/null 2>&1 || true; }
+cleanup_pua
+pua_output=$(bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1 && bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" mark failure 2>&1) || true
 assert_contains "PUA L1 triggers on 2nd failure" "PUA L1" "$pua_output"
-bash "$ROOT_DIR/agents/claude-code/scripts/enforce.sh" reset >/dev/null 2>&1
+cleanup_pua
 
 # ============================================================================
 echo ""

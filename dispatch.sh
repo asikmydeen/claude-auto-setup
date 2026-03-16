@@ -67,14 +67,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --list-routes)
       if command -v python3 &>/dev/null; then
-        python3 -c "
-import json
-with open('$PROVIDERS_FILE') as f:
+        PROVIDERS_FILE="$PROVIDERS_FILE" python3 -c "
+import json, os, shutil
+with open(os.environ['PROVIDERS_FILE']) as f:
     data = json.load(f)
 print('Task routing:')
 for task, providers in sorted(data['task_routing'].items()):
     if task.startswith('_'): continue
-    available = [p for p in providers if __import__('shutil').which(p)]
+    available = [p for p in providers if shutil.which(p)]
     print(f'  {task}: {\" > \".join(providers)}', end='')
     if available:
         print(f'  (will use: {available[0]})')
@@ -186,14 +186,14 @@ resolve_provider() {
   # Fallback: use routing table from providers.json
   if [ -n "$TASK_TYPE" ] && command -v python3 &>/dev/null; then
     local provider
-    provider=$(python3 -c "
-import json, shutil
-with open('$PROVIDERS_FILE') as f:
+    provider=$(PROVIDERS_FILE="$PROVIDERS_FILE" TASK_TYPE="$TASK_TYPE" python3 -c "
+import json, shutil, os
+with open(os.environ['PROVIDERS_FILE']) as f:
     data = json.load(f)
 providers = data.get('providers', {})
 cli_map = {name: info.get('cli', name) for name, info in providers.items()}
 routes = data.get('task_routing', {})
-chain = routes.get('$TASK_TYPE', ['claude', 'codex', 'gemini', 'amp'])
+chain = routes.get(os.environ.get('TASK_TYPE', ''), ['claude', 'codex', 'gemini', 'amp'])
 for p in chain:
     cli = cli_map.get(p, p)
     if shutil.which(cli):
@@ -249,12 +249,23 @@ build_context() {
         warn "Context file not found: $f"
         continue
       fi
-      # Resolve to absolute path (macOS-compatible, no -e flag)
+      # Resolve to absolute path following symlinks (macOS-compatible)
       local abs_path
       abs_path=$(cd "$(dirname "$f")" && pwd)/$(basename "$f")
+      # Resolve symlinks if possible (prevent symlink bypass)
+      if command -v realpath &>/dev/null; then
+        abs_path=$(realpath "$abs_path" 2>/dev/null) || abs_path=$(cd "$(dirname "$f")" && pwd)/$(basename "$f")
+      fi
       # Restrict to project root — prevent reading /etc/passwd, ~/.ssh/*, etc.
       if [[ "$abs_path" != "$project_root"* ]]; then
         warn "Context file outside project root, skipping: $f"
+        continue
+      fi
+      # Size limit: skip files > 1MB to prevent hangs
+      local file_size
+      file_size=$(wc -c < "$abs_path" 2>/dev/null || echo 0)
+      if [ "$file_size" -gt 1048576 ]; then
+        warn "Context file too large (>1MB), skipping: $f"
         continue
       fi
       ctx="$ctx\n--- File: $f ---\n$(cat "$abs_path")\n"
@@ -274,9 +285,9 @@ dispatch_to() {
     claude)
       local tools="Read,Grep,Glob,Bash,Edit,Write"
       info "Invoking: claude -p (non-interactive)"
-      # Unset CLAUDECODE to allow dispatch from inside a Claude Code session
+      # Unset CLAUDECODE + CLAUDE_CODE_ENTRYPOINT to allow dispatch from inside a Claude Code session
       # (mirrors orchestration/lib/agents.js which does the same for Node.js)
-      CLAUDECODE= claude -p "$full_prompt" --allowedTools "$tools" --output-format text 2>/dev/null
+      CLAUDECODE= CLAUDE_CODE_ENTRYPOINT= claude -p "$full_prompt" --allowedTools "$tools" --output-format text 2>/dev/null
       ;;
     codex)
       info "Invoking: codex -q (quiet mode)"

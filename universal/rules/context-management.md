@@ -1,21 +1,18 @@
-# Context Management
+# Context & Memory Management
 
-## Memory System Hierarchy
-
-Context and memory are provided by multiple systems, in priority order:
+## Memory Hierarchy
 
 | Priority | System | Scope | How it works |
 |---|---|---|---|
 | 1 | **claude-mem** | Cross-session, semantic | Auto-captures observations via hooks. 3-layer search via MCP. Worker on port 37777. |
 | 2 | **MEMORY.md** | Per-project, lightweight | Auto-loaded (first 200 lines). Quick notes. Manual writes. |
 | 3 | **project-intel.md** | Per-project, structural | Codebase map. Architecture. Not session-specific. |
-| 4 | **OpenViking** | Cross-project, resources | Optional. Broader resource management. Tiered loading. |
 
 All coexist. Use claude-mem for deep memory. MEMORY.md for quick notes. project-intel.md for structure.
 
-## claude-mem (Primary Memory System)
+## claude-mem (Primary — Automatic)
 
-claude-mem provides automatic persistent memory across coding sessions via 5 lifecycle hooks:
+claude-mem provides persistent memory across sessions via 5 lifecycle hooks:
 
 | Hook | When | What it does |
 |---|---|---|
@@ -25,7 +22,9 @@ claude-mem provides automatic persistent memory across coding sessions via 5 lif
 | Stop | Session pausing/ending | AI-generated summary (investigated, learned, completed, next steps) |
 | SessionEnd | Session fully ends | Marks session complete |
 
-### When to Actively Query Memory
+**You do NOT need to manually manage memory.** It works in the background.
+
+### When to Actively Query
 
 Memory works passively most of the time. Actively use it when:
 - Starting work on an area you've touched before
@@ -33,7 +32,7 @@ Memory works passively most of the time. Actively use it when:
 - Making architectural decisions (search for past decisions + rationale)
 - Onboarding to a project
 
-### 3-Layer Search Pattern
+### 3-Layer Search Pattern (Token-Efficient)
 
 Always follow this pattern — never skip to full details:
 
@@ -41,7 +40,7 @@ Always follow this pattern — never skip to full details:
 2. **Timeline** (contextual view): `timeline({ anchor_id: ID, before: 5, after: 5 })` — chronological context
 3. **Fetch Details** (500-1000 tokens each): `get_observations({ ids: [...] })` — full content, only for relevant IDs
 
-This achieves ~10x token savings vs loading everything.
+~10x token savings vs loading everything.
 
 ### Observation Types
 
@@ -54,7 +53,11 @@ This achieves ~10x token savings vs loading everything.
 
 ### Knowledge Concepts
 
-- `how-it-works`, `why-it-exists`, `what-changed`, `problem-solution`, `gotcha`, `pattern`, `trade-off`
+`how-it-works`, `why-it-exists`, `what-changed`, `problem-solution`, `gotcha`, `pattern`, `trade-off`
+
+### Privacy
+
+Wrap sensitive content in `<private>` tags — it will be excluded from observations.
 
 ## Tiered Context Loading (L0/L1/L2)
 
@@ -75,40 +78,9 @@ When loading `project-intel.md`:
 
 Do NOT load the entire intel file into context unless the task is a full-project refactor.
 
-## OpenViking (Optional Enhancement)
-
-When installed, OpenViking provides additional capabilities:
-
-| Tool | Purpose | When to use |
-|---|---|---|
-| `search` | Semantic search across resources | Finding project docs, API references |
-| `add_memory` | Store persistent knowledge | After discovering patterns, preferences |
-| `add_resource` | Ingest external docs/repos | Project setup, adding references |
-
-URI scheme: `viking://resources/`, `viking://user/memories/`, `viking://agent/memories/`
-
-## Integration with Orchestration Pipeline
-
-### During Exploration (Step 0)
-```
-0b: Memory Context (claude-mem)
-- Search memory for past observations about this codebase/feature
-- Look for: decisions, gotchas, patterns, prior fixes
-
-0b-alt: OpenViking (if no claude-mem)
-- Search viking://agent/memories/ for past learnings
-- Search viking://resources/ for project docs
-```
-
-### After Implementation
-- claude-mem captures automatically via PostToolUse hook — no manual action needed
-- Store significant discoveries in MEMORY.md if they're quick-reference worthy
-- OpenViking: store broader resources via `add_resource`
-
 ## Graceful Degradation
 
 All memory systems are OPTIONAL. When unavailable:
 - claude-mem offline → fall back to MEMORY.md + project-intel.md
-- OpenViking offline → fall back to `context7` for library docs
 - MEMORY.md missing → still works, just less context
 - Never block a workflow because a memory system is unavailable

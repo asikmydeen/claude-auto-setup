@@ -49,8 +49,3 @@ Output format:
 - **INFO**: observations, no action needed
 
 After auditing, update your agent memory with security patterns specific to this codebase.
-
-OpenViking integration (when available):
-- Query `viking://agent/memories/` at start for known security patterns and past audit findings
-- Store discovered vulnerability patterns via `add_memory` for cross-session learning
-- Search `viking://resources/` for security documentation and compliance requirements

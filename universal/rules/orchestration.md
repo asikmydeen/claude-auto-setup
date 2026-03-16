@@ -99,12 +99,6 @@ Before planning, gather context using the right tools:
 - If claude-mem is not available, fall back to MEMORY.md
 - See `memory-system.md` rule for the full 3-layer search protocol
 
-### 0b-alt: OpenViking Context (when available, no claude-mem)
-- If OpenViking MCP is connected, search `viking://agent/memories/` for past learnings about this codebase
-- Search `viking://resources/` for project-relevant documentation
-- Search `viking://user/memories/` for user preferences and workflow patterns
-- If neither memory system is available, fall back to MEMORY.md and context7
-
 ### 0c: Standard Context
 - Use `context7` MCP to fetch up-to-date docs for any library/framework you're unsure about
 - Use `serena` for semantic code navigation when exploring unfamiliar code
@@ -137,25 +131,11 @@ Cache the result mentally for the session. This determines whether to use cross-
 - If only Claude is installed → do everything yourself, no degradation
 - If a provider fails → fall back to Claude silently, log the failure
 
-**How to dispatch** (via Bash tool with performance-based routing):
+**How to dispatch** (via Bash tool):
 ```bash
-# Source the performance tracker (for smart routing)
-source ~/.claude/lib/performance-tracker.sh
-
-# Use dispatch.sh with automatic performance-based routing
+# Use dispatch.sh for cross-provider routing
 ~/claude-code-setup/dispatch.sh --task "prompt" --type task-type
-
-# Or manually dispatch to best agent based on past performance:
-TASK_TYPE="test-writing"
-BEST_AGENT=$(get_best_agent_for_task "$TASK_TYPE" "claude,codex,gemini,amp")
-$BEST_AGENT -q "Write unit tests for [file]. Test all edge cases. Use [framework]."
-
-# After task completes, track the outcome for learning:
-TRACK_DURATION=$SECONDS  # If you measured time
-track_agent_outcome "$BEST_AGENT" "$TASK_TYPE" "success|partial|failure" "$TRACK_DURATION"
 ```
-
-The performance tracker learns which agents perform best for which task types and automatically routes to the best performer over time.
 
 ## Step 1.5: Classify the Task
 
@@ -211,30 +191,6 @@ Always use these when relevant:
 - **`security-guidance`**: Automatic — warns about security issues on file edits
 - **`code-review`**: After implementation — run multi-agent review before marking done
 - **`code-simplifier`**: After implementation — simplify and refine the code
-
-## Step 3.5: Dashboard & Activity Logging
-
-The dashboard (`cd dashboard && pnpm dev`, port 3200) provides real-time agent monitoring with a React+Tailwind UI.
-
-If the dashboard API is running, report agent state at each phase transition:
-```bash
-curl -s -X POST http://localhost:3200/api/sessions/$SESSION_ID/agents \
-  -H 'Content-Type: application/json' \
-  -d '{"id":"AGENT_ID","role":"ROLE","status":"STATUS","task":"DESCRIPTION","progress":{"done":N,"total":M}}' \
-  --connect-timeout 1 -o /dev/null 2>/dev/null || true
-```
-
-Log significant actions to the activity trail:
-```bash
-curl -s -X POST http://localhost:3200/api/activity \
-  -H 'Content-Type: application/json' \
-  -d '{"actor":"AGENT_ID","action":"ACTION","entity":"ENTITY","details":"DETAILS"}' \
-  --connect-timeout 1 -o /dev/null 2>/dev/null || true
-```
-
-Status values: `exploring`, `implementing`, `reviewing`, `done`, `error`, `idle`
-
-The `|| true` ensures reporting never blocks work. The dashboard falls back gracefully if the server isn't running.
 
 ## Step 4: Execute with Multi-Agent Pattern
 
@@ -340,34 +296,6 @@ After ANY task that changes code (build, debug, review with fixes), update the c
 
 When a build, test, or lint fails during any phase, follow this structured recovery:
 
-### SMART Error Recovery (using learned patterns)
-
-Before attempting manual fixes, check the error pattern database:
-
-```bash
-# Source the error patterns library
-source ~/.claude/lib/error-patterns.sh
-
-# Classify the error type
-ERROR_TYPE="build_failure"  # or "type_error", "test_failure", "dependency_conflict", etc.
-
-# Query for successful fixes
-SUGGESTED_FIX=$(suggest_fix_for_error "$ERROR_TYPE")
-
-if [ -n "$SUGGESTED_FIX" ]; then
-  echo "💡 Learned fix suggestion: $SUGGESTED_FIX"
-  # Try the suggested fix first
-fi
-```
-
-**After any fix attempt, log the outcome:**
-```bash
-# After trying a fix:
-log_failure_pattern "$ERROR_TYPE" "your attempted fix" "success|partial|failure" '{"context":"details"}'
-```
-
-This builds a knowledge base of what works for each error type, making future recoveries faster.
-
 ### Build Failure
 1. Read the FULL error output — don't guess from the first line
 2. Check if it's a dependency issue (`npm install` / `brazil-build install` first)
@@ -398,13 +326,7 @@ If fixing one error creates new errors (> 3 cascading failures):
 5. Surface the blocker to the user with: what you tried, why it failed, what you'd do differently
 
 ### Learning from Failures
-After recovering from any failure, **ALWAYS log to the error patterns database:**
-```bash
-source ~/.claude/lib/error-patterns.sh
-log_failure_pattern "$ERROR_TYPE" "your_fix" "success|partial|failure"
-```
-
-Additionally, check if it reveals a pattern worth remembering in intel:
+After recovering from any failure, check if it reveals a pattern worth remembering in intel:
 - If you hit an API gotcha → add to intel's "Known Gotchas" section
 - If a test pattern was unexpected → note in intel's "Test Infrastructure"
 - If a build config was non-obvious → note in intel's "Quick Reference"
@@ -420,84 +342,5 @@ Additionally, check if it reveals a pattern worth remembering in intel:
 - Don't do full re-scans when incremental updates suffice
 - Don't brute-force past errors — 3 attempts at the same fix means rethink the approach
 - Don't suppress errors (ts-ignore, eslint-disable, test.skip) — fix the root cause
-
----
-
-## Quick Reference: Orchestration Intelligence
-
-### Error Pattern Learning
-
-**When to use:** After recovering from any error (build, test, lint, type errors)
-
-```bash
-# 1. Classify the error type
-# Common types: build_failure, type_error, test_failure, dependency_conflict,
-#               lint_error, runtime_error, api_error
-
-# 2. Log what you tried and whether it worked
-source ~/.claude/lib/error-patterns.sh
-log_failure_pattern "build_failure" "npm install --legacy-peer-deps" "success"
-
-# 3. Next time you see the same error, ask for suggestions
-SUGGESTED_FIX=$(suggest_fix_for_error "build_failure")
-# Output: "npm install --legacy-peer-deps" (most successful fix)
-```
-
-### Performance-Based Agent Selection
-
-**When to use:** Before dispatching tasks to external providers
-
-```bash
-# 1. Source the performance tracker
-source ~/.claude/lib/performance-tracker.sh
-
-# 2. Find the best agent for your task type
-TASK_TYPE="test-writing"  # or: code-review, documentation, implementation, etc.
-BEST_AGENT=$(get_best_agent_for_task "$TASK_TYPE")
-
-# 3. Use that agent
-$BEST_AGENT -q "Write tests for src/api/users.ts"
-
-# 4. After completion, track the outcome
-track_agent_outcome "$BEST_AGENT" "$TASK_TYPE" "success" 45  # 45 seconds
-```
-
-### Common Task Types for Tracking
-
-- `test-writing` - Unit and integration tests
-- `code-review` - General code review
-- `code-review-security` - Security-focused review
-- `code-review-performance` - Performance-focused review
-- `documentation` - API docs, README, tutorials
-- `implementation` - Feature implementation
-- `boilerplate` - CRUD, scaffolding, repetitive code
-- `refactoring` - Code restructuring
-- `debugging` - Bug investigation and fixes
-
-### CLI Wrapper
-
-Or use the CLI wrapper for quick access:
-
-```bash
-# From anywhere in the claude-auto-setup directory
-./orchestration-intel.sh suggest-fix type_error
-./orchestration-intel.sh best-agent test-writing
-./orchestration-intel.sh compare-agents code-review
-./orchestration-intel.sh track-outcome codex test-writing success 30
-```
-
-### View Performance Data
-
-```bash
-# Compare all agents for a task type
-source ~/.claude/lib/performance-tracker.sh
-compare_agents "test-writing"
-
-# Get detailed stats for an agent
-get_agent_stats "codex" | jq '.'
-
-# See all error types you've encountered
-list_errors
-```
 
 ---

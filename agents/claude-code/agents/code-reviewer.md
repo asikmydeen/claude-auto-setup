@@ -49,7 +49,3 @@ Provide feedback organized by priority:
 Include specific code examples showing the issue and the fix.
 
 After reviewing, update your agent memory with patterns and recurring issues you discover.
-
-OpenViking integration (when available):
-- Query `viking://agent/memories/` at start for known patterns and past review findings in this codebase
-- Store recurring issues and codebase-specific patterns via `add_memory` for cross-session learning

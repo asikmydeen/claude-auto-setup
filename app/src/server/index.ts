@@ -25,6 +25,15 @@ import { createTogetherAI } from "@ai-sdk/togetherai";
 
 const app = express();
 const PORT = 3201;
+
+// --- Security headers (no helmet dependency needed) ---
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
 const HOME = homedir();
 const CLAUDE_DIR = join(HOME, ".claude");
 const AGENTS_DIR = join(CLAUDE_DIR, "agents");
@@ -4196,8 +4205,21 @@ if (distPath) {
   });
 }
 
+// --- Centralized error handler (catches async route errors) ---
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled route error:", err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`API server running on http://127.0.0.1:${PORT}`);
+});
+
+// --- Prevent uncaught async errors from crashing the server ---
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
 });
 
 // --- Graceful shutdown: kill child processes ---
