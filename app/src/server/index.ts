@@ -1996,8 +1996,10 @@ Your job:
    - Add new components or pages as needed for their features
    - Wire up any data fetching, forms, or interactivity they described
    - Keep the design system and UI library — don't replace them
-4. Make sure "npm run ${template.scripts[0] || "dev"}" works when you're done
+4. Make sure the dev server starts without errors
 5. Create a brief README.md explaining what was built
+
+IMPORTANT: Do NOT tell the user to "run npm run dev" or any other command. The app will automatically start the dev server and open it in a browser panel when you're done. Just focus on writing the code.
 
 Build on the template — don't start from scratch. The design is already beautiful.`;
 
@@ -2111,7 +2113,7 @@ app.post("/api/projects/create", (req, res) => {
   // Launch Claude session to build the project
   try {
     const claudePath = execFileSync("which", ["claude"], { encoding: "utf-8" }).trim();
-    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add, bun run dev) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built and how to run it`;
+    const buildPrompt = `You are creating a new project called "${name}". Here is the user's idea:\n\n${description}\n\nBuild this project from scratch following these requirements:\n1. Use bun as the package manager (bun init, bun add) for maximum speed\n2. Create all necessary files, set up project structure, install dependencies\n3. Implement the core functionality — not just scaffolding, make it actually work\n4. MUST have a working "dev" script in package.json that starts a dev server (e.g. vite, next dev, bun serve)\n5. After creating all files, run "bun install" to install dependencies\n6. Use modern best practices: TypeScript, proper error handling, clean code\n7. Create a brief README.md explaining what was built\n\nIMPORTANT: Do NOT tell the user to run any commands. The app will automatically start the dev server and open it in a browser when you're done. Just focus on writing the code.`;
 
     const id = randomUUID().slice(0, 12);
     const args = ["-p", buildPrompt, "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
@@ -2991,11 +2993,53 @@ interface DevServerEntry {
 
 const devServers = new Map<string, DevServerEntry>();
 
+// Port manager — auto-assign unique ports to avoid conflicts
+let nextPort = 4100;
+const usedPorts = new Set<number>();
+
+function findFreePort(): number {
+  // Try ports starting from nextPort, skip any in use
+  for (let p = nextPort; p < nextPort + 200; p++) {
+    if (!usedPorts.has(p)) {
+      // Quick check if port is actually free
+      try {
+        execFileSync("lsof", ["-i", `:${p}`], { encoding: "utf-8", timeout: 2000 });
+        // Port is in use by another process
+        usedPorts.add(p);
+      } catch {
+        // lsof found nothing — port is free
+        usedPorts.add(p);
+        nextPort = p + 1;
+        return p;
+      }
+    }
+  }
+  // Fallback
+  return nextPort++;
+}
+
+function releasePort(port: number) {
+  usedPorts.delete(port);
+}
+
+// Detect preferred container runtime (Podman first, then Docker)
+function getDefaultRuntime(): string | null {
+  for (const rt of ["podman", "docker", "finch"]) {
+    try {
+      execFileSync("which", [rt], { encoding: "utf-8", timeout: 2000 });
+      return rt;
+    } catch {}
+  }
+  return null;
+}
+
+const defaultContainerRuntime = getDefaultRuntime();
+
 // Detect package manager and dev command for a project
 function detectDevCommand(projectCwd: string): { cmd: string; args: string[]; port: number; installCmd: string } | { error: string } {
   let cmd = "npm"; // default to npm (always available)
   let args = ["run", "dev"];
-  const port = 5173;
+  const port = findFreePort(); // Auto-assign unique port
 
   if (existsSync(join(projectCwd, "bun.lockb")) || existsSync(join(projectCwd, "bun.lock"))) {
     cmd = "bun"; args = ["run", "dev"];
@@ -3072,9 +3116,17 @@ app.post("/api/dev-server/start", (req, res) => {
 
   const { cmd, args, port, installCmd } = devCmd;
 
-  // Container mode: docker, podman, finch, nerdctl
+  // Container mode: default to Podman if available, unless explicitly "native"
   const allowedRuntimes = ["docker", "podman", "finch", "nerdctl"];
-  const containerRuntime = requestedRuntime && allowedRuntimes.includes(requestedRuntime) ? requestedRuntime : null;
+  let containerRuntime: string | null = null;
+  if (requestedRuntime === "native") {
+    containerRuntime = null;
+  } else if (requestedRuntime && allowedRuntimes.includes(requestedRuntime)) {
+    containerRuntime = requestedRuntime;
+  } else {
+    // Auto-detect: use Podman/Docker by default for isolation
+    containerRuntime = defaultContainerRuntime;
+  }
 
   if (containerRuntime) {
     try {
@@ -3207,6 +3259,8 @@ app.post("/api/dev-server/stop", (req, res) => {
   const entry = devServers.get(projectCwd);
   if (!entry) return res.json({ ok: true });
 
+  // Release the port
+  releasePort(entry.port);
   // Kill the process — containers with --rm auto-remove on exit
   try { entry.process.kill("SIGTERM"); } catch {}
   // Safety: force-remove container if still hanging after 3s
@@ -3640,6 +3694,8 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     sessions: sessions.size,
     activity: activity.length,
+    defaultRuntime: defaultContainerRuntime || "native",
+    devServers: devServers.size,
     projectRoot: PROJECT_ROOT,
     claudeDir: CLAUDE_DIR,
   });
