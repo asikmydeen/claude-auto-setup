@@ -325,20 +325,20 @@ export function BrowserPanel({ open, onClose, cwd, initialUrl, building }: Brows
               title="App Preview"
             />
           ) : building ? (
-            /* Building animation */
+            /* Building / Starting animation */
             <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-5">
               <div className="relative">
                 <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Loader2 className="h-8 w-8 text-primary animate-spin" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-yellow-500 flex items-center justify-center animate-bounce">
-                  <span className="text-[10px]">🔨</span>
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-green-500 flex items-center justify-center animate-bounce">
+                  <span className="text-[10px]">🚀</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-semibold">Building your project...</p>
-                <p className="text-xs text-muted-foreground max-w-[260px]">
-                  Claude is creating files, installing dependencies, and setting up your app. The preview will appear automatically when ready.
+                <p className="text-sm font-semibold">Starting dev server...</p>
+                <p className="text-xs text-muted-foreground max-w-[280px]">
+                  Installing dependencies and starting the dev server in a container. The preview will appear automatically — check the terminal below for live progress.
                 </p>
               </div>
               <div className="flex gap-1">

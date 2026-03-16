@@ -100,6 +100,7 @@ import { ProjectCreator } from "@/components/ProjectCreator";
 import { OpsPanel } from "@/components/OpsPanel";
 import { BrowserPanel } from "@/components/BrowserPanel";
 import { TerminalPanel } from "@/components/TerminalPanel";
+import { DevServerLogs } from "@/components/DevServerLogs";
 import { ProjectEnvDrawer } from "@/components/ProjectEnvDrawer";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -2463,7 +2464,9 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
 
   /** Start dev server for a project and open browser + terminal panels */
   const autoStartAndPreview = useCallback(async (projectPath: string) => {
-    // Always open terminal for visibility into build/dev server output
+    // Open browser with "building" state — shows loading animation, not blank page
+    setBuildingProjectDir(projectPath);
+    setBrowserPanelOpen(true);
     setTerminalPanelOpen(true);
 
     try {
@@ -2471,31 +2474,36 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       const status = await fetchDevServerStatus(projectPath);
       if (status.running && status.port) {
         setBrowserInitialUrl(`http://localhost:${status.port}`);
-        setBrowserPanelOpen(true);
+        setBuildingProjectDir(null);
         return;
       }
       // Start dev server
-      setBrowserPanelOpen(true);
       const result = await startDevServer(projectPath);
       if (result.ok) {
-        // If already running (deps were installed), set URL immediately
+        // If already running, set URL immediately
         if (result.status === "running" && result.port) {
           setBrowserInitialUrl(`http://localhost:${result.port}`);
+          setBuildingProjectDir(null);
           return;
         }
-        // Poll until running (installing deps + starting)
+        // Poll until running — keep building animation visible
         const poll = setInterval(async () => {
           try {
             const s = await fetchDevServerStatus(projectPath);
             if (s.running && s.port) {
               clearInterval(poll);
               setBrowserInitialUrl(`http://localhost:${s.port}`);
+              setBuildingProjectDir(null);
             }
           } catch {}
         }, 3000);
-        setTimeout(() => clearInterval(poll), 300000);
+        setTimeout(() => { clearInterval(poll); setBuildingProjectDir(null); }, 300000);
+      } else {
+        setBuildingProjectDir(null);
       }
-    } catch {}
+    } catch {
+      setBuildingProjectDir(null);
+    }
   }, []);
 
   /** Open a project folder and add it to the sidebar */
@@ -2977,14 +2985,22 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               availableModels={llmModels}
             />
 
-            {/* Bottom panel — Terminal (per project/conversation) */}
+            {/* Bottom panel — Dev Server Logs or Terminal */}
             {terminalPanelOpen && (
               <div className="h-[280px] shrink-0 border-t border-border">
-                <TerminalPanel
-                  cwd={currentProjectCwd}
-                  open={terminalPanelOpen}
-                  onClose={() => setTerminalPanelOpen(false)}
-                />
+                {buildingProjectDir || browserPanelOpen ? (
+                  <DevServerLogs
+                    cwd={currentProjectCwd}
+                    open={terminalPanelOpen}
+                    onClose={() => setTerminalPanelOpen(false)}
+                  />
+                ) : (
+                  <TerminalPanel
+                    cwd={currentProjectCwd}
+                    open={terminalPanelOpen}
+                    onClose={() => setTerminalPanelOpen(false)}
+                  />
+                )}
               </div>
             )}
           </div>

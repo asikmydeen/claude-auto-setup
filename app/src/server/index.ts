@@ -3250,8 +3250,54 @@ app.get("/api/dev-server/status", (req, res) => {
     status: entry.status,
     port: entry.port,
     runtime: entry.runtime,
+    containerId: entry.containerId || null,
     output: entry.output.slice(-20).join(""),
   });
+});
+
+// SSE stream of dev server logs
+app.get("/api/dev-server/logs", (req, res) => {
+  const projectCwd = req.query.cwd as string;
+  if (!projectCwd) return res.status(400).json({ error: "cwd required" });
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const entry = devServers.get(projectCwd);
+
+  // Send existing output as replay
+  if (entry) {
+    res.write(`data: ${JSON.stringify({ type: "replay", content: entry.output.join("") })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: "status", status: entry.status, port: entry.port, runtime: entry.runtime, containerId: entry.containerId })}\n\n`);
+  } else {
+    res.write(`data: ${JSON.stringify({ type: "status", status: "not-started" })}\n\n`);
+  }
+
+  // Stream new output as it comes
+  if (entry?.process) {
+    const onData = (data: Buffer) => {
+      try { res.write(`data: ${JSON.stringify({ type: "log", content: data.toString() })}\n\n`); } catch {}
+    };
+    entry.process.stdout?.on("data", onData);
+    entry.process.stderr?.on("data", onData);
+
+    const onClose = () => {
+      try { res.write(`data: ${JSON.stringify({ type: "status", status: entry.status, port: entry.port })}\n\n`); } catch {}
+    };
+    entry.process.on("close", onClose);
+
+    // Cleanup on client disconnect
+    res.on("close", () => {
+      entry.process?.stdout?.removeListener("data", onData);
+      entry.process?.stderr?.removeListener("data", onData);
+      entry.process?.removeListener("close", onClose);
+    });
+  }
+
+  // Heartbeat
+  const hb = setInterval(() => { try { res.write(":\n\n"); } catch { clearInterval(hb); } }, 15000);
+  res.on("close", () => clearInterval(hb));
 });
 
 app.post("/api/dev-server/stop", (req, res) => {

@@ -478,6 +478,7 @@ export interface DevServerStatus {
   status?: string;
   port?: number;
   runtime?: string;
+  containerId?: string | null;
   output?: string;
 }
 
