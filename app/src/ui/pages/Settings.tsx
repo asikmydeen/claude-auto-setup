@@ -80,28 +80,36 @@ interface PluginToggleProps {
 }
 
 function PluginToggle({ name, enabled, onToggle }: PluginToggleProps) {
+  // Show just the plugin short name (before @)
+  const shortName = name.split("@")[0];
   return (
     <button
       type="button"
       onClick={() => onToggle(name, !enabled)}
       className={cn(
-        "flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors",
+        "flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-all",
         enabled
-          ? "border-primary/20 bg-primary/5"
-          : "border-border bg-card hover:bg-accent"
+          ? "border-green-600/30 bg-green-500/5"
+          : "border-border bg-card hover:bg-accent/50"
       )}
     >
-      <span className="font-medium">{name}</span>
+      <span className={cn(
+        "text-xs font-medium truncate mr-2",
+        enabled ? "text-foreground" : "text-muted-foreground"
+      )}>
+        {shortName}
+      </span>
+      {/* iOS-style toggle switch */}
       <div
         className={cn(
-          "relative h-5 w-9 rounded-full transition-colors",
-          enabled ? "bg-primary" : "bg-muted-foreground/30"
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
+          enabled ? "bg-green-500" : "bg-zinc-600"
         )}
       >
         <div
           className={cn(
-            "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-            enabled ? "translate-x-4" : "translate-x-0.5"
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+            enabled ? "translate-x-[22px]" : "translate-x-0.5"
           )}
         />
       </div>
