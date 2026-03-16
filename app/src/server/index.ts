@@ -3392,14 +3392,22 @@ const LLM_PROVIDERS: LLMProviderConfig[] = [
     createProvider: (apiKey) => createOpenAI({ apiKey }),
   },
   {
-    id: "bedrock", name: "AWS Bedrock", apiKeyField: "bedrockRegion",
+    id: "bedrock", name: "AWS Bedrock", apiKeyField: "bedrockApiKey",
     models: [
       { id: "us.anthropic.claude-sonnet-4-6", name: "Claude Sonnet 4.6 (Bedrock)", context: 200000 },
       { id: "global.anthropic.claude-haiku-4-5-20251001-v1:0", name: "Claude Haiku 4.5 (Bedrock)", context: 200000 },
       { id: "us.anthropic.claude-sonnet-4-20250514-v1:0", name: "Claude Sonnet 4 (Bedrock)", context: 200000 },
       { id: "global.anthropic.claude-opus-4-5-20251101-v1:0", name: "Claude Opus 4.5 (Bedrock)", context: 200000 },
     ],
-    createProvider: (region) => createAmazonBedrock({ region: region || "us-east-1" }),
+    createProvider: (apiKey) => {
+      // If it looks like a region (e.g. us-east-1), use AWS profile auth
+      // If it looks like an API key, use bearer token auth
+      // If empty, try auto-detect from AWS profile
+      if (!apiKey || /^[a-z]{2}-[a-z]+-\d$/.test(apiKey)) {
+        return createAmazonBedrock({ region: apiKey || "us-east-1" });
+      }
+      return createAmazonBedrock({ apiKey, region: "us-east-1" });
+    },
   },
   {
     id: "google", name: "Google", apiKeyField: "googleApiKey",
@@ -3488,7 +3496,9 @@ app.get("/api/llm/providers", (_req, res) => {
   const providers = LLM_PROVIDERS.map((p) => ({
     id: p.id,
     name: p.name,
-    configured: p.id === "bedrock" ? !!(keys[p.apiKeyField] || process.env.AWS_REGION) : !!keys[p.apiKeyField],
+    configured: p.id === "bedrock"
+      ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
+      : !!keys[p.apiKeyField],
     models: p.models,
     apiKeyField: p.apiKeyField,
   }));
@@ -3500,7 +3510,9 @@ app.get("/api/llm/models", (_req, res) => {
   const keys = getLLMKeys();
   const models: Array<{ provider: string; providerName: string; id: string; name: string; context?: number }> = [];
   for (const p of LLM_PROVIDERS) {
-    const configured = p.id === "bedrock" ? !!(keys[p.apiKeyField] || process.env.AWS_REGION) : !!keys[p.apiKeyField];
+    const configured = p.id === "bedrock"
+      ? !!(keys[p.apiKeyField] || existsSync(join(HOME, ".aws/credentials")))
+      : !!keys[p.apiKeyField];
     if (configured) {
       for (const m of p.models) {
         models.push({ provider: p.id, providerName: p.name, ...m });
@@ -3540,7 +3552,8 @@ app.post("/api/llm/chat", async (req, res) => {
   if (!providerConfig) return res.status(404).json({ error: `Unknown provider: ${providerId}` });
 
   const keys = getLLMKeys();
-  const apiKey = keys[providerConfig.apiKeyField] || (providerId === "bedrock" ? process.env.AWS_REGION || "us-east-1" : "");
+  // Bedrock: use saved API key, or fall back to AWS credential chain (empty string triggers auto-detect)
+  const apiKey = keys[providerConfig.apiKeyField] || (providerId === "bedrock" ? "" : "");
   if (!apiKey) {
     return res.status(401).json({ error: `No API key configured for ${providerConfig.name}. Add it in Settings → AI Providers.` });
   }

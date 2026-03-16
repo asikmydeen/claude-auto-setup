@@ -145,7 +145,7 @@ export function AIProviders() {
                     type={showKeys[provider.id] ? "text" : "password"}
                     value={isEditing ? editingKeys[provider.apiKeyField] : (savedKeys[provider.apiKeyField] || "")}
                     onChange={(e) => setEditingKeys((prev) => ({ ...prev, [provider.apiKeyField]: e.target.value }))}
-                    placeholder={provider.id === "bedrock" ? "AWS region (e.g. us-east-1)" : `${provider.name} API key`}
+                    placeholder={provider.id === "bedrock" ? "Bedrock API key (or leave empty for AWS profile)" : `${provider.name} API key`}
                     className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring pr-8"
                   />
                   <button
@@ -177,6 +177,15 @@ export function AIProviders() {
                   ) : "Test"}
                 </Button>
               </div>
+
+              {/* Bedrock help note */}
+              {provider.id === "bedrock" && (
+                <p className="text-[9px] text-muted-foreground">
+                  {hasKey && !editingKeys[provider.apiKeyField]
+                    ? "Using AWS credentials from ~/.aws/credentials"
+                    : "Paste a Bedrock API key, or leave empty to use your AWS CLI profile automatically."}
+                </p>
+              )}
 
               {/* Test result */}
               {testResult && (
