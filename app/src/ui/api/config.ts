@@ -506,6 +506,28 @@ export const fetchRuntimes = () => api.get<RuntimeInfo>("/runtime/detect");
 export const stopOpsProcess = (id: string) =>
   api.post<{ ok: boolean }>(`/ops/stop/${id}`, {});
 
+// --- Memory System (claude-mem) ---
+export interface MemoryStatus {
+  workerHealthy: boolean;
+  observations: number | null;
+  sessions: number | null;
+  dbSize: string | null;
+}
+
+export interface MemorySearchResult {
+  id: number;
+  title: string;
+  subtitle?: string;
+  type: string;
+  date: string;
+}
+
+export const fetchMemoryStatus = () => api.get<MemoryStatus>("/memory/status");
+export const searchMemory = async (query: string): Promise<MemorySearchResult[]> => {
+  const res = await api.get<{ results: MemorySearchResult[] }>(`/memory/search?q=${encodeURIComponent(query)}`);
+  return res.results;
+};
+
 // --- LLM Providers ---
 export interface LLMModel {
   id: string;

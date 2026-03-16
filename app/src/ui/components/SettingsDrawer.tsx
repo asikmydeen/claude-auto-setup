@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings2, Boxes, Shield, Plug, Brain, X } from "lucide-react";
+import { Settings2, Boxes, Shield, Plug, Brain, Database, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Settings } from "@/pages/Settings";
@@ -7,6 +7,7 @@ import { Providers } from "@/pages/Providers";
 import { Rules } from "@/pages/Rules";
 import { Integrations } from "@/pages/Integrations";
 import { AIProviders } from "@/components/AIProviders";
+import { MemoryPanel } from "@/components/MemoryPanel";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -17,6 +18,7 @@ const tabs = [
   { id: "settings", label: "Settings", icon: Settings2 },
   { id: "ai-models", label: "AI Models", icon: Brain },
   { id: "providers", label: "Providers", icon: Boxes },
+  { id: "memory", label: "Memory", icon: Database },
   { id: "rules", label: "Rules", icon: Shield },
   { id: "integrations", label: "Integrations", icon: Plug },
 ] as const;
@@ -73,6 +75,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
           {activeTab === "settings" && <Settings />}
           {activeTab === "ai-models" && <AIProviders />}
           {activeTab === "providers" && <Providers />}
+          {activeTab === "memory" && <MemoryPanel />}
           {activeTab === "rules" && <Rules />}
           {activeTab === "integrations" && <Integrations />}
         </div>

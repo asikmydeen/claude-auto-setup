@@ -514,6 +514,7 @@ summary() {
   echo "    /review            Multi-agent code review"
   echo "    /debug <problem>   Multi-agent debugging"
   echo "    /deep-research     Full codebase analysis"
+  echo "    /mem-search <q>    Search persistent memory"
   echo ""
 
   if [ "$mode" = "update" ]; then
@@ -623,6 +624,28 @@ doctor() {
     fi
   else
     check_warn "cmux wrapper not installed — run ./install.sh"
+  fi
+
+  # --- claude-mem (persistent memory) ---
+  step "claude-mem (persistent memory)"
+  local mem_plugin_dir="$HOME/.claude/plugins/marketplaces/thedotmack/plugin"
+  if [ -d "$mem_plugin_dir" ] && [ -f "$mem_plugin_dir/scripts/worker-service.cjs" ]; then
+    check_pass "claude-mem plugin: installed"
+    if curl -s --connect-timeout 2 http://localhost:37777/health &>/dev/null; then
+      check_pass "claude-mem worker: running (port 37777)"
+    else
+      check_warn "claude-mem worker: not running (starts on session start via hooks)"
+    fi
+    local mem_db="$HOME/.claude-mem/claude-mem.db"
+    if [ -f "$mem_db" ]; then
+      local db_size
+      db_size=$(du -sh "$mem_db" 2>/dev/null | cut -f1)
+      check_pass "claude-mem database: $db_size"
+    else
+      check_warn "claude-mem database: not yet created (initializes on first session)"
+    fi
+  else
+    check_warn "claude-mem: not installed (install: claude plugin marketplace add thedotmack/claude-mem)"
   fi
 
   # --- OpenViking ---

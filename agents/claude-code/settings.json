@@ -85,6 +85,38 @@
             "command": "$HOME/.claude/scripts/enforce.sh session-start 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/smart-install.js\" 2>/dev/null || true",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" start 2>/dev/null || true",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code context 2>/dev/null || true",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code session-init 2>/dev/null || true",
+            "timeout": 60
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -125,6 +157,16 @@
             "command": "$HOME/.claude/scripts/hook-handler.sh agent 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code observation 2>/dev/null || true",
+            "timeout": 120
+          }
+        ]
       }
     ],
     "Stop": [
@@ -134,6 +176,23 @@
           {
             "type": "command",
             "command": "$HOME/.claude/scripts/enforce.sh session-stop 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code summarize 2>/dev/null || true",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code session-complete 2>/dev/null || true",
+            "timeout": 30
           }
         ]
       }
@@ -153,7 +212,8 @@
     "claude-md-management@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "github@claude-plugins-official": true
+    "github@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
   },
   "showTurnDuration": true,
   "skipDangerousModePermissionPrompt": true

@@ -57,8 +57,25 @@ for k in ['allow', 'deny']:
 for k in ['showTurnDuration', 'model']:
     if k not in existing and k in new:
         existing[k] = new[k]
-if 'hooks' not in existing:
-    existing['hooks'] = new.get('hooks', {})
+# Merge hooks: for each hook event, append new hook entries that don't already exist
+existing.setdefault('hooks', {})
+for event, entries in new.get('hooks', {}).items():
+    existing['hooks'].setdefault(event, [])
+    for new_entry in entries:
+        # Check if this matcher+hooks combo already exists
+        new_cmds = set()
+        for h in new_entry.get('hooks', []):
+            new_cmds.add(h.get('command', ''))
+        already = False
+        for ex_entry in existing['hooks'][event]:
+            for h in ex_entry.get('hooks', []):
+                if h.get('command', '') in new_cmds:
+                    already = True
+                    break
+            if already:
+                break
+        if not already:
+            existing['hooks'][event].append(new_entry)
 with open('$CLAUDE_HOME/settings.json', 'w') as f:
     json.dump(existing, f, indent=2)
     f.write('\n')
@@ -128,6 +145,34 @@ with open('$CLAUDE_HOME/settings.json', 'w') as f:
     command -v typescript-language-server &>/dev/null || npm install -g typescript-language-server typescript 2>/dev/null
     command -v pyright-langserver &>/dev/null || npm install -g pyright 2>/dev/null
     echo "    LSP binaries: installed"
+  fi
+
+  # Install claude-mem persistent memory plugin
+  if command -v claude &>/dev/null; then
+    local mem_plugin_dir="$HOME/.claude/plugins/marketplaces/thedotmack/plugin"
+    if [ -d "$mem_plugin_dir" ]; then
+      echo "    claude-mem: already installed"
+    else
+      echo "    Installing claude-mem memory system..."
+      if claude plugin marketplace add thedotmack/claude-mem 2>/dev/null; then
+        echo "    claude-mem: installed via marketplace"
+        # Run smart-install to provision Bun, uv, dependencies
+        if [ -f "$mem_plugin_dir/scripts/smart-install.js" ]; then
+          node "$mem_plugin_dir/scripts/smart-install.js" 2>/dev/null || true
+        fi
+      else
+        echo "    claude-mem: marketplace install failed (install manually later)"
+      fi
+    fi
+
+    # Register claude-mem MCP server for mem-search tools
+    local mcp_script="$mem_plugin_dir/scripts/mcp-server.cjs"
+    if [ -f "$mcp_script" ]; then
+      claude mcp remove -s user claude-mem-search 2>/dev/null || true
+      claude mcp add -s user claude-mem-search -- node "$mcp_script" 2>/dev/null \
+        && echo "    claude-mem MCP: registered (search, timeline, get_observations)" \
+        || echo "    claude-mem MCP: registration failed"
+    fi
   fi
 
   # Register OpenViking MCP server (if installed)

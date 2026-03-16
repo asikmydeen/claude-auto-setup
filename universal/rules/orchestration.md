@@ -92,11 +92,18 @@ Before planning, gather context using the right tools:
 - If no package-level intel exists, AUTO-GENERATE it by running the deep-research workflow (6 parallel agents). Do not ask — just do it. Print "No cached intel. Generating codebase intelligence..." and proceed.
 - If no workspace-level intel exists but sibling packages are detected, auto-generate workspace-intel.md too.
 
-### 0b: OpenViking Context (when available)
+### 0b: Memory Context (claude-mem — when available)
+- Use `search` MCP tool to query past observations about this codebase/feature area
+- Look for: past decisions, known gotchas, established patterns, prior bug fixes
+- Follow the 3-layer pattern: search (index) → timeline (context) → get_observations (details)
+- If claude-mem is not available, fall back to MEMORY.md
+- See `memory-system.md` rule for the full 3-layer search protocol
+
+### 0b-alt: OpenViking Context (when available, no claude-mem)
 - If OpenViking MCP is connected, search `viking://agent/memories/` for past learnings about this codebase
 - Search `viking://resources/` for project-relevant documentation
 - Search `viking://user/memories/` for user preferences and workflow patterns
-- If OpenViking is not available, skip this step — fall back to MEMORY.md and context7
+- If neither memory system is available, fall back to MEMORY.md and context7
 
 ### 0c: Standard Context
 - Use `context7` MCP to fetch up-to-date docs for any library/framework you're unsure about

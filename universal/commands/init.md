@@ -71,6 +71,12 @@ Read and analyze these signals (use parallel tool calls):
    - Check if dispatch script exists: `ls ~/claude-code-setup/dispatch.sh 2>/dev/null`
    - This determines the cross-provider dispatch capabilities for this project
 
+7. **Memory System Detection**
+   - Check if claude-mem plugin is installed: `[ -d "$HOME/.claude/plugins/marketplaces/thedotmack/plugin" ]`
+   - Check if worker is running: `curl -s --connect-timeout 2 http://localhost:37777/health`
+   - If installed, report observation count and database size
+   - If not installed, note: "claude-mem not installed — run: claude plugin marketplace add thedotmack/claude-mem"
+
 ## Phase 2: Generate Project CLAUDE.md
 
 If `.claude/CLAUDE.md` does not exist, create it. If it exists, suggest additions only.
@@ -245,10 +251,11 @@ Plugins: [list]
 Providers: [installed providers] → Tests: [codex/claude] | Docs: [gemini/claude] | Review: [amp/claude]
 Build: `[command]` | Test: `[command]` | Dev: `[command]`
 Intel: [generated / refreshed / loaded (date)]
+Memory: [claude-mem active (N observations) / not installed / worker offline]
 Workspace Intel: [generated / refreshed / loaded (date) / N/A (standalone)]
 Sibling Intel: [N of M siblings have intel]
 ```
 
-Then say: "Project fully initialized with cached intelligence. I know this codebase [and its workspace context]. Cross-provider dispatch is [active (N providers) / single-provider mode]. Ask me to build anything."
+Then say: "Project fully initialized with cached intelligence. I know this codebase [and its workspace context]. Cross-provider dispatch is [active (N providers) / single-provider mode]. Memory system is [active / offline / not installed]. Ask me to build anything."
 
 $ARGUMENTS

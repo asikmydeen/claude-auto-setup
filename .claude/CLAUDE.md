@@ -61,7 +61,19 @@ Native agents: all set to `model: sonnet` (configurable in Settings → Agent Mo
 
 Orchestration MCP tools: `pipeline_*`, `checkpoint_*`, `queue_*`, `analytics_*`, `agent_*`
 
-Plugins: `serena`, `context7`, `code-review`, `security-guidance`
+Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`
+
+## Persistent Memory (claude-mem)
+claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
+- Worker service on port 37777 (auto-started on session start)
+- MCP server `claude-mem-search` provides: `search`, `timeline`, `get_observations`
+- 3-layer search: search (index, 50-100 tokens) → timeline (context) → get_observations (details, 500-1000 tokens)
+- Observations captured automatically on every tool use (bugfix, feature, refactor, change, discovery, decision)
+- Session summaries generated at Stop hook (investigated, learned, completed, next steps)
+- Plugin root: `$HOME/.claude/plugins/marketplaces/thedotmack/plugin`
+- Database: `~/.claude-mem/claude-mem.db` (SQLite + Chroma vector DB)
+- Desktop app: Settings → Memory tab shows status, search, observation count
+- See `universal/rules/memory-system.md` for usage patterns
 
 ## Shell Script Rules
 - Must work on macOS bash 3.2 (no `declare -A`, no bash 4+ features)

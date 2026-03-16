@@ -3815,7 +3815,96 @@ app.post("/api/llm/test", async (req, res) => {
   }
 });
 
-app.get("/api/health", (_req, res) => {
+// ============================================================
+// MEMORY SYSTEM (claude-mem proxy)
+// ============================================================
+
+const CLAUDE_MEM_WORKER = "http://localhost:37777";
+const CLAUDE_MEM_ALLOWED_PATHS = ["/health", "/api/stats", "/api/search", "/api/observations"];
+
+async function fetchClaudeMemWorker(path: string, timeout = 3000): Promise<Response | null> {
+  const basePath = path.split("?")[0];
+  if (!CLAUDE_MEM_ALLOWED_PATHS.includes(basePath)) return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    const res = await fetch(`${CLAUDE_MEM_WORKER}${path}`, { signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch {
+    return null;
+  }
+}
+
+app.get("/api/memory/status", async (_req, res) => {
+  const healthRes = await fetchClaudeMemWorker("/health");
+  if (!healthRes || !healthRes.ok) {
+    return res.json({
+      workerHealthy: false,
+      observations: null,
+      sessions: null,
+      dbSize: null,
+    });
+  }
+
+  try {
+    const health = await healthRes.json() as Record<string, unknown>;
+    // Try to get stats from the worker
+    const statsRes = await fetchClaudeMemWorker("/api/stats");
+    const stats = statsRes?.ok ? (await statsRes.json() as Record<string, unknown>) : {};
+
+    res.json({
+      workerHealthy: true,
+      observations: stats.observations ?? health.observations ?? null,
+      sessions: stats.sessions ?? health.sessions ?? null,
+      dbSize: stats.dbSize ?? null,
+    });
+  } catch {
+    res.json({ workerHealthy: true, observations: null, sessions: null, dbSize: null });
+  }
+});
+
+app.get("/api/memory/search", async (req, res) => {
+  const q = (req.query.q as string)?.trim();
+  if (!q) return res.json({ results: [] });
+  if (q.length > 500) return res.status(400).json({ error: "Query too long" });
+
+  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 100);
+  const searchRes = await fetchClaudeMemWorker(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`);
+
+  if (!searchRes || !searchRes.ok) {
+    return res.json({ results: [] });
+  }
+
+  try {
+    const data = await searchRes.json() as Record<string, unknown>;
+    res.json({ results: data.results ?? data.observations ?? [] });
+  } catch {
+    res.json({ results: [] });
+  }
+});
+
+app.get("/api/memory/observations", async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 100);
+  const obsRes = await fetchClaudeMemWorker(`/api/observations?limit=${limit}`);
+
+  if (!obsRes || !obsRes.ok) {
+    return res.json({ observations: [] });
+  }
+
+  try {
+    const data = await obsRes.json();
+    res.json(data);
+  } catch {
+    res.json({ observations: [] });
+  }
+});
+
+// ============================================================
+// HEALTH
+// ============================================================
+
+app.get("/api/health", async (_req, res) => {
   const llmKeys = getLLMKeys();
   const bridgedCredentials: string[] = [];
   if (llmKeys.anthropicApiKey) bridgedCredentials.push("anthropic→ANTHROPIC_API_KEY");
@@ -3825,6 +3914,10 @@ app.get("/api/health", (_req, res) => {
   if (llmKeys.groqApiKey) bridgedCredentials.push("groq→GROQ_API_KEY");
   if (llmKeys.openrouterApiKey) bridgedCredentials.push("openrouter→OPENROUTER_API_KEY");
 
+  // Check claude-mem worker health (non-blocking, fast timeout)
+  const memRes = await fetchClaudeMemWorker("/health", 1500);
+  const memoryWorkerHealthy = memRes?.ok ?? false;
+
   res.json({
     ok: true,
     sessions: sessions.size,
@@ -3832,6 +3925,10 @@ app.get("/api/health", (_req, res) => {
     defaultRuntime: defaultContainerRuntime || "native",
     devServers: devServers.size,
     bridgedCredentials,
+    memory: {
+      workerHealthy: memoryWorkerHealthy,
+      port: 37777,
+    },
     projectRoot: PROJECT_ROOT,
     claudeDir: CLAUDE_DIR,
   });

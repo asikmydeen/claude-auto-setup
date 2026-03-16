@@ -21,9 +21,9 @@ Exploration patterns:
 - For "what depends on X?": grep for imports/references, list dependents
 - For "what's the pattern for X?": sample 3-5 examples, describe the convention
 
-OpenViking integration (when available):
-- Before searching code, query `viking://agent/memories/` for past findings about this area
-- After exploration, store significant discoveries via `add_memory` (architecture insights, non-obvious patterns)
-- Use `search` to find relevant project documentation in `viking://resources/`
+Memory integration (claude-mem):
+- Before searching code, query memory for past findings: `curl -s "http://localhost:37777/api/search?q=TOPIC&limit=10"` or use mem-search MCP tools
+- Look for past decisions, known gotchas, and established patterns about this area
+- Fall back to MEMORY.md and project-intel.md if worker is unavailable
 
 Output format: bullet points with file:line references. No essays.
