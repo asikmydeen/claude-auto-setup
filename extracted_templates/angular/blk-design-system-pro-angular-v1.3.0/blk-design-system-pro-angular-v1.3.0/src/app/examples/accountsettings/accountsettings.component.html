@@ -1,0 +1,833 @@
+<div class="wrapper">
+  <div class="section">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="section">
+            <section class="text-center">
+              <app-picture-upload [avatar]="true"></app-picture-upload>
+              <h3 class="title">Charlie Bailey</h3>
+            </section>
+            <section>
+              <br />
+
+              <ul class="nav flex-column" role="tablist">
+                <li class="nav-item">
+                  <a
+                    class="nav-link active text-danger"
+                    data-toggle="tab"
+                    href="#link1"
+                    role="tablist"
+                  >
+                    <i class="tim-icons icon-single-02"> </i> General
+                  </a>
+                </li>
+                <hr class="line-danger" />
+
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    data-toggle="tab"
+                    href="#link2"
+                    role="tablist"
+                  >
+                    <i class="tim-icons icon-credit-card"> </i> Billing
+                  </a>
+                </li>
+                <hr class="line-danger" />
+
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    data-toggle="tab"
+                    href="#link3"
+                    role="tablist"
+                  >
+                    <i class="tim-icons icon-lock-circle"> </i> Security
+                  </a>
+                </li>
+                <hr class="line-danger" />
+
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    data-toggle="tab"
+                    href="#link4"
+                    role="tablist"
+                  >
+                    <i class="tim-icons icon-volume-98"> </i> Notifications
+                  </a>
+                </li>
+              </ul>
+            </section>
+            <br />
+
+            <br />
+
+            <br />
+
+            <section>
+              <div class="progress-container progress-danger">
+                <span class="progress-badge"> Profile Completion </span>
+                <div class="">
+                  <progressbar class="progress-bar-warning" [value]="60">
+                    <span class="progress-value"> 60% </span>
+                  </progressbar>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="col-md-8 ml-auto">
+          <div class="section">
+            <div class="tab-content">
+              <div class="tab-pane active" id="link1">
+                <div>
+                  <header>
+                    <h2 class="text-uppercase">General information</h2>
+                  </header>
+                  <hr class="line-danger" />
+
+                  <br />
+
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#firstName">
+                        First Name
+                      </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="firstName"
+                          name="firstName"
+                          required="required"
+                          type="text"
+                          value="Charlie"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#lastName"> Last Name </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="lastName"
+                          name="lastName"
+                          required="required"
+                          type="text"
+                          value="Bailey"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels"> I'm </label>
+                    </div>
+                    <div class="col-md-4 align-self-center">
+                      <div class="form-group">
+                        <angular2-multiselect
+                          [data]="[
+                            { id: '2', itemName: 'Male' },
+                            { id: '3', itemName: 'Female' }
+                          ]"
+                          [ngModel]="[]"
+                          [settings]="{
+                            singleSelection: true,
+                            text: 'Single Select',
+                            enableSearchFilter: false,
+                            classes: 'selectpicker btn-danger',
+                            lazyLoading: true,
+                            maxHeight: 200
+                          }"
+                        >
+                        </angular2-multiselect>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels"> Birth Date </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="row">
+                        <div class="col-md-4 align-self-center">
+                          <div class="form-group">
+                            <angular2-multiselect
+                              [data]="[
+                                { id: '', itemName: 'January' },
+                                { id: '', itemName: 'February' },
+                                { id: '', itemName: 'March' },
+                                { id: '', itemName: 'May' },
+                                { id: '', itemName: 'June' },
+                                { id: '', itemName: 'July' },
+                                { id: '', itemName: 'August' },
+                                { id: '', itemName: 'September' },
+                                { id: '', itemName: 'October' },
+                                { id: '', itemName: 'November' },
+                                { id: '', itemName: 'December' }
+                              ]"
+                              [ngModel]="[{ id: '', itemName: 'April' }]"
+                              [settings]="{
+                                singleSelection: true,
+                                text: 'Single Select',
+                                enableSearchFilter: false,
+                                classes: 'selectpicker btn-danger',
+                                lazyLoading: true,
+                                maxHeight: 200
+                              }"
+                            >
+                            </angular2-multiselect>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="form-group">
+                            <angular2-multiselect
+                              [data]="[
+                                { id: '', itemName: '1' },
+                                { id: '', itemName: '2' },
+                                { id: '', itemName: '3' },
+                                { id: '', itemName: '4' },
+                                { id: '', itemName: '5' },
+                                { id: '', itemName: '6' },
+                                { id: '', itemName: '7' },
+                                { id: '', itemName: '8' },
+                                { id: '', itemName: '9' },
+                                { id: '', itemName: '10' },
+                                { id: '', itemName: '12' },
+                                { id: '', itemName: '13' },
+                                { id: '', itemName: '14' },
+                                { id: '', itemName: '15' },
+                                { id: '', itemName: '16' },
+                                { id: '', itemName: '17' },
+                                { id: '', itemName: '18' },
+                                { id: '', itemName: '19' },
+                                { id: '', itemName: '20' },
+                                { id: '', itemName: '21' },
+                                { id: '', itemName: '22' },
+                                { id: '', itemName: '23' },
+                                { id: '', itemName: '24' },
+                                { id: '', itemName: '25' },
+                                { id: '', itemName: '26' },
+                                { id: '', itemName: '27' },
+                                { id: '', itemName: '28' },
+                                { id: '', itemName: '29' },
+                                { id: '', itemName: '30' },
+                                { id: '', itemName: '31' }
+                              ]"
+                              [ngModel]="[{ id: '', itemName: '11' }]"
+                              [settings]="{
+                                singleSelection: true,
+                                text: 'Single Select',
+                                enableSearchFilter: false,
+                                classes: 'selectpicker btn-danger',
+                                lazyLoading: true,
+                                maxHeight: 200
+                              }"
+                            >
+                            </angular2-multiselect>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="form-group">
+                            <angular2-multiselect
+                              [data]="[
+                                { id: '', itemName: '1986' },
+                                { id: '', itemName: '1987' },
+                                { id: '', itemName: '1988' },
+                                { id: '', itemName: '1990' },
+                                { id: '', itemName: '1991' },
+                                { id: '', itemName: '1992' },
+                                { id: '', itemName: '1993' },
+                                { id: '', itemName: '1994' },
+                                { id: '', itemName: '1995' },
+                                { id: '', itemName: '1996' },
+                                { id: '', itemName: '1997' },
+                                { id: '', itemName: '1998' },
+                                { id: '', itemName: '1999' },
+                                { id: '', itemName: '2000' },
+                                { id: '', itemName: '2001' },
+                                { id: '', itemName: '2002' },
+                                { id: '', itemName: '2003' },
+                                { id: '', itemName: '2004' },
+                                { id: '', itemName: '2005' },
+                                { id: '', itemName: '2006' },
+                                { id: '', itemName: '2007' },
+                                { id: '', itemName: '2008' },
+                                { id: '', itemName: '2009' },
+                                { id: '', itemName: '2010' },
+                                { id: '', itemName: '2011' },
+                                { id: '', itemName: '2012' },
+                                { id: '', itemName: '2013' },
+                                { id: '', itemName: '2014' },
+                                { id: '', itemName: '2015' },
+                                { id: '', itemName: '2016' },
+                                { id: '', itemName: '2017' },
+                                { id: '', itemName: '2018' },
+                                { id: '', itemName: '2019' }
+                              ]"
+                              [ngModel]="[{ id: '', itemName: '1989' }]"
+                              [settings]="{
+                                singleSelection: true,
+                                text: 'Single Select',
+                                enableSearchFilter: false,
+                                classes: 'selectpicker btn-danger',
+                                lazyLoading: true,
+                                maxHeight: 200
+                              }"
+                            >
+                            </angular2-multiselect>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#email"> Email </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="email"
+                          name="email"
+                          required="required"
+                          type="email"
+                          value="charlie.bailey@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#confirmEmail">
+                        Confirm Email
+                      </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="confirmEmail"
+                          name="confirmEmail"
+                          required="required"
+                          type="email"
+                          value="charlie.bailey@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#location">
+                        Your Location
+                      </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="location"
+                          name="location"
+                          required="required"
+                          type="text"
+                          value="Sydney, A"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels" for="#phone"> Phone Number </label>
+                    </div>
+                    <div class="col-md-4 align-self-center">
+                      <div class="form-group">
+                        <input
+                          class="form-control"
+                          id="phone"
+                          name="phone"
+                          required="required"
+                          type="tel"
+                          value="+40 745 031 200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels"> Language </label>
+                    </div>
+                    <div class="col-md-4 align-self-center">
+                      <div class="form-group">
+                        <angular2-multiselect
+                          [data]="[
+                            { id: '2', itemName: 'French' },
+                            { id: '3', itemName: 'Spanish' },
+                            { id: '4', itemName: 'Deutsche' },
+                            { id: '4', itemName: 'Russian' }
+                          ]"
+                          [ngModel]="[{ id: '', itemName: 'English' }]"
+                          [settings]="{
+                            singleSelection: true,
+                            text: 'Single Select',
+                            enableSearchFilter: false,
+                            classes: 'selectpicker btn-danger',
+                            lazyLoading: true,
+                            maxHeight: 200
+                          }"
+                        >
+                        </angular2-multiselect>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 align-self-center">
+                      <label class="labels"> Skills </label>
+                    </div>
+                    <div class="col-md-9 align-self-center">
+                      <tag-input
+                        [ngModel]="['HTML5', 'CSS3', 'JavaScript', 'React']"
+                        name="tags"
+                        theme="regular-theme"
+                      >
+                      </tag-input>
+                    </div>
+                  </div>
+                  <div class="row mt-4">
+                    <div class="col-md-6">
+                      <button class="btn btn-danger mr-1" type="submit">
+                        Save Changes
+                      </button>
+                      <button class="btn btn-danger btn-simple" type="reset">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="tab-pane" id="link2">
+                <header><h2 class="text-uppercase">Billing method</h2></header>
+                <hr class="line-danger" />
+
+                <br />
+
+                <table class="table align-items-center">
+                  <thead>
+                    <tr>
+                      <th scope="col">Card Type</th>
+                      <th scope="col">Card Number</th>
+                      <th scope="col">Payment Method</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">
+                        <img
+                          alt="Image"
+                          class="avatar"
+                          src="assets/img/visas.png"
+                        />
+                      </th>
+                      <td>
+                        <span class="d-block"> •••• •••• •••• 8372 </span>
+                        <small class="text-muted"> Exp: 06/22 </small>
+                      </td>
+                      <td class="text-center">
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              checked="checked"
+                              class="form-check-input"
+                              id="Radios"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option2"
+                            />
+
+                            <span class="form-check-sign"> </span>
+                          </label>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-danger btn-sm btn-simple"
+                          type="submit"
+                        >
+                          <i class="tim-icons icon-simple-remove"> </i> Remove
+                          card
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">
+                        <img
+                          alt="Image"
+                          class="avatar"
+                          src="assets/img/mastercard.png"
+                        />
+                      </th>
+                      <td>
+                        <span class="d-block"> •••• •••• •••• 1225 </span>
+                        <small class="text-muted"> Exp: 07/21 </small>
+                      </td>
+                      <td class="text-center">
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              class="form-check-input"
+                              id="Radios"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option1"
+                            />
+
+                            <span class="form-check-sign"> </span>
+                          </label>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-danger btn-sm btn-simple"
+                          type="submit"
+                        >
+                          <i class="tim-icons icon-simple-remove"> </i> Remove
+                          card
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button class="btn btn-danger btn-sm">
+                  <i class="tim-icons icon-simple-add"> </i> Add card
+                </button>
+              </div>
+              <div class="tab-pane" id="link3">
+                <div
+                  class="g-pos-rel h-100 g-brd-around g-brd-gray-light-v7 g-rounded-4 g-pa-15 g-pa-30--md"
+                >
+                  <header>
+                    <h2
+                      class="text-uppercase g-font-size-12 g-font-size-default--md g-color-black mb-0"
+                    >
+                      Security Questions
+                    </h2>
+                  </header>
+                  <hr class="line-danger" />
+
+                  <form>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <label> Security Question </label>
+                        <div class="form-group">
+                          <angular2-multiselect
+                            name="angular2-multiselect1"
+                            [data]="[
+                              { id: '2', itemName: 'Question 1' },
+                              { id: '3', itemName: 'Question 2' },
+                              { id: '4', itemName: 'Question 3' }
+                            ]"
+                            [ngModel]="[]"
+                            [settings]="{
+                              singleSelection: true,
+                              text: 'Single Select',
+                              enableSearchFilter: false,
+                              classes: 'selectpicker',
+                              lazyLoading: true,
+                              maxHeight: 200
+                            }"
+                          >
+                          </angular2-multiselect>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <label> Your Answer </label>
+                        <div class="form-group">
+                          <input
+                            class="form-control"
+                            placeholder="Enter your answer"
+                            type="text"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <br />
+
+                    <br />
+
+                    <header>
+                      <h2 class="text-uppercase">Security Settings</h2>
+                    </header>
+                    <hr class="line-danger" />
+
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span> Notify me via email when logging in </span>
+                      <input
+                        checked="checked"
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span>
+                        Send SMS confirmation for all online payments
+                      </span>
+                      <input
+                        checked="checked"
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span> Check which devices accessed your account </span>
+                      <input
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span>
+                        Find My Device, make sure your device can be found if it
+                        gets lost
+                      </span>
+                      <input
+                        checked="checked"
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span>
+                        Lock your device with a PIN, pattern, or password
+                      </span>
+                      <input
+                        checked="checked"
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div
+                      class="form-group d-flex align-items-center justify-content-between"
+                    >
+                      <span>
+                        Manage what apps have access to app-usage data on your
+                        device
+                      </span>
+                      <input
+                        class="bootstrap-switch"
+                        data-off-label="'OFF'"
+                        data-on-label="'ON'"
+                        name="checkbox"
+                        type="checkbox"
+                      />
+                    </div>
+                    <div class="row mt-5 justify-content-end">
+                      <div class="col-md-4 ml-auto">
+                        <button
+                          class="btn btn-danger btn-sm btn-simple"
+                          type="reset"
+                        >
+                          Cancel
+                        </button>
+                        <button class="btn btn-danger btn-sm" type="button">
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="tab-pane" id="link4">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-12">
+                      <alert class="text-small" [type]="'danger'">
+                        <i class="icon-shield"> </i>
+                        <span>
+                          We will never distribute your email address to third
+                          parties. Read about email communication in our privacy
+                          policy.
+                        </span>
+                      </alert>
+                    </div>
+                  </div>
+                  <hr />
+
+                  <div class="row">
+                    <div class="col-12">
+                      <form>
+                        <h5 class="mb-4">Notification Preferences</h5>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input
+                              checked="checked"
+                              class="form-check-input"
+                              type="checkbox"
+                            />
+
+                            <span class="form-check-sign"> </span> Someone
+                            mentions me
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input
+                              checked="checked"
+                              class="form-check-input"
+                              type="checkbox"
+                            />
+
+                            <span class="form-check-sign"> </span> Someone
+                            follows me
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" />
+
+                            <span class="form-check-sign"> </span> Someone
+                            shares my activty
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" />
+
+                            <span class="form-check-sign"> </span> Someone
+                            messages me
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" />
+
+                            <span class="form-check-sign"> </span> Someone adds
+                            me to a project
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" />
+
+                            <span class="form-check-sign"> </span> Sales and
+                            promotions
+                          </label>
+                        </div>
+                        <button
+                          class="btn btn-danger btn-sm mt-4"
+                          type="submit"
+                        >
+                          Update preferences
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <hr />
+
+                  <div class="row">
+                    <div class="col-12">
+                      <form>
+                        <h5>Notification Frequency</h5>
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              class="form-check-input"
+                              id="exampleF"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option1"
+                            />
+
+                            <span class="form-check-sign"> </span> Daily
+                          </label>
+                        </div>
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              checked="checked"
+                              class="form-check-input"
+                              id="exampleF"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option2"
+                            />
+
+                            <span class="form-check-sign"> </span> Weekly
+                          </label>
+                        </div>
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              class="form-check-input"
+                              id="exampleF"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option3"
+                            />
+
+                            <span class="form-check-sign"> </span> Monthly
+                          </label>
+                        </div>
+                        <div class="form-check form-check-radio">
+                          <label class="form-check-label">
+                            <input
+                              class="form-check-input"
+                              id="exampleF"
+                              name="exampleRadios"
+                              type="radio"
+                              value="option4"
+                            />
+
+                            <span class="form-check-sign"> </span> Never
+                          </label>
+                        </div>
+                        <button
+                          class="btn btn-danger btn-sm mt-4"
+                          type="submit"
+                        >
+                          Update
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

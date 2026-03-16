@@ -1,0 +1,70 @@
+{
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "npx expo start",
+    "android": "npx expo start --android",
+    "ios": "npx expo start --ios",
+    "web": "npx expo start --web",
+    "eject": "npx expo eject",
+    "test": "jest",
+    "lint": "eslint . --ext .ts,.tsx --quiet"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-masked-view/masked-view": "0.3.2",
+    "@react-navigation/drawer": "7.4.1",
+    "@react-navigation/elements": "2.4.3",
+    "@react-navigation/native": "7.1.10",
+    "@react-navigation/stack": "7.3.3",
+    "dayjs": "1.11.13",
+    "expo": "53.0.11",
+    "expo-asset": "^11.1.5",
+    "expo-blur": "14.1.5",
+    "expo-constants": "17.1.6",
+    "expo-dev-client": "~5.2.0",
+    "expo-haptics": "14.1.4",
+    "expo-linear-gradient": "14.1.5",
+    "expo-localization": "16.1.5",
+    "expo-splash-screen": "0.30.9",
+    "expo-status-bar": "2.2.3",
+    "glob": "^11.0.2",
+    "i18n-js": "4.5.1",
+    "lodash.isequal": "^4.5.0",
+    "nanoid": "5.1.5",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-calendars": "1.1312.1",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-gifted-chat": "2.6.5",
+    "react-native-keyboard-aware-scroll-view": "0.9.5",
+    "react-native-pager-view": "6.8.1",
+    "react-native-reanimated": "3.17.5",
+    "react-native-safe-area-context": "5.4.1",
+    "react-native-screens": "4.11.1",
+    "react-native-web": "^0.20.0",
+    "rimraf": "^6.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.27.4",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "7.18.6",
+    "@babel/plugin-proposal-optional-chaining": "7.21.0",
+    "@react-native-community/eslint-config": "3.2.0",
+    "@types/i18n-js": "3.8.9",
+    "@types/react": "~19.1.7",
+    "@types/react-native-calendars": "1.1264.7",
+    "eslint": "8.57.1",
+    "jest-expo": "53.0.7",
+    "typescript": "5.8.3"
+  },
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(jest-)?react-native|react-clone-referenced-element|@react-native-community|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|@sentry/.*)"
+    ]
+  }
+}

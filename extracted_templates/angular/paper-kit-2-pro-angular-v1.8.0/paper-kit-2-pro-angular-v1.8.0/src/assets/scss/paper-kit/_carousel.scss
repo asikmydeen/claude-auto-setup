@@ -1,0 +1,142 @@
+.visually-hidden{
+    display: none;
+  }
+.carousel-control{
+    background-color: $danger-color;
+    border-radius: 50%;
+    opacity: 1;
+    text-shadow: none;
+
+    &:hover,
+    &:focus{
+        opacity: 1;
+        background-color: $danger-states-color;
+    }
+}
+
+.carousel-control-prev{
+    height: 30px;
+    top: 50%;
+    width: 30px;
+    left: 25px;
+    opacity: 0;
+    border: none;
+}
+.carousel-control-next{
+    height: 30px;
+    right: 25px;
+    top: 50%;
+    width: 30px;
+    opacity: 0;
+    border: none;
+}
+.carousel-control .icon-prev, .carousel-control .icon-next, .carousel-control .fa, .carousel-control .fa {
+    display: inline-block;
+    z-index: 5;
+}
+.carousel-control .fa{
+    font-size: 26px;
+    margin: 2px;
+}
+.carousel-control.left, .carousel-control.right {
+    background-image: none;
+}
+
+ .page-carousel{
+    border-radius: $border-radius-extreme !important;
+    border: none !important;
+    width: 100%;
+}
+
+.carousel-inner {
+  > .carousel-item > img,
+  > .carousel-item > a > img {
+      border-radius: $border-radius-extreme;
+      box-shadow: 0 2px 2px rgba(204, 197, 185, 0.5);
+  }
+  .carousel-item img {
+    width: 100%;
+  }
+  .carousel-item{
+      transition: none;
+  }
+}
+
+.carousel-indicators {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+    left: 0;
+    z-index: 15;
+    display: flex;
+    justify-content: center;
+    padding-left: 0;
+    margin-right: $carousel-control-width;
+    margin-left: $carousel-control-width;
+    margin-bottom: $carousel-control-margin-bottom;
+    list-style: none;
+  
+    button {
+      position: relative;
+      flex: 0 1 auto;
+      width: $carousel-indicator-width;
+      height: $carousel-indicator-height;
+      margin-right: $carousel-indicator-spacer;
+      margin-left: $carousel-indicator-spacer;
+      text-indent: -999px;
+      cursor: pointer;
+      background-color: rgba($carousel-indicator-active-bg, .5);
+      border: 0;
+      outline: 0;
+      // Use pseudo classes to increase the hit area by 10px on top and bottom.
+      &::before {
+        position: absolute;
+        top: -10px;
+        left: 0;
+        display: inline-block;
+        width: 100%;
+        height: 10px;
+        content: "";
+      }
+      &::after {
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        display: inline-block;
+        width: 100%;
+        height: 10px;
+        content: "";
+      }
+    }
+  
+    .active {
+      background-color: $carousel-indicator-active-bg;
+    }
+  }
+.page-carousel:hover{
+    .carousel-control.right,
+    .carousel-control.left{
+        opacity: 1;
+        z-index: 1;
+    }
+}
+.card {
+    .carousel {
+        .carousel-indicators {
+            bottom: 0;
+        }
+        a {
+            position: absolute;
+            color: $white-color !important;
+        &:hover {
+            color: $white-color !important;
+        }
+        .fa-angle-left:before {
+            padding-right: 3px;
+        }
+        .fa-angle-right:before {
+            padding-left: 3px;
+        }
+        }
+    }
+}

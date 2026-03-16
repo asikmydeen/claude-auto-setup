@@ -1,0 +1,133 @@
+<body>
+<% include ../../partials/sidebar %>
+<!-- Main content -->
+<div class="main-content" id="panel">
+  <% include ../../partials/navbar %>
+  <div class="header bg-primary pb-6">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <h6 class="h2 text-white d-inline-block mb-0">Examples</h6>
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                <li class="breadcrumb-item"><a href="#">Post List</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Add Post</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header bg-transparent">
+            <div class="row align-items-center">
+              <div class="col-8">
+                <h3 class="mb-0">Post Management</h3>
+              </div>
+              <div class="col-4 text-right">
+                <a href="/posts/management" class="btn btn-sm btn-primary">Back to list</a>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <% if (locals.messages && messages.success) { %>
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= messages.success %>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            <% } %>
+            <% if (locals.messages && messages.errors && messages.errors.databaseError) { %>
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">                
+                <span class="alert-text"><%= messages.errors && messages.errors.databaseError %></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            <% } %>
+            <form action="/posts/add" method="post" autocomplete="off">
+              <h6 class="heading-small text-muted mb-4">Add post</h6>
+              <div class="pl-lg-4">
+                <div class="form-group">
+                  <label for="inputTitle" class="form-control-label">Title</label>
+                  <input type="text" name="title" required id="inputTitle" class="form-control" placeholder="Title">
+                  <% if (locals.messages && messages.errors && messages.errors.title) { %>
+                    <strong class="invalid-feedback" style="display: block"><%= messages.errors.title %></strong>
+                  <% } %>
+                </div>
+                <div class="form-group">
+                  <label class="form-control-label" for="description">Description</label>
+                  <textarea class="form-control" required name="content" id="description" rows="3"></textarea>
+                  <% if (locals.messages && messages.errors && messages.errors.content) { %>
+                    <strong class="invalid-feedback" style="display: block"><%= messages.errors.content %></strong>
+                  <% } %>
+                </div>
+                <div class="form-group">
+                  <label class="form-control-label" for="categorySelect">Select category</label>
+                  <select class="form-control" name="category" id="categorySelect">
+                    <% locals.categories.forEach(function(category) { %>
+                      <option value="<%= category.id %>"><%= category.name %></option>
+                    <% }) %>
+                  </select>
+                  <% if (locals.messages && messages.errors && messages.errors.category) { %>
+                    <strong class="invalid-feedback" style="display: block"><%= messages.errors.category %></strong>
+                  <% } %>
+                </div>
+                <div class="form-group">
+                  <label class="form-control-label" for="tagsSelect">Choose tags</label>
+                  <select class="form-control" name="tags" data-toggle="select" id="tagsSelect" multiple="multiple">
+                      <% locals.tags.forEach(function(tag) { %>
+                        <option value="<%= tag.id %>"><%= tag.name %></option>
+                      <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-control-label" for="publish">Publish</label>
+                  <br>
+                  <label class="custom-toggle custom-toggle-default">
+                    <input type="checkbox" id="publish" checked="">
+                    <span class="custom-toggle-slider rounded-circle" data-label-off="No" data-label-on="Yes"></span>
+                  </label>
+                </div>
+                <div class="form-group publishAt" style="display: none">
+                    <label class="form-control-label" for="publishDatepicker">Publish at</label>
+                    <input class="form-control publish-datepicker" id="publishDatepicker" name="publishedAt" placeholder="Select date" type="text">
+                  </div>
+                <div class="text-center">
+                  <button type="submit" class="btn btn-success mt-4">Submit</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <% include ../../partials/footer %>
+  </div>
+</div>
+<!-- Include scripts -->
+<% include ../../partials/scripts %>
+<script>
+  $('#publish').change(function(){
+    if ($(this).is(':checked')) {
+      return $('.publishAt').hide();
+    }
+    return $('.publishAt').show();
+  });
+
+  $('.publish-datepicker').datepicker({
+    startDate: new Date(),
+    defaultDate: new Date(),
+  });
+</script>
+</body>

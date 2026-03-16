@@ -1,0 +1,1607 @@
+<!--
+=========================================================
+* Notus Design System PRO - v1.0.0
+=========================================================
+
+* Product Page: https://www.creative-tim.com/product/notus-design-system-pro
+* Copyright 2022 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://www.creative-tim.com/license)
+* Coded by Creative Tim
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>
+    Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS
+  </title>
+  <meta name="description" content="Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS">
+  <link rel="shortcut icon" href="../../assets/img/favicon.ico">
+  <link rel="apple-touch-icon" sizes="76x76" href="../../assets/img/favicon.ico">
+  <link rel="stylesheet" href="../../assets/styles/tailwind.min.css">
+  <link rel="stylesheet" href="../../assets/styles/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="../../assets/styles/highlight.css" />
+</head>
+
+<body>
+  <div class="bg-white docs-component-wrapper text-blueGray-700">
+    <!--Nav-->
+    <nav class="fixed top-0 w-full bg-blueGray-900 flex flex-wrap items-center justify-between px-2 py-3 z-9999">
+      <div class="w-full px-4 mx-auto flex flex-wrap items-center justify-between max-h-screen-70 overflow-y-auto">
+        <div class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start">
+          <a class="text-white text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase" href="/notus-design-system-pro">Notus Design System PRO</a>
+          <button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none" type="button" onclick="toggleNavbar('example-collapse-navbar')">
+            <i class="text-white fas fa-bars"></i>
+          </button>
+        </div>
+        <div class="lg:flex flex-grow items-center bg-white lg:bg-transparent lg:shadow-none hidden">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="_blank">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <p class="uppercase font-bold text-xs px-3 pt-6 pb-2 block w-full whitespace-nowrap bg-transparent text-blueGray-400">Pages</p>
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-col lg:flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+        <!-- Navbar mobile -->
+        <div class="flex-grow items-center bg-white lg:bg-transparent lg:shadow-none rounded block pt-1 pb-4 hidden" id="example-collapse-navbar">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="
+                  ">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="bg-white min-h-screen">
+      <div class="flex flex-raw pt-20 justify-center"></div>
+      <div class="mx-auto px-4 container">
+        <div class="flex justify-center my-8 flex-col">
+          <h2 class="text-lg font-medium text-blueGray-600 mb-2"><a class="mr-2" href="#/components#presentation-id">Presentation</a><i class="fas fa-angle-right mr-2"></i><a href="#/components#presentation-id-components">Pages</a></h2>
+          <h1 class="text-3xl font-semibold">Landing</h1>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="presentation-id-presentation-id-components-cardinfoicon">Landing 1</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <div class="relative pt-16pb-3 flex content-center items-center justify-center min-h-screen-75 ">
+                    <div class="absolute top-0 w-full h-full bg-center bg-cover" style="
+      background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1267&amp;q=80');
+      ">
+                      <span class="w-full h-full absolute opacity-75 bg-black"></span>
+                    </div>
+                    <div class="container relative mx-auto">
+                      <div class="items-center flex flex-wrap">
+                        <div class="w-full lg:w-7/12 px-4 ml-auto mr-auto text-center">
+                          <div class="">
+                            <h1 class="text-white font-semibold text-5xl">
+                              Your story starts with us.
+                            </h1>
+                            <p class="mt-4 text-lg text-blueGray-300">
+                              This is a simple example of a Landing Page you can build using
+                              Notus Design System PRO. It features multiple CSS components based on the
+                              Tailwind CSS design system.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="w-full absolute top-auto bottom-0">
+                      <div class="w-full pointer-events-none overflow-hidden h-70-px" style="transform: translateZ(0px)">
+                        <svg class="absolute bottom-0 overflow-hidden" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+                          <polygon class="text-blueGray-100 fill-current" points="2560 0 2560 100 0 100"></polygon>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <section class="pb-20 bg-blueGray-100">
+                    <div class="container mx-auto px-4">
+                      <div class="pt-6">
+                        <div class="mb-12 flex flex-wrap -mx-4 justify-center">
+                          <div class="px-4 relative w-full lg:w-8/12 text-center">
+                            <h6 class="mb-2 font-bold uppercase text-lightBlue-500">with burned soles</h6>
+                            <h3 class="text-3xl font-bold mt-3 mb-1 text-blueGray-700">I've risen with the soles burned</h3>
+                            <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">I've fought hard to get out of the hole I was in. I've dusted myself, and exactly like a dancer, I have danced with the fear, you should have filmed me.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap">
+                        <div class="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
+                            <div class="px-4 py-5 flex-auto">
+                              <div class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-red-400 to-red-600 bg-red-400"><i class="fas fa-award"></i></div>
+                              <h6 class="text-xl font-semibold">Awarded Agency</h6>
+                              <p class="mt-2 mb-4 text-blueGray-400">Divide details about your product or agency work into parts. A paragraph describing a feature will be enough.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
+                            <div class="px-4 py-5 flex-auto">
+                              <div class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-lightBlue-400 to-lightBlue-600 bg-lightBlue-400"><i class="fas fa-retweet"></i></div>
+                              <h6 class="text-xl font-semibold">Free Revisions</h6>
+                              <p class="mt-2 mb-4 text-blueGray-400">Keep you user engaged by providing meaningful information. Remember that by this time, the user is curious.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg">
+                            <div class="px-4 py-5 flex-auto">
+                              <div class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 bg-emerald-400"><i class="fas fa-fingerprint"></i></div>
+                              <h6 class="text-xl font-semibold">Verified Company</h6>
+                              <p class="mt-2 mb-4 text-blueGray-400">Write a few lines about each one. A paragraph describing a feature will be enough. Keep you user engaged!</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap items-center mt-32">
+                        <div class="w-full md:w-5/12 px-4 mr-auto ml-auto">
+                          <div class="text-blueGray-500 bg-white p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full"><i class="fas fa-user-friends text-xl"></i></div>
+                          <h3 class="text-3xl mb-2 font-semibold leading-normal">Working with us is a pleasure</h3>
+                          <p class="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-700">Don't let your users guess by attaching tooltips and popoves to any element. Just make sure you enable them first via JavaScript.</p>
+                          <p class="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-700">The kit comes with three pre-built pages to help you get started faster. You can change the text and images and you're good to go. Just make sure you enable them first via JavaScript.</p>
+                          <a class="font-bold text-blueGray-800 mt-8" href="#/">Check Notus Design System PRO!</a>
+                        </div>
+                        <div class="w-full md:w-4/12 px-4 mr-auto ml-auto">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-lightBlue-500">
+                            <img alt="..." src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1051&amp;q=80" class="w-full align-middle rounded-t-lg">
+                            <blockquote class="relative p-8 mb-4">
+                              <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 583 95" class="absolute left-0 w-full block h-95-px -top-94-px">
+                                <polygon points="-30,95 583,95 583,65" class="text-lightBlue-500 fill-current"></polygon>
+                              </svg>
+                              <h4 class="text-xl font-bold text-white">Top Notch Services</h4>
+                              <p class="text-md font-light mt-2 text-white">The Arctic Ocean freezes every winter and much of the sea-ice then thaws every summer, and that process will continue whatever happens.</p>
+                            </blockquote>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <div class="w-full">
+                  <section class="pt-20 pb-48">
+                    <div class="container mx-auto px-4">
+                      <div class="mb-24">
+                        <div class="pt-6">
+                          <div class="mb-12 flex flex-wrap -mx-4 justify-center">
+                            <div class="px-4 relative w-full lg:w-8/12 text-center">
+                              <h6 class="mb-2 font-bold uppercase text-orange-500">The entourage</h6>
+                              <h3 class="text-3xl font-bold mt-3 mb-1 text-blueGray-700">It is everything, and it won't change</h3>
+                              <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">It depends on your friends and companions, it depends on who goes out with you, if they have money, if you have money.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap">
+                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+                          <div class="px-6">
+                            <img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg" class="shadow-lg rounded-full mx-auto max-w-120-px">
+                            <div class="pt-6 text-center">
+                              <h5 class="text-xl font-bold">Ryan Tompson</h5>
+                              <p class="mt-1 text-sm text-blueGray-400 uppercase font-bold">Web Developer</p>
+                              <div class="mt-6"><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-twitter"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-facebook"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-pink-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-dribbble"></i></a></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+                          <div class="px-6">
+                            <img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg" class="shadow-lg rounded-full mx-auto max-w-120-px">
+                            <div class="pt-6 text-center">
+                              <h5 class="text-xl font-bold">Romina Hadid</h5>
+                              <p class="mt-1 text-sm text-blueGray-400 uppercase font-bold">Marketing Specialist</p>
+                              <div class="mt-6"><a href="javascript:;" target="_blank" type="button" class="bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-instagram"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-facebook"></i></a></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+                          <div class="px-6">
+                            <img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg" class="shadow-lg rounded-full mx-auto max-w-120-px">
+                            <div class="pt-6 text-center">
+                              <h5 class="text-xl font-bold">Alexa Smith</h5>
+                              <p class="mt-1 text-sm text-blueGray-400 uppercase font-bold">UI/UX Designer</p>
+                              <div class="mt-6"><a href="javascript:;" target="_blank" type="button" class="bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-instagram"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-facebook"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-twitter"></i></a></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+                          <div class="px-6">
+                            <img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png" class="shadow-lg rounded-full mx-auto max-w-120-px">
+                            <div class="pt-6 text-center">
+                              <h5 class="text-xl font-bold">Jenna Kardi</h5>
+                              <p class="mt-1 text-sm text-blueGray-400 uppercase font-bold">Founder and CEO</p>
+                              <div class="mt-6"><a href="javascript:;" target="_blank" type="button" class="bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-instagram"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-facebook"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-twitter"></i></a><a href="javascript:;" target="_blank" type="button" class="bg-pink-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"><i class="fab fa-dribbble"></i></a></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <div class="w-full">
+                  <section class="relative block">
+                    <div class="w-full pointer-events-none overflow-hidden h-70-px" style="transform: translateZ(0px);">
+                      <svg class="absolute bottom-0 overflow-hidden" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+                        <polygon class="text-blueGray-900 fill-current" points="2560 0 2560 100 0 100"></polygon>
+                      </svg>
+                    </div>
+                    <div class="bg-blueGray-900 py-24">
+                      <div class="container mx-auto px-4">
+                        <div class="mb-12 flex flex-wrap -mx-4 justify-center">
+                          <div class="px-4 relative w-full lg:w-8/12 text-center">
+                            <h6 class="mb-2 font-bold uppercase text-blueGray-200">On the coastline</h6>
+                            <h3 class="text-3xl font-bold mt-3 mb-1 text-white">We are missing the summer</h3>
+                            <p class="mt-2 mb-4 text-xl leading-relaxed text-white opacity-75">We're waiting for the weather to warm up so that we can go to the coastline. We really miss the summertime, our second home the coastline.</p>
+                          </div>
+                        </div>
+                        <div class="flex flex-wrap mt-12 justify-center">
+                          <div class="w-full lg:w-3/12 px-4 text-center">
+                            <div class="text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"><i class="fas fa-medal text-xl"></i></div>
+                            <h6 class="text-white text-xl mt-5 font-semibold">Excelent Services</h6>
+                            <p class="text-blueGray-500 mt-2 mb-4">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          </div>
+                          <div class="w-full lg:w-3/12 px-4 text-center">
+                            <div class="text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"><i class="fas fa-poll text-xl"></i></div>
+                            <h6 class="text-white text-xl mt-5 font-semibold">Grow your market</h6>
+                            <p class="text-blueGray-500 mt-2 mb-4">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          </div>
+                          <div class="w-full lg:w-3/12 px-4 text-center">
+                            <div class="text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"><i class="fas fa-lightbulb text-xl"></i></div>
+                            <h6 class="text-white text-xl mt-5 font-semibold">Launch time</h6>
+                            <p class="text-blueGray-500 mt-2 mb-4">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <div class="w-full">
+                  <section class="relative block py-24 bg-blueGray-900">
+                    <div class="container mx-auto px-4">
+                      <div class="mb-12 flex flex-wrap -mx-4 justify-center">
+                        <div class="px-4 relative w-full lg:w-8/12 text-center">
+                          <span class="text-teal-500 bg-teal-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2">Message us</span>
+                          <h3 class="text-3xl font-bold mt-3 mb-1 text-white">Type in the bellow form</h3>
+                          <p class="mt-2 mb-4 text-xl leading-relaxed text-white opacity-75">They say there's no future for the street rascals, nothing for them, leave them to fall. But it isn't always how you would like it to be, especially when you do nothing for yourself.</p>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap justify-center">
+                        <div class="w-full lg:w-6/12 px-4">
+                          <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200">
+                            <div class="flex-auto p-5 lg:p-10">
+                              <h4 class="text-2xl font-semibold">Want to work with us?</h4>
+                              <p class="leading-relaxed mt-1 mb-4 text-blueGray-500">Complete this form and we will get back to you in 24 hours.</p>
+                              <div class="mt-8">
+                                <div class="relative w-full mb-3">
+                                  <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1">Full Name</label>
+                                  <input placeholder="Full Name" type="text" class="px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent">
+                                </div>
+                                <div class="relative w-full mb-3">
+                                  <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1">Email</label>
+                                  <input placeholder="Email" type="email" class="px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent">
+                                </div>
+                                <div class="relative w-full mb-3">
+                                  <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1">Message</label>
+                                  <textarea placeholder="Type a message..." type="textarea" rows="4" cols="80" class="px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent"></textarea>
+                                </div>
+                              </div>
+                              <div class="text-center mt-6">
+                                <button class="text-xs px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Send Message</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <div class="w-full">
+                  <footer>
+                    <div class="w-full pointer-events-none overflow-hidden h-70-px" style="transform: translateZ(0px);">
+                      <svg class="absolute bottom-0 overflow-hidden" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+                        <polygon class="text-blueGray-100 fill-current" points="2560 0 2560 100 0 100"></polygon>
+                      </svg>
+                    </div>
+                    <div class="relative bg-blueGray-100 pt-8 pb-6">
+                      <div class="container mx-auto px-4">
+                        <div class="flex flex-wrap text-center lg:text-left">
+                          <div class="w-full lg:w-6/12 px-4">
+                            <h4 class="text-xl mt-4 font-bold">Let's keep in touch!</h4>
+                            <h5 class="mt-1 mb-2 text-blueGray-500">Find us on any of these platforms, we respond 1-2 business days.</h5>
+                            <div class="mt-6 lg:mb-0 mb-6"><a href="https://twitter.com/CreativeTim/" target="_blank" class="bg-white text-twitter-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex" type="button"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/CreativeTim/" target="_blank" class="bg-white text-facebook-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex" type="button"><i class="fab fa-facebook"></i></a><a href="https://dribbble.com/creativetim" target="_blank" class="bg-white text-dribbble-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex" type="button"><i class="fab fa-dribbble"></i></a><a href="https://github.com/creativetimofficial" target="_blank" class="bg-white text-github-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex" type="button"><i class="fab fa-github"></i></a></div>
+                          </div>
+                          <div class="w-full lg:w-6/12 px-4">
+                            <div class="flex flex-wrap items-top mb-6">
+                              <div class="w-full lg:w-4/12 px-4 ml-auto">
+                                <span class="block uppercase text-xs font-bold mb-2">Useful Links</span>
+                                <ul class="list-unstyled"><a href="https://www.creative-tim.com/presentation?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">About Us</a><a href="https://www.creative-tim.com/blog?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Blog</a><a href="https://github.com/creativetimofficial" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Github</a><a href="https://www.creative-tim.com/templates/free?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Free Products</a></ul>
+                              </div>
+                              <div class="w-full lg:w-4/12 px-4 ml-auto">
+                                <span class="block uppercase text-xs font-bold mb-2">Other Resources</span>
+                                <ul class="list-unstyled"><a href="https://www.creative-tim.com/license?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">License</a><a href="https://www.creative-tim.com/terms?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Terms &amp; Conditions</a><a href="https://www.creative-tim.com/privacy?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Privacy Policy</a><a href="https://www.creative-tim.com/contact-us?npr-landing-1" target="_blank" class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm">Contact Us</a></ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <hr class="my-6 border-blueGray-200">
+                        <div class="flex flex-wrap items-center md:justify-between justify-center">
+                          <div class="w-full md:w-4/12 px-4 mx-auto text-center">
+                            <div class="text-sm text-blueGray-500 py-1">Copyright © 2021 Notus Design System PRO by Creative Tim.</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </footer>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html">      
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative pt-16pb-3 flex content-center items-center justify-center min-h-screen-75 "</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute top-0 w-full h-full bg-center bg-cover"</span> <span class="na">style=</span><span class="s">"
+      background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&amp;amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;amp;auto=format&amp;amp;fit=crop&amp;amp;w=1267&amp;amp;q=80');
+      "</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"w-full h-full absolute opacity-75 bg-black"</span><span class="nt">&gt;&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container relative mx-auto"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"items-center flex flex-wrap"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-7/12 px-4 ml-auto mr-auto text-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">""</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;h1</span> <span class="na">class=</span><span class="s">"text-white font-semibold text-5xl"</span><span class="nt">&gt;</span>
+              Your story starts with us.
+            <span class="nt">&lt;/h1&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-4 text-lg text-blueGray-300"</span><span class="nt">&gt;</span>
+              This is a simple example of a Landing Page you can build using
+              Notus Design System PRO. It features multiple CSS components based on the
+              Tailwind CSS design system.
+            <span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full absolute top-auto bottom-0"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full pointer-events-none overflow-hidden h-70-px"</span> <span class="na">style=</span><span class="s">"transform: translateZ(0px)"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;svg</span> <span class="na">class=</span><span class="s">"absolute bottom-0 overflow-hidden"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">version=</span><span class="s">"1.1"</span> <span class="na">viewBox=</span><span class="s">"0 0 2560 100"</span> <span class="na">x=</span><span class="s">"0"</span> <span class="na">y=</span><span class="s">"0"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;polygon</span> <span class="na">class=</span><span class="s">"text-blueGray-100 fill-current"</span> <span class="na">points=</span><span class="s">"2560 0 2560 100 0 100"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+        <span class="nt">&lt;/svg&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"pb-20 bg-blueGray-100"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mb-2 font-bold uppercase text-lightBlue-500"</span><span class="nt">&gt;</span>with burned soles<span class="nt">&lt;/h6&gt;</span>
+            <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>I've risen with the soles burned<span class="nt">&lt;/h3&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>I've fought hard to get out of the hole I was in. I've dusted myself, and exactly like a dancer, I have danced with the fear, you should have filmed me.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-red-400 to-red-600 bg-red-400"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-award"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold"</span><span class="nt">&gt;</span>Awarded Agency<span class="nt">&lt;/h6&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-blueGray-400"</span><span class="nt">&gt;</span>Divide details about your product or agency work into parts. A paragraph describing a feature will be enough.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-lightBlue-400 to-lightBlue-600 bg-lightBlue-400"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-retweet"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold"</span><span class="nt">&gt;</span>Free Revisions<span class="nt">&lt;/h6&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-blueGray-400"</span><span class="nt">&gt;</span>Keep you user engaged by providing meaningful information. Remember that by this time, the user is curious.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 bg-emerald-400"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-fingerprint"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold"</span><span class="nt">&gt;</span>Verified Company<span class="nt">&lt;/h6&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-blueGray-400"</span><span class="nt">&gt;</span>Write a few lines about each one. A paragraph describing a feature will be enough. Keep you user engaged!<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap items-center mt-32"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-5/12 px-4 mr-auto ml-auto"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-blueGray-500 bg-white p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-user-friends text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+          <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl mb-2 font-semibold leading-normal"</span><span class="nt">&gt;</span>Working with us is a pleasure<span class="nt">&lt;/h3&gt;</span>
+          <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-700"</span><span class="nt">&gt;</span>Don't let your users guess by attaching tooltips and popoves to any element. Just make sure you enable them first via JavaScript.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-700"</span><span class="nt">&gt;</span>The kit comes with three pre-built pages to help you get started faster. You can change the text and images and you're good to go. Just make sure you enable them first via JavaScript.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"font-bold text-blueGray-800 mt-8"</span> <span class="na">href=</span><span class="s">"#/"</span><span class="nt">&gt;</span>Check Notus Design System PRO!<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-4/12 px-4 mr-auto ml-auto"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-lightBlue-500"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&amp;amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;amp;auto=format&amp;amp;fit=crop&amp;amp;w=1051&amp;amp;q=80"</span> <span class="na">class=</span><span class="s">"w-full align-middle rounded-t-lg"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;blockquote</span> <span class="na">class=</span><span class="s">"relative p-8 mb-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;svg</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">viewBox=</span><span class="s">"0 0 583 95"</span> <span class="na">class=</span><span class="s">"absolute left-0 w-full block h-95-px -top-94-px"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;polygon</span> <span class="na">points=</span><span class="s">"-30,95 583,95 583,65"</span> <span class="na">class=</span><span class="s">"text-lightBlue-500 fill-current"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+              <span class="nt">&lt;/svg&gt;</span>
+              <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-xl font-bold text-white"</span><span class="nt">&gt;</span>Top Notch Services<span class="nt">&lt;/h4&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-md font-light mt-2 text-white"</span><span class="nt">&gt;</span>The Arctic Ocean freezes every winter and much of the sea-ice then thaws every summer, and that process will continue whatever happens.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/blockquote&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/section&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"pt-20 pb-48"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-24"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-center"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mb-2 font-bold uppercase text-orange-500"</span><span class="nt">&gt;</span>The entourage<span class="nt">&lt;/h6&gt;</span>
+              <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>It is everything, and it won't change<span class="nt">&lt;/h3&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>It depends on your friends and companions, it depends on who goes out with you, if they have money, if you have money.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-full mx-auto max-w-120-px"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6 text-center"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-xl font-bold"</span><span class="nt">&gt;</span>Ryan Tompson<span class="nt">&lt;/h5&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-1 text-sm text-blueGray-400 uppercase font-bold"</span><span class="nt">&gt;</span>Web Developer<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-twitter"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-pink-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-dribbble"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-full mx-auto max-w-120-px"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6 text-center"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-xl font-bold"</span><span class="nt">&gt;</span>Romina Hadid<span class="nt">&lt;/h5&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-1 text-sm text-blueGray-400 uppercase font-bold"</span><span class="nt">&gt;</span>Marketing Specialist<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-instagram"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-full mx-auto max-w-120-px"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6 text-center"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-xl font-bold"</span><span class="nt">&gt;</span>Alexa Smith<span class="nt">&lt;/h5&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-1 text-sm text-blueGray-400 uppercase font-bold"</span><span class="nt">&gt;</span>UI/UX Designer<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-instagram"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-twitter"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-full mx-auto max-w-120-px"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-6 text-center"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-xl font-bold"</span><span class="nt">&gt;</span>Jenna Kardi<span class="nt">&lt;/h5&gt;</span>
+              <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-1 text-sm text-blueGray-400 uppercase font-bold"</span><span class="nt">&gt;</span>Founder and CEO<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-pink-700 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-instagram"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-lightBlue-400 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-twitter"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"bg-pink-500 inline-flex items-center justify-center text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-dribbble"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/section&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"relative block"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full pointer-events-none overflow-hidden h-70-px"</span> <span class="na">style=</span><span class="s">"transform: translateZ(0px);"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;svg</span> <span class="na">class=</span><span class="s">"absolute bottom-0 overflow-hidden"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">version=</span><span class="s">"1.1"</span> <span class="na">viewBox=</span><span class="s">"0 0 2560 100"</span> <span class="na">x=</span><span class="s">"0"</span> <span class="na">y=</span><span class="s">"0"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;polygon</span> <span class="na">class=</span><span class="s">"text-blueGray-900 fill-current"</span> <span class="na">points=</span><span class="s">"2560 0 2560 100 0 100"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+      <span class="nt">&lt;/svg&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-blueGray-900 py-24"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mb-2 font-bold uppercase text-blueGray-200"</span><span class="nt">&gt;</span>On the coastline<span class="nt">&lt;/h6&gt;</span>
+            <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-white"</span><span class="nt">&gt;</span>We are missing the summer<span class="nt">&lt;/h3&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-white opacity-75"</span><span class="nt">&gt;</span>We're waiting for the weather to warm up so that we can go to the coastline. We really miss the summertime, our second home the coastline.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap mt-12 justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-3/12 px-4 text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-medal text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-white text-xl mt-5 font-semibold"</span><span class="nt">&gt;</span>Excelent Services<span class="nt">&lt;/h6&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 mt-2 mb-4"</span><span class="nt">&gt;</span>Some quick example text to build on the card title and make up the bulk of the card's content.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-3/12 px-4 text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-poll text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-white text-xl mt-5 font-semibold"</span><span class="nt">&gt;</span>Grow your market<span class="nt">&lt;/h6&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 mt-2 mb-4"</span><span class="nt">&gt;</span>Some quick example text to build on the card title and make up the bulk of the card's content.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-3/12 px-4 text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-blueGray-900 bg-white p-3 w-12 h-12 shadow-lg rounded-full inline-flex items-center justify-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-lightbulb text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-white text-xl mt-5 font-semibold"</span><span class="nt">&gt;</span>Launch time<span class="nt">&lt;/h6&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 mt-2 mb-4"</span><span class="nt">&gt;</span>Some quick example text to build on the card title and make up the bulk of the card's content.<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/section&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"relative block py-24 bg-blueGray-900"</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"text-teal-500 bg-teal-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2"</span><span class="nt">&gt;</span>Message us<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-white"</span><span class="nt">&gt;</span>Type in the bellow form<span class="nt">&lt;/h3&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-white opacity-75"</span><span class="nt">&gt;</span>They say there's no future for the street rascals, nothing for them, leave them to fall. But it isn't always how you would like it to be, especially when you do nothing for yourself.<span class="nt">&lt;/p&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap justify-center"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-6/12 px-4"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-auto p-5 lg:p-10"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold"</span><span class="nt">&gt;</span>Want to work with us?<span class="nt">&lt;/h4&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"leading-relaxed mt-1 mb-4 text-blueGray-500"</span><span class="nt">&gt;</span>Complete this form and we will get back to you in 24 hours.<span class="nt">&lt;/p&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-8"</span><span class="nt">&gt;</span>
+                         <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span><span class="nt">&gt;</span>Full Name<span class="nt">&lt;/label&gt;</span>
+                            <span class="nt">&lt;input</span> <span class="na">placeholder=</span><span class="s">"Full Name"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent"</span><span class="nt">&gt;</span>
+                         <span class="nt">&lt;/div&gt;</span>
+                         <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span><span class="nt">&gt;</span>Email<span class="nt">&lt;/label&gt;</span>
+                            <span class="nt">&lt;input</span> <span class="na">placeholder=</span><span class="s">"Email"</span> <span class="na">type=</span><span class="s">"email"</span> <span class="na">class=</span><span class="s">"px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent"</span><span class="nt">&gt;</span>
+                         <span class="nt">&lt;/div&gt;</span>
+                         <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span><span class="nt">&gt;</span>Message<span class="nt">&lt;/label&gt;</span>
+                            <span class="nt">&lt;textarea</span> <span class="na">placeholder=</span><span class="s">"Type a message..."</span> <span class="na">type=</span><span class="s">"textarea"</span> <span class="na">rows=</span><span class="s">"4"</span> <span class="na">cols=</span><span class="s">"80"</span> <span class="na">class=</span><span class="s">"px-3 py-3 placeholder-blueGray-400 text-blueGray-500 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150 border-transparent"</span><span class="nt">&gt;&lt;/textarea&gt;</span>
+                         <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-center mt-6"</span><span class="nt">&gt;</span>
+                         <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"text-xs px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold"</span><span class="nt">&gt;</span>Send Message<span class="nt">&lt;/button&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+       <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/section&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;footer&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full pointer-events-none overflow-hidden h-70-px"</span> <span class="na">style=</span><span class="s">"transform: translateZ(0px);"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;svg</span> <span class="na">class=</span><span class="s">"absolute bottom-0 overflow-hidden"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">version=</span><span class="s">"1.1"</span> <span class="na">viewBox=</span><span class="s">"0 0 2560 100"</span> <span class="na">x=</span><span class="s">"0"</span> <span class="na">y=</span><span class="s">"0"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;polygon</span> <span class="na">class=</span><span class="s">"text-blueGray-100 fill-current"</span> <span class="na">points=</span><span class="s">"2560 0 2560 100 0 100"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+      <span class="nt">&lt;/svg&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative bg-blueGray-100 pt-8 pb-6"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap text-center lg:text-left"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-6/12 px-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-xl mt-4 font-bold"</span><span class="nt">&gt;</span>Let's keep in touch!<span class="nt">&lt;/h4&gt;</span>
+            <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"mt-1 mb-2 text-blueGray-500"</span><span class="nt">&gt;</span>Find us on any of these platforms, we respond 1-2 business days.<span class="nt">&lt;/h5&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6 lg:mb-0 mb-6"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://twitter.com/CreativeTim/"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"bg-white text-twitter-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex"</span> <span class="na">type=</span><span class="s">"button"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-twitter"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.facebook.com/CreativeTim/"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"bg-white text-facebook-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex"</span> <span class="na">type=</span><span class="s">"button"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://dribbble.com/creativetim"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"bg-white text-dribbble-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex"</span> <span class="na">type=</span><span class="s">"button"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-dribbble"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://github.com/creativetimofficial"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"bg-white text-github-regular shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-flex"</span> <span class="na">type=</span><span class="s">"button"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-github"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-6/12 px-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap items-top mb-6"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-4/12 px-4 ml-auto"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"block uppercase text-xs font-bold mb-2"</span><span class="nt">&gt;</span>Useful Links<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"list-unstyled"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/presentation?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>About Us<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/blog?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Blog<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://github.com/creativetimofficial"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Github<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/templates/free?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Free Products<span class="nt">&lt;/a&gt;&lt;/ul&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full lg:w-4/12 px-4 ml-auto"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"block uppercase text-xs font-bold mb-2"</span><span class="nt">&gt;</span>Other Resources<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"list-unstyled"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/license?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>License<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/terms?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Terms <span class="ni">&amp;amp;</span> Conditions<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/privacy?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Privacy Policy<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"https://www.creative-tim.com/contact-us?npr-landing-1"</span> <span class="na">target=</span><span class="s">"_blank"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm"</span><span class="nt">&gt;</span>Contact Us<span class="nt">&lt;/a&gt;&lt;/ul&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;hr</span> <span class="na">class=</span><span class="s">"my-6 border-blueGray-200"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap items-center md:justify-between justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-4/12 px-4 mx-auto text-center"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-sm text-blueGray-500 py-1"</span><span class="nt">&gt;</span>Copyright © 2021 Notus Design System PRO by Creative Tim.<span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/footer&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+ </code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="presentation-id-presentation-id-components-cardinfoicon">Landing 2</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <div class="p-0 flex items-center overflow-hidden relative bg-black min-h-screen-75">
+                    <div class="absolute w-full bg-indigo-500 h-full z-1 opacity-30 top-0 left-0"></div>
+                    <video playsinline="" autoplay="" loop="" class="absolute min-w-full max-w-none min-h-full z-0 transform -translate-x-1/2 -translate-y-1/2 top-7/20 left-1/2">
+                      <source src="../../assets/videos/Lights - 26607.mp4" type="video/mp4">
+                    </video>
+                    <div class="container mx-auto px-4">
+                      <div class="relative text-center flex flex-wrap -mx-4 z-1">
+                        <div class="mx-auto px-4 relative w-full lg:w-8/12">
+                          <h1 class="text-4xl font-semibold leading-tight text-white">Welcome to our most special company</h1>
+                          <h4 class="mt-2 text-lg text-white opacity-75 mb-8">We’re not always in the position that we want to be at. We’re constantly growing! When you're home, is different, since your parents are helping you.</h4>
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-orange-500 border-orange-500 active:bg-orange-600 active:border-orange-600 text-sm px-6 py-3 shadow-md hover:shadow-lg rounded-lg"><i class="fas fa-play mr-2"></i>Get in contact</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="w-full absolute text-white bottom-0 z-1">
+                      <div class="w-full pointer-events-none overflow-hidden h-70-px" style="transform: translateZ(0px);">
+                        <svg class="absolute bottom-0 overflow-hidden" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+                          <polygon class="text-white fill-current" points="2560 0 2560 100 0 100"></polygon>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <div class="py-12">
+                    <div class="flex flex-wrap -mx-4 justify-center">
+                      <div class="px-4 relative w-full text-center">
+                        <span class="text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2">Lost angels</span>
+                        <h2 class="text-4xl font-bold mt-3 mb-1 text-blueGray-700">Why did you last so much, nobody knows</h2>
+                        <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">There will come a day, when you'll fall again, and you know this, but like myself, you too have some angels that help you.</p>
+                      </div>
+                    </div>
+                    <div class="items-center flex flex-wrap -mx-4">
+                      <div class="ml-auto text-left mt-6 px-4 relative w-full lg:w-4/12">
+                        <div class="shadow-lg rounded border-0 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg text-white bg-blueGray-500">
+                          <img class="w-full flex-shrink-0 rounded-t-lg" src="https://demos.creative-tim.com/notus-pro-react/static/media/img-1.f2fd521a.jpg" alt="...">
+                          <blockquote class="p-6 relative mb-4">
+                            <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 583 95" class="block w-full absolute text-blueGray-700 h-95-px -top-94-px left-0">
+                              <polygon points="0,52 583,95 0,95" class="text-blueGray-500 fill-current"></polygon>
+                              <polygon points="0,42 583,95 683,0 0,95" opacity=".2" class="text-blueGray-500 fill-current"></polygon>
+                            </svg>
+                            <h4 class="text-2xl font-semibold mt-0 text-white">Notus Design System</h4>
+                            <p class="text-white mt-2">That’s my skill, I like to create things that last many years. I’m not really specifically talented at anything except for the ability to learn. That's it, see you at top...</p>
+                          </blockquote>
+                        </div>
+                      </div>
+                      <div class="mr-auto px-4 relative w-full lg:w-7/12">
+                        <div class="flex flex-wrap -mx-4">
+                          <div class="px-4 relative w-full md:w-6/12">
+                            <div class="bg-orange-500 mt-8 rounded-lg text-left p-6 flex items-start">
+                              <div class="flex-1">
+                                <div class="text-orange-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"><i class="fas fa-smile-beam text-xl"></i></div>
+                                <h4 class="text-2xl font-semibold leading-normal text-white">Best Quality</h4>
+                                <p class="mt-2 text-white">It becomes harder for us to give others a hand. We get our heart broken by people we love.</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="px-4 relative w-full md:w-6/12">
+                            <div class="bg-lightBlue-500 mt-8 rounded-lg text-left p-6 flex items-start">
+                              <div class="flex-1">
+                                <div class="text-lightBlue-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"><i class="fas fa-palette text-xl"></i></div>
+                                <h4 class="text-2xl font-semibold leading-normal text-white">Awesome Design</h4>
+                                <p class="mt-2 text-white">As we live, our hearts turn colder. Cause pain is what we go through as we become older.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="flex flex-wrap -mx-4">
+                          <div class="px-4 relative w-full md:w-6/12">
+                            <div class="bg-red-500 mt-8 rounded-lg text-left p-6 flex items-start">
+                              <div class="flex-1">
+                                <div class="text-red-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"><i class="fas fa-running text-xl"></i></div>
+                                <h4 class="text-2xl font-semibold leading-normal text-white">Fast Development</h4>
+                                <p class="mt-2 text-white">We’re not always in the position that we want to be at. We’re constantly growing.</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="px-4 relative w-full md:w-6/12">
+                            <div class="bg-emerald-500 mt-8 rounded-lg text-left p-6 flex items-start">
+                              <div class="flex-1">
+                                <div class="text-emerald-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"><i class="fas fa-glasses text-xl"></i></div>
+                                <h4 class="text-2xl font-semibold leading-normal text-white">Super Fresh</h4>
+                                <p class="mt-2 text-white">When we lose family over time. What else could rust the heart more over time? Blackgold.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <div class="py-12">
+                    <div class="flex flex-wrap -mx-4 justify-center">
+                      <div class="px-4 relative w-full text-center">
+                        <span class="text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded-full px-3">Fight hard</span>
+                        <h2 class="text-4xl font-bold mt-3 mb-1 text-blueGray-700">It's time to know</h2>
+                        <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">Go and show them how strong you are. Leave them with their jaws to the ground, and hit them so that they faint on the ropes. Since you've got talent, you have to wear a crown.</p>
+                      </div>
+                    </div>
+                    <div class="items-center flex flex-wrap -mx-4">
+                      <div class="text-left px-4 relative w-full lg:w-4/12">
+                        <div class="text-lightBlue-500 border-lightBlue-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"><i class="fas fa-cog text-1625"></i></div>
+                        <h6 class="text-xl font-semibold leading-tight mb-2 mt-6">Social Conversation</h6>
+                        <p class="mb-2 text-blueGray-400">We get insulted by others, lose trust for those others. We get back stabbed by friends. It becomes harder for us to give others a hand.</p>
+                        <a class="text-lightBlue-500" href="javascript:;">More about us <i class="ml-1 fas fa-angle-right"></i></a>
+                      </div>
+                      <div class="text-left px-4 relative w-full lg:w-4/12">
+                        <div class="text-emerald-500 border-emerald-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"><i class="fas fa-atom text-1625"></i></div>
+                        <h6 class="text-xl font-semibold leading-tight mb-2 mt-6">Analyze Performance</h6>
+                        <p class="mb-2 text-blueGray-400">Don't get your heart broken by people we love, even that we give them all we have. Then we lose family over time. As we live, our hearts turn colder.</p>
+                        <a class="text-lightBlue-500" href="javascript:;">Learn about our products <i class="ml-1 fas fa-angle-right"></i></a>
+                      </div>
+                      <div class="text-left px-4 relative w-full lg:w-4/12">
+                        <div class="text-orange-500 border-orange-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"><i class="fas fa-globe-europe text-1625"></i></div>
+                        <h6 class="text-xl font-semibold leading-tight mb-2 mt-6">Measure Conversions</h6>
+                        <p class="mb-2 text-blueGray-400">What else could rust the heart more over time? Blackgold. The time is now for it to be okay to be great. or being a bright color. For standing out.</p>
+                        <a class="text-lightBlue-500" href="javascript:;">Check our documentation <i class="ml-1 fas fa-angle-right"></i></a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="px-4 py-5 flex-auto ct-docs-frame">
+                  <div class="relative flex flex-wrap justify-center ">
+                    <div class="w-full">
+                      <div class="py-12">
+                        <div class="mb-12 flex flex-wrap -mx-4 justify-center">
+                          <div class="px-4 relative w-full lg:w-8/12 text-center">
+                            <h6 class="mb-2 font-bold uppercase text-emerald-500">Our latest blogposts</h6>
+                            <h3 class="text-3xl font-bold mt-3 mb-1 text-blueGray-700">Check the news for this month</h3>
+                            <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">I always felt like I could do anything. That’s the main thing people are controlled by! Thoughts- their perception of themselves!</p>
+                          </div>
+                        </div>
+                        <div class="items-center flex flex-wrap -mx-4">
+                          <div class="px-4 relative w-full lg:w-3/12">
+                            <div class="h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4">
+                              <div class="absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg" style="background-image: url('../../assets/img/guitar-play.jpg'); backface-visibility: hidden;"></div>
+                              <div class="absolute w-full h-full bg-black opacity-50 rounded-lg"></div><a href="javascript:;">
+                                <div class="absolute text-left p-6 bottom-0">
+                                  <h6 class="text-xl leading-normal mb-0 text-white opacity-75">All the beautiful places</h6>
+                                  <h5 class="text-2xl font-bold leading-tight mt-0 mb-2 text-white">Research by Bang &amp; Olufsen on city sounds and music</h5>
+                                </div>
+                              </a>
+                            </div>
+                          </div>
+                          <div class="px-4 relative w-full lg:w-3/12">
+                            <div class="h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4">
+                              <div class="absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg" style="background-image: url('../../assets/img/sections/thomas.jpg'); backface-visibility: hidden;"></div>
+                              <div class="absolute w-full h-full bg-black opacity-50 rounded-lg"></div><a href="javascript:;">
+                                <div class="absolute text-left p-6 bottom-0">
+                                  <h6 class="text-xl leading-normal mb-0 text-white opacity-75">Spectrum Boats</h6>
+                                  <h5 class="text-2xl font-bold leading-tight mt-0 mb-2 text-white">Data Virtualization and Boats Startups</h5>
+                                </div>
+                              </a>
+                            </div>
+                          </div>
+                          <div class="px-4 relative w-full lg:w-3/12">
+                            <div class="h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4">
+                              <div class="absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg" style="background-image: url('../../assets/img/sections/ashim.jpg'); backface-visibility: hidden;"></div>
+                              <div class="absolute w-full h-full bg-black opacity-50 rounded-lg"></div><a href="javascript:;">
+                                <div class="absolute text-left p-6 bottom-0">
+                                  <h6 class="text-xl leading-normal mb-0 text-white opacity-75">Flying on pandemic</h6>
+                                  <h5 class="text-2xl font-bold leading-tight mt-0 mb-2 text-white">New Challenges when you want to fly to new areas</h5>
+                                </div>
+                              </a>
+                            </div>
+                          </div>
+                          <div class="px-4 relative w-full lg:w-3/12">
+                            <div class="h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4">
+                              <div class="absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg" style="background-image: url('../../assets/img/sections/dane.jpg'); backface-visibility: hidden;"></div>
+                              <div class="absolute w-full h-full bg-black opacity-50 rounded-lg"></div><a href="javascript:;">
+                                <div class="absolute text-left p-6 bottom-0">
+                                  <h6 class="text-xl leading-normal mb-0 text-white opacity-75">Work from Home</h6>
+                                  <h5 class="text-2xl font-bold leading-tight mt-0 mb-2 text-white">How meetings and behaviour are changing</h5>
+                                </div>
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <div class="py-12 bg-blueGray-100">
+                    <div class="flex flex-wrap -mx-4">
+                      <div class="flex justify-center flex-col px-4 relative w-full md:w-4/12 ml-auto">
+                        <h2 class="text-3xl font-bold mt-0">Choose a plan for your next project</h2>
+                        <p class="mt-2 mb-10 text-lg leading-relaxed text-blueGray-400">You have Free Unlimited Updates and Premium Support on each package. You also have 20 days to request a refund.</p>
+                        <div><button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-pink-500 border-pink-500 active:bg-pink-600 active:border-pink-600 text-sm px-6 py-2 shadow hover:shadow-lg rounded-md">Freelancer</button>
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-sm px-6 py-2 shadow hover:shadow-lg rounded-md">Enterprise</button>
+                        </div>
+                      </div>
+                      <div class="mx-auto px-4 relative w-full md:w-7/12 w-full lg:w-7/12">
+                        <div class="block">
+                          <div class="block">
+                            <div class="flex flex-wrap -mx-4">
+                              <div class="px-4 relative w-full md:w-6/12">
+                                <div class="bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg">
+                                  <div class="bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200">
+                                    <h6 class="font-bold my-2">Standard</h6>
+                                  </div>
+                                  <div class="px-4 py-5 flex-auto">
+                                    <div class="text-5xl mt-0 mb-0 font-bold">$25</div>
+                                    <span> per month </span>
+                                    <ul class="mt-6 mb-0 list-none">
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 20GB </b>File Storage
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 15 </b>Users/project
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 4.000 </b>Internal messages
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200">
+                                    <a href="javascript:;" class="text-lightBlue-500">Request a demo</a>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="px-4 relative w-full md:w-6/12">
+                                <div class="bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg">
+                                  <div class="bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200">
+                                    <h6 class="font-bold my-2">Premium</h6>
+                                  </div>
+                                  <div class="px-4 py-5 flex-auto">
+                                    <div class="text-5xl mt-0 mb-0 font-bold">$59</div>
+                                    <span> per month </span>
+                                    <ul class="mt-6 mb-0 list-none">
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 50GB </b>File Storage
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 100 </b>Users
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> Premium </b>Support
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200">
+                                    <a href="javascript:;" class="text-lightBlue-500">Request a demo</a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="hidden">
+                            <div class="flex flex-wrap -mx-4">
+                              <div class="px-4 relative w-full md:w-6/12">
+                                <div class="bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg">
+                                  <div class="bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200">
+                                    <h6 class="font-bold my-2">Gold</h6>
+                                  </div>
+                                  <div class="px-4 py-5 flex-auto">
+                                    <div class="text-5xl mt-0 mb-0 font-bold">$100</div>
+                                    <span> per month </span>
+                                    <ul class="mt-6 mb-0 list-none">
+                                      <li class="py-1 text-blueGray-500"><b class="text-lightBlue-500"> 200GB </b>File Storage</li>
+                                      <li class="py-1 text-blueGray-500"><b class="text-lightBlue-500"> Unlimited </b>Users</li>
+                                      <li class="py-1 text-blueGray-500"><b class="text-lightBlue-500"> Premium </b>Support</li>
+                                    </ul>
+                                  </div>
+                                  <div class="mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200">
+                                    <a href="javascript:;" class="text-lightBlue-500">Request a demo</a>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="px-4 relative w-full md:w-6/12">
+                                <div class="bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg">
+                                  <div class="bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200">
+                                    <h6 class="font-bold my-2">Platinum</h6>
+                                  </div>
+                                  <div class="px-4 py-5 flex-auto">
+                                    <div class="text-5xl mt-0 mb-0 font-bold">$135</div>
+                                    <span> per month </span>
+                                    <ul class="mt-6 mb-0 list-none">
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> 500GB </b>File Storage
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> Premium </b>Users
+                                      </li>
+                                      <li class="py-1 text-blueGray-500">
+                                        <b class="text-lightBlue-500"> No time </b>Tracking
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200">
+                                    <a href="javascript:;" class="text-lightBlue-500">Request a demo</a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <div class="pt-12 pb-12 border-b bg-blueGray-100">
+                    <div class="container mx-auto px-4">
+                      <div class="justify-between items-center flex flex-wrap -mx-4">
+                        <div class="px-4 relative w-full lg:w-6/12">
+                          <h3 class="text-xl font-bold leading-normal mt-0">Thank you for supporting us!</h3>
+                          <h4 class="leading-normal mt-1 mb-2 text-blueGray-500">Let's get in touch on any of these platforms.</h4>
+                        </div>
+                        <div class="text-right pr-6 px-4 relative w-full lg:w-6/12">
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md">
+                            <i class="fab fa-twitter"></i></button>
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md">
+                            <i class="fab fa-facebook"></i></button>
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md">
+                            <i class="fab fa-dribbble"></i></button>
+                          <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md">
+                            <i class="fab fa-github"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-0 flex items-center overflow-hidden relative bg-black min-h-screen-75"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full bg-indigo-500 h-full z-1 opacity-30 top-0 left-0"</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;video</span> <span class="na">playsinline=</span><span class="s">""</span> <span class="na">autoplay=</span><span class="s">""</span> <span class="na">loop=</span><span class="s">""</span> <span class="na">class=</span><span class="s">"absolute min-w-full max-w-none min-h-full z-0 transform -translate-x-1/2 -translate-y-1/2 top-7/20 left-1/2"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;source</span> <span class="na">src=</span><span class="s">"../../assets/videos/Lights - 26607.mp4"</span> <span class="na">type=</span><span class="s">"video/mp4"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;/video&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative text-center flex flex-wrap -mx-4 z-1"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mx-auto px-4 relative w-full lg:w-8/12"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;h1</span> <span class="na">class=</span><span class="s">"text-4xl font-semibold leading-tight text-white"</span><span class="nt">&gt;</span>Welcome to our most special company<span class="nt">&lt;/h1&gt;</span>
+          <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"mt-2 text-lg text-white opacity-75 mb-8"</span><span class="nt">&gt;</span>We’re not always in the position that we want to be at. We’re constantly growing! When you're home, is different, since your parents are helping you.<span class="nt">&lt;/h4&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-orange-500 border-orange-500 active:bg-orange-600 active:border-orange-600 text-sm px-6 py-3 shadow-md hover:shadow-lg rounded-lg"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-play mr-2"</span><span class="nt">&gt;&lt;/i&gt;</span>Get in contact<span class="nt">&lt;/button&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full absolute text-white bottom-0 z-1"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full pointer-events-none overflow-hidden h-70-px"</span> <span class="na">style=</span><span class="s">"transform: translateZ(0px);"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;svg</span> <span class="na">class=</span><span class="s">"absolute bottom-0 overflow-hidden"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">version=</span><span class="s">"1.1"</span> <span class="na">viewBox=</span><span class="s">"0 0 2560 100"</span> <span class="na">x=</span><span class="s">"0"</span> <span class="na">y=</span><span class="s">"0"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;polygon</span> <span class="na">class=</span><span class="s">"text-white fill-current"</span> <span class="na">points=</span><span class="s">"2560 0 2560 100 0 100"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+        <span class="nt">&lt;/svg&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-12"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full text-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2"</span><span class="nt">&gt;</span>Lost angels<span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;h2</span> <span class="na">class=</span><span class="s">"text-4xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>Why did you last so much, nobody knows<span class="nt">&lt;/h2&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>There will come a day, when you'll fall again, and you know this, but like myself, you too have some angels that help you.<span class="nt">&lt;/p&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"items-center flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"ml-auto text-left mt-6 px-4 relative w-full lg:w-4/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-lg rounded border-0 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg text-white bg-blueGray-500"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;img</span> <span class="na">class=</span><span class="s">"w-full flex-shrink-0 rounded-t-lg"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/img-1.f2fd521a.jpg"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;blockquote</span> <span class="na">class=</span><span class="s">"p-6 relative mb-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;svg</span> <span class="na">preserveAspectRatio=</span><span class="s">"none"</span> <span class="na">xmlns=</span><span class="s">"http://www.w3.org/2000/svg"</span> <span class="na">viewBox=</span><span class="s">"0 0 583 95"</span> <span class="na">class=</span><span class="s">"block w-full absolute text-blueGray-700 h-95-px -top-94-px left-0"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;polygon</span> <span class="na">points=</span><span class="s">"0,52 583,95 0,95"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 fill-current"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+              <span class="nt">&lt;polygon</span> <span class="na">points=</span><span class="s">"0,42 583,95 683,0 0,95"</span> <span class="na">opacity=</span><span class="s">".2"</span> <span class="na">class=</span><span class="s">"text-blueGray-500 fill-current"</span><span class="nt">&gt;&lt;/polygon&gt;</span>
+            <span class="nt">&lt;/svg&gt;</span>
+            <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold mt-0 text-white"</span><span class="nt">&gt;</span>Notus Design System<span class="nt">&lt;/h4&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-white mt-2"</span><span class="nt">&gt;</span>That’s my skill, I like to create things that last many years. I’m not really specifically talented at anything except for the ability to learn. That's it, see you at top...<span class="nt">&lt;/p&gt;</span>
+          <span class="nt">&lt;/blockquote&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mr-auto px-4 relative w-full lg:w-7/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-orange-500 mt-8 rounded-lg text-left p-6 flex items-start"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-1"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-orange-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-smile-beam text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-normal text-white"</span><span class="nt">&gt;</span>Best Quality<span class="nt">&lt;/h4&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 text-white"</span><span class="nt">&gt;</span>It becomes harder for us to give others a hand. We get our heart broken by people we love.<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-lightBlue-500 mt-8 rounded-lg text-left p-6 flex items-start"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-1"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-lightBlue-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-palette text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-normal text-white"</span><span class="nt">&gt;</span>Awesome Design<span class="nt">&lt;/h4&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 text-white"</span><span class="nt">&gt;</span>As we live, our hearts turn colder. Cause pain is what we go through as we become older.<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-red-500 mt-8 rounded-lg text-left p-6 flex items-start"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-1"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-red-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-running text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-normal text-white"</span><span class="nt">&gt;</span>Fast Development<span class="nt">&lt;/h4&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 text-white"</span><span class="nt">&gt;</span>We’re not always in the position that we want to be at. We’re constantly growing.<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-emerald-500 mt-8 rounded-lg text-left p-6 flex items-start"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-1"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-emerald-500 bg-white shadow-lg rounded rounded-full justify-center items-center text-center p-2 mx-auto mb-5 inline-flex w-12 h-12"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-glasses text-xl"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-normal text-white"</span><span class="nt">&gt;</span>Super Fresh<span class="nt">&lt;/h4&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 text-white"</span><span class="nt">&gt;</span>When we lose family over time. What else could rust the heart more over time? Blackgold.<span class="nt">&lt;/p&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-12"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full text-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded-full px-3"</span><span class="nt">&gt;</span>Fight hard<span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;h2</span> <span class="na">class=</span><span class="s">"text-4xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>It's time to know<span class="nt">&lt;/h2&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>Go and show them how strong you are. Leave them with their jaws to the ground, and hit them so that they faint on the ropes. Since you've got talent, you have to wear a crown.<span class="nt">&lt;/p&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"items-center flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-left px-4 relative w-full lg:w-4/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-lightBlue-500 border-lightBlue-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog text-1625"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold leading-tight mb-2 mt-6"</span><span class="nt">&gt;</span>Social Conversation<span class="nt">&lt;/h6&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mb-2 text-blueGray-400"</span><span class="nt">&gt;</span>We get insulted by others, lose trust for those others. We get back stabbed by friends. It becomes harder for us to give others a hand.<span class="nt">&lt;/p&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>More about us <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"ml-1 fas fa-angle-right"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-left px-4 relative w-full lg:w-4/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-emerald-500 border-emerald-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-atom text-1625"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold leading-tight mb-2 mt-6"</span><span class="nt">&gt;</span>Analyze Performance<span class="nt">&lt;/h6&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mb-2 text-blueGray-400"</span><span class="nt">&gt;</span>Don't get your heart broken by people we love, even that we give them all we have. Then we lose family over time. As we live, our hearts turn colder.<span class="nt">&lt;/p&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>Learn about our products <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"ml-1 fas fa-angle-right"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-left px-4 relative w-full lg:w-4/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-orange-500 border-orange-500 shadow-lg rounded-full justify-center items-center inline-flex text-center mb-2 bg-white w-16 h-16"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-globe-europe text-1625"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-semibold leading-tight mb-2 mt-6"</span><span class="nt">&gt;</span>Measure Conversions<span class="nt">&lt;/h6&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mb-2 text-blueGray-400"</span><span class="nt">&gt;</span>What else could rust the heart more over time? Blackgold. The time is now for it to be okay to be great. or being a bright color. For standing out.<span class="nt">&lt;/p&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>Check our documentation <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"ml-1 fas fa-angle-right"</span><span class="nt">&gt;&lt;/i&gt;&lt;/a&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto ct-docs-frame"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-wrap justify-center "</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-center"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-center"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mb-2 font-bold uppercase text-emerald-500"</span><span class="nt">&gt;</span>Our latest blogposts<span class="nt">&lt;/h6&gt;</span>
+                        <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>Check the news for this month<span class="nt">&lt;/h3&gt;</span>
+                        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>I always felt like I could do anything. That’s the main thing people are controlled by! Thoughts- their perception of themselves!<span class="nt">&lt;/p&gt;</span>
+                    <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"items-center flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg"</span> <span class="na">style=</span><span class="s">"background-image: url('../../assets/img/guitar-play.jpg'); backface-visibility: hidden;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-black opacity-50 rounded-lg"</span><span class="nt">&gt;&lt;/div&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute text-left p-6 bottom-0"</span><span class="nt">&gt;</span>
+                                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl leading-normal mb-0 text-white opacity-75"</span><span class="nt">&gt;</span>All the beautiful places<span class="nt">&lt;/h6&gt;</span>
+                                    <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-bold leading-tight mt-0 mb-2 text-white"</span><span class="nt">&gt;</span>Research by Bang <span class="ni">&amp;amp;</span> Olufsen on city sounds and music<span class="nt">&lt;/h5&gt;</span>
+                                <span class="nt">&lt;/div&gt;</span>
+                            <span class="nt">&lt;/a&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/div&gt;</span>
+
+
+
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg"</span> <span class="na">style=</span><span class="s">"background-image: url('../../assets/img/sections/thomas.jpg'); backface-visibility: hidden;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-black opacity-50 rounded-lg"</span><span class="nt">&gt;&lt;/div&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute text-left p-6 bottom-0"</span><span class="nt">&gt;</span>
+                                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl leading-normal mb-0 text-white opacity-75"</span><span class="nt">&gt;</span>Spectrum Boats<span class="nt">&lt;/h6&gt;</span>
+                                    <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-bold leading-tight mt-0 mb-2 text-white"</span><span class="nt">&gt;</span>Data Virtualization and Boats Startups<span class="nt">&lt;/h5&gt;</span>
+                                <span class="nt">&lt;/div&gt;</span>
+                            <span class="nt">&lt;/a&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg"</span> <span class="na">style=</span><span class="s">"background-image: url('../../assets/img/sections/ashim.jpg'); backface-visibility: hidden;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-black opacity-50 rounded-lg"</span><span class="nt">&gt;&lt;/div&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute text-left p-6 bottom-0"</span><span class="nt">&gt;</span>
+                                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl leading-normal mb-0 text-white opacity-75"</span><span class="nt">&gt;</span>Flying on pandemic<span class="nt">&lt;/h6&gt;</span>
+                                    <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-bold leading-tight mt-0 mb-2 text-white"</span><span class="nt">&gt;</span>New Challenges when you want to fly to new areas<span class="nt">&lt;/h5&gt;</span>
+                                <span class="nt">&lt;/div&gt;</span>
+                            <span class="nt">&lt;/a&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"h-430-px overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full shadow-lg transition-all duration-150 ease-in-out hover:z-1 hover:transform hover:scale-110 group rounded-lg mb-4"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-50-center bg-cover transition-all duration-1000 ease-in-out group-hover:transform group-hover:scale-110 rounded-lg"</span> <span class="na">style=</span><span class="s">"background-image: url('../../assets/img/sections/dane.jpg'); backface-visibility: hidden;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute w-full h-full bg-black opacity-50 rounded-lg"</span><span class="nt">&gt;&lt;/div&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"absolute text-left p-6 bottom-0"</span><span class="nt">&gt;</span>
+                                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl leading-normal mb-0 text-white opacity-75"</span><span class="nt">&gt;</span>Work from Home<span class="nt">&lt;/h6&gt;</span>
+                                    <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-bold leading-tight mt-0 mb-2 text-white"</span><span class="nt">&gt;</span>How meetings and behaviour are changing<span class="nt">&lt;/h5&gt;</span>
+                                <span class="nt">&lt;/div&gt;</span>
+                            <span class="nt">&lt;/a&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/div&gt;</span>
+
+                <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-12 bg-blueGray-100"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-center flex-col px-4 relative w-full md:w-4/12 ml-auto"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;h2</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-0"</span><span class="nt">&gt;</span>Choose a plan for your next project<span class="nt">&lt;/h2&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-10 text-lg leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>You have Free Unlimited Updates and Premium Support on each package. You also have 20 days to request a refund.<span class="nt">&lt;/p&gt;</span>
+        <span class="nt">&lt;div&gt;&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-pink-500 border-pink-500 active:bg-pink-600 active:border-pink-600 text-sm px-6 py-2 shadow hover:shadow-lg rounded-md"</span><span class="nt">&gt;</span>Freelancer<span class="nt">&lt;/button&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-sm px-6 py-2 shadow hover:shadow-lg rounded-md"</span><span class="nt">&gt;</span>Enterprise<span class="nt">&lt;/button&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mx-auto px-4 relative w-full md:w-7/12 w-full lg:w-7/12"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"font-bold my-2"</span><span class="nt">&gt;</span>Standard<span class="nt">&lt;/h6&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-5xl mt-0 mb-0 font-bold"</span><span class="nt">&gt;</span>$25<span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;span&gt;</span> per month <span class="nt">&lt;/span&gt;</span>
+                    <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"mt-6 mb-0 list-none"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 20GB <span class="nt">&lt;/b&gt;</span>File Storage
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 15 <span class="nt">&lt;/b&gt;</span>Users/project
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 4.000 <span class="nt">&lt;/b&gt;</span>Internal messages
+                      <span class="nt">&lt;/li&gt;</span>
+                    <span class="nt">&lt;/ul&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span>Request a demo<span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"font-bold my-2"</span><span class="nt">&gt;</span>Premium<span class="nt">&lt;/h6&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-5xl mt-0 mb-0 font-bold"</span><span class="nt">&gt;</span>$59<span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;span&gt;</span> per month <span class="nt">&lt;/span&gt;</span>
+                    <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"mt-6 mb-0 list-none"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 50GB <span class="nt">&lt;/b&gt;</span>File Storage
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 100 <span class="nt">&lt;/b&gt;</span>Users
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> Premium <span class="nt">&lt;/b&gt;</span>Support
+                      <span class="nt">&lt;/li&gt;</span>
+                    <span class="nt">&lt;/ul&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span>Request a demo<span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"font-bold my-2"</span><span class="nt">&gt;</span>Gold<span class="nt">&lt;/h6&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-5xl mt-0 mb-0 font-bold"</span><span class="nt">&gt;</span>$100<span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;span&gt;</span> per month <span class="nt">&lt;/span&gt;</span>
+                    <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"mt-6 mb-0 list-none"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 200GB <span class="nt">&lt;/b&gt;</span>File Storage<span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> Unlimited <span class="nt">&lt;/b&gt;</span>Users<span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> Premium <span class="nt">&lt;/b&gt;</span>Support<span class="nt">&lt;/li&gt;</span>
+                    <span class="nt">&lt;/ul&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span>Request a demo<span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-6/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-white mb-6 text-center shadow-lg rounded-lg relative flex flex-col min-w-0 break-words w-full mb-6 rounded-lg"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"bg-transparent first:rounded-t px-5 py-3 border-b border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"font-bold my-2"</span><span class="nt">&gt;</span>Platinum<span class="nt">&lt;/h6&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 py-5 flex-auto"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-5xl mt-0 mb-0 font-bold"</span><span class="nt">&gt;</span>$135<span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;span&gt;</span> per month <span class="nt">&lt;/span&gt;</span>
+                    <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"mt-6 mb-0 list-none"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> 500GB <span class="nt">&lt;/b&gt;</span>File Storage
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> Premium <span class="nt">&lt;/b&gt;</span>Users
+                      <span class="nt">&lt;/li&gt;</span>
+                      <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"py-1 text-blueGray-500"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;b</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span> No time <span class="nt">&lt;/b&gt;</span>Tracking
+                      <span class="nt">&lt;/li&gt;</span>
+                    <span class="nt">&lt;/ul&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-4 py-6 bg-transparent bg-transparent rounded-b px-4 py-3 border-t border-blueGray-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-lightBlue-500"</span><span class="nt">&gt;</span>Request a demo<span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pt-12 pb-12 border-b bg-blueGray-100"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"justify-between items-center flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-6/12"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-xl font-bold leading-normal mt-0"</span><span class="nt">&gt;</span>Thank you for supporting us!<span class="nt">&lt;/h3&gt;</span>
+          <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"leading-normal mt-1 mb-2 text-blueGray-500"</span><span class="nt">&gt;</span>Let's get in touch on any of these platforms.<span class="nt">&lt;/h4&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-right pr-6 px-4 relative w-full lg:w-6/12"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-twitter"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-facebook"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-dribbble"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;i</span> <span class="na">class=</span><span class="s">"fab fa-github"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../assets/js/popper.js"></script>
+  <script src="../../assets/js/plugins/chart.min.js"></script>
+  <!--  Google Maps Plugin    -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+  <script src="../../assets/js/map.js"></script>
+  <script src="../../assets/js/notus.js"></script>
+</body>
+<footer class="relative pt-8 pb-6 mt-8">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-wrap">
+      <div class="w-full md:w-6/12 px-4">
+        <h4 class="text-xl leading-normal font-bold">Let's keep in touch!</h4>
+        <h5 class="leading-normal mt-1 mb-2 text-blueGray-500">Find us on any of these platforms, we respond within 1-2 business days.</h5>
+        <div class="mt-6">
+          <a href="https://www.twitter.com/creativetim" target="_blank">
+            <i class="fab fa-twitter  bg-white text-twitter-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.facebook.com/creativetim" target="_blank">
+            <i class="fab fa-facebook-square bg-white text-facebook-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"> </i>
+          </a>
+          <a href="https://www.dribbble.com/creativetim" target="_blank">
+            <i class="fab fa-dribbble bg-white text-dribbble-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.github.com/creativetimofficial" target="_blank">
+            <i class="fab fa-github bg-white text-github-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+        </div>
+      </div>
+      <div class="w-full md:w-6/12 px-4">
+        <div class="flex flex-wrap items-top mb-6">
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Useful Links</span>
+            <ul class="list-unstyled">
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/presentation" target="_blank">About Us</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/blog" target="_blank">Blog</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.github.com/creativetimofficial/tailwind-starter-kit" target="_blank">Github</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/bootstrap-themes/free" target="_blank">Free Products</a>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Other Resources</span>
+            <ul class="list-unstyled">
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/license" target="_blank">License</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/terms" target="_blank">Terms &amp; Conditions</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/privacy" target="_blank">Privacy Policy</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/contact-us" target="_blank">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="my-6 border-blueGray-200">
+    <div class="flex flex-wrap items-center md:justify-between justify-center">
+      <div class="w-full md:w-4/12 px-4 mx-auto text-center">
+        <div class="text-sm text-blueGray-500 py-1">Copyright © 2021
+          <a href="https://www.creative-tim.com" class="text-blueGray-500 hover:text-blueGray-600 font-semibold" target="_blank">Creative Tim</a>
+          . All rights reserved.
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</html>

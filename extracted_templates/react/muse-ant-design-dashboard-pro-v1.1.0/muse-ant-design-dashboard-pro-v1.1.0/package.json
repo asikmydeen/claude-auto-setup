@@ -1,0 +1,65 @@
+{
+  "name": "muse-ant-design-dashboard-pro",
+  "version": "1.1.0",
+  "private": true,
+  "dependencies": {
+    "@ant-design/charts": "1.4.2",
+    "@ant-design/colors": "6.0.0",
+    "@ant-design/icons": "4.8.0",
+    "@fullcalendar/core": "6.1.8",
+    "@fullcalendar/daygrid": "6.1.8",
+    "@fullcalendar/interaction": "6.1.8",
+    "@fullcalendar/react": "6.1.8",
+    "@testing-library/jest-dom": "5.17.0",
+    "@testing-library/react": "14.0.0",
+    "@testing-library/user-event": "14.4.3",
+    "antd": "4.24.8",
+    "antd-button-color": "1.0.4",
+    "apexcharts": "3.41.0",
+    "chart.js": "4.3.0",
+    "install": "0.13.0",
+    "postscribe": "2.0.8",
+    "react": "17.0.2",
+    "react-apexcharts": "1.4.1",
+    "react-beautiful-dnd": "13.1.1",
+    "react-chartjs-2": "4.3.1",
+    "react-csv": "2.2.2",
+    "react-dom": "^17.0.2",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "5.2.0",
+    "react-scripts": "5.0.1",
+    "styled-components": "5.3.10",
+    "web-vitals": "3.4.0"
+  },
+  "scripts": {
+    "dev": "PORT=1621 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/sortablejs": "1.15.1",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
+  },
+  "overrides": {
+    "svgo": "3.0.2"
+  }
+}

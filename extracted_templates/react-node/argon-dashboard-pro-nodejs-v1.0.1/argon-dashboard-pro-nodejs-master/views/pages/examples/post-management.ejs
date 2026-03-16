@@ -1,0 +1,128 @@
+<body>
+<% include ../../partials/sidebar %>
+<!-- Main content -->
+<div class="main-content" id="panel">
+  <% include ../../partials/navbar %>
+  <div class="header bg-primary pb-6">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <h6 class="h2 text-white d-inline-block mb-0">Examples</h6>
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Post List</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="row align-items-center">
+              <div class="col-8">
+                <h3 class="mb-0">Post List</h3>
+              </div>
+              <div class="col-4 text-right">
+                <a href="/posts/add" class="btn btn-sm btn-neutral">Add post</a>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive py-4">
+            <table class="table table-flush" id="datatable-basic">
+              <thead class="thead-light">
+              <tr>
+                <th>Title</th>
+                <th>Content</th>
+                <th>Category</th>
+                <th>Tags</th>
+                <th>Author Name</th>
+                <th>Published</th>
+                <th>Publish at</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tfoot>
+              <tr>
+                <th>Title</th>
+                <th>Content</th>
+                <th>Category</th>
+                <th>Tags</th>
+                <th>Author Name</th>
+                <th>Published</th>
+                <th>Publish at</th>
+                <th>Actions</th>
+              </tr>
+              </tfoot>
+              <tbody>
+              <% locals.postList && locals.postList.forEach(function(post) { %>
+                <tr>
+                  <td><%= post.title %></td>
+                  <td><%= post.content %></td>
+                  <td><%= (post.categories || []).join(', ') %></td>
+                  <td>
+                    <% post.tags && post.tags.forEach(function(tag) { %>
+                    <span class="badge badge-default" style="background-color:<%=tag.color %>"><%=tag.name%></span>
+                    <% }) %>
+                  </td>
+                  <td><%= post.author %></td>
+                  <td><%= post.published_at <= Date.now() %></td>
+                  <td><%= post.published_at > Date.now() ? post.published_at : '-' %></td>
+                  <td>
+                    <a href="/posts/<%=post.post_id%>/edit" class="btn btn-primary btn-sm">EDIT</a>
+                    <button type="button" class="btn btn-primary btn-sm delete-post" data-post="<%= post.post_id %>">DELETE</button>
+                  </td>
+                </tr>
+              <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <% include ../../partials/footer %>
+  </div>
+</div>
+<!-- Include scripts -->
+<% include ../../partials/scripts %>
+<script>
+  function addEvent(event, elem, func) {
+    if (elem.addEventListener) // W3C DOM
+      elem.addEventListener(event, func, false);
+    else if (elem.attachEvent) { // IE DOM
+      elem.attachEvent("on" + event, func);
+    } else { // No much to do
+      elem["on" + event] = func;
+    }
+  }
+
+  function redirectTo() {
+    if (this.status === 200) {
+      return window.location = this.responseURL;
+    }
+  }
+
+  function deletePost(event) {
+    var xhr = new XMLHttpRequest();
+    var postId = event.target.dataset.post;
+    xhr.addEventListener("load", redirectTo);
+    xhr.open("POST", "/posts/remove");
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.send('id=' + postId);
+  }
+
+  var deletePostElements = document.querySelectorAll('.delete-post');
+  for (let index = 0; index < deletePostElements.length; index++) {
+    addEvent('click', deletePostElements[index], deletePost);
+  }
+</script>
+</body>

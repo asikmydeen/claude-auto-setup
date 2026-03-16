@@ -1,0 +1,52 @@
+{
+  "name": "vue-material-dashboard-pro",
+  "version": "1.5.3",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve --open",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "dev": "npm run serve",
+    "deploy": "npm run build && cd docs && npm run build && cd .. && sudo gh-pages -d dist",
+    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm run dev"
+  },
+  "dependencies": {
+    "@fullcalendar/core": "6.1.11",
+    "@fullcalendar/daygrid": "6.1.11",
+    "@fullcalendar/interaction": "6.1.11",
+    "@fullcalendar/timegrid": "^6.1.11",
+    "@fullcalendar/vue": "6.1.11",
+    "@tweenjs/tween.js": "20.0.3",
+    "chartist": "0.11.4",
+    "es6-promise": "4.2.8",
+    "fuse.js": "6.6.2",
+    "google-maps": "4.3.3",
+    "jquery": "3.7.1",
+    "jvectormap-next": "3.1.1",
+    "moment": "2.30.1",
+    "nouislider": "15.7.1",
+    "perfect-scrollbar": "1.5.5",
+    "sweetalert2": "11.10.5",
+    "vee-validate": "3.4.15",
+    "vue": "2.7.14",
+    "vue-clickaway": "2.2.2",
+    "vue-material": "^1.0.0-beta-15",
+    "vue-router": "3.6.5",
+    "vue2-transitions": "0.3.0"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "7.23.10",
+    "@vue/cli-plugin-babel": "5.0.8",
+    "@vue/cli-plugin-eslint": "5.0.8",
+    "@vue/cli-plugin-router": "5.0.8",
+    "@vue/cli-service": "5.0.8",
+    "@vue/eslint-config-prettier": "7.1.0",
+    "eslint": "8.56.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-vue": "9.21.1",
+    "prettier": "2.8.8",
+    "sass": "1.71.1",
+    "sass-loader": "13.3.2",
+    "vue-template-compiler": "2.7.16"
+  }
+}

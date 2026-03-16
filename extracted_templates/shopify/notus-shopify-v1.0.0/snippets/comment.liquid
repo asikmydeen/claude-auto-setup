@@ -1,0 +1,14 @@
+<!-- /snippets/comment.liquid -->
+<div class="grid mb-4 mx-2">
+  <div class="grid__itemh">
+    <span class="h5 comment-author mb-1">{{ comment.author }}</span>
+    <div class="d-flex align-items-center mb-2">
+      <i class="far fa-calendar text-sm"></i>
+      <time datetime="{{ comment.created_at | date: '%Y-%m-%dT%H:%M:%SZ' }}" class="comment-date ms-1">
+        {{ comment.created_at | date: format: 'date' }}
+      </time>
+     </div>
+  	{{ comment.content }}
+  </div>
+ 
+</div>

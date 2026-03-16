@@ -1,0 +1,560 @@
+    .features-1 .title-second {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 25px;
+        line-height: 29px;
+        text-align: center;
+        margin-top: 0px;
+    }
+    
+    .title-first {
+        font-weight: 500;
+        font-family: Roboto;
+        width: 30rem;
+        height: 5rem;
+        margin: auto;
+        font-size: 3rem;
+    }
+    
+    .title-second {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 1.5rem;
+        line-height: 29px;
+        text-align: center;
+        margin-top: 10px auto 0;
+    }
+    
+    .features-2 .title-first {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 2.5rem;
+        line-height: 53px;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .features-2 .title-second {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 23px;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .features-3 .title-second {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 23px;
+        /* identical to box height */
+        color: #3C4858;
+        margin-top: 0px;
+    }
+    
+    .description-examples {
+        padding-top: 4rem;
+    }
+    
+    .features-3 .title-first {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        line-height: 53px;
+        /* identical to box height */
+        color: #3C4858;
+        font-size: 2.5rem;
+        /* identical to box height */
+    }
+    
+    .features-4 .title-first {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 2.5rem;
+        line-height: 53px;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .title-first-feature7 {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 2.5rem;
+        line-height: 53px;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .title-second-feature7 {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 1.2rem;
+        line-height: 53px;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .navbar-brand {
+        display: inline-block;
+        padding-top: 0.3125rem;
+        padding-bottom: 0.3125rem;
+        margin-right: 1rem;
+        /* font-size: 1.40rem !important; */
+        line-height: inherit;
+        white-space: nowrap;
+        margin-left: 2rem;
+    }
+    
+    @media only screen and (max-width: 1024px) {
+        .navbar-brand {
+            margin-left: 0rem;
+        }
+    }
+    
+    .description-subtitle {
+        padding-top: 30px;
+    }
+    
+    .text-button-manager {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 6px;
+        color: #FFFFFF;
+    }
+    
+    .btn-manage {
+        width: 6.56rem;
+        height: 1.68rem;
+        background: #9C27B0;
+        box-shadow: 0px 2px 2px rgba(156, 39, 176, 0.2);
+        border-radius: 3px;
+    }
+    
+    .image-role {
+        padding-left: 11.87rem;
+        margin-top: -2.81rem;
+    }
+    
+    .features-2 .role {
+        padding-top: 3.12rem;
+    }
+    
+    .icon-lock {
+        margin-left: -2.18rem;
+        padding-right: 0.62rem;
+    }
+    
+    .row .role .btn {
+        width: 10.43rem;
+    }
+    
+    .features-2 .role .roles {
+        padding-top: 70px;
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 300;
+        font-size: 15px;
+        line-height: 20px;
+        /* or 133% */
+        color: #999999;
+        width: 380px;
+    }
+    
+    .pro-badge {
+        position: relative;
+        font-size: 1.6rem;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin: auto;
+        right: -17rem;
+        padding: 1rem 1rem;
+        top: -6.5rem;
+        background: #fff;
+        border-radius: 3px;
+        color: #444444;
+        line-height: 1.3rem;
+        box-shadow: 0 5px 5px -2px rgba(31, 31, 31, 0.4);
+        width: 5rem;
+        height: 3rem;
+        align-content: center;
+    }
+    
+    .pro-badge-text {
+        font-size: 1.7rem;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin: auto;
+    }
+    
+    .info-title-description {
+        font-size: 1rem;
+    }
+    
+    .title-page-section {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: auto;
+        padding-top: 3.3rem;
+        padding-bottom: 2.2rem;
+    }
+    
+    .image-section5 {
+        margin: auto;
+        width: 100%;
+        height: auto;
+        max-width: 1150px;
+    }
+    
+    .image-section5-col {
+        width: 37rem;
+        margin-left: -1.5rem;
+    }
+    
+    .card-feature-6 {}
+    
+    .card-tittle-feature-6 {
+        width: 15rem;
+        margin: auto;
+    }
+    
+    .text-card {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: 300;
+        font-size: 20px;
+        line-height: 30px;
+        /* or 150% */
+        color: #999999;
+        max-width: 50rem;
+        margin: auto;
+    }
+    
+    .btn.btn-twitter {
+        border-radius: 22px;
+    }
+    
+    .btn.btn-facebook {
+        border-radius: 22px;
+    }
+    
+    .btn.btn-google {
+        border-radius: 22px;
+    }
+    
+    .container-fluid {
+        padding-left: 100px;
+        padding-right: 100px;
+    }
+    
+    .navbar .navbar-nav .button-container {
+        padding: 4px;
+    }
+    
+    .description-text {
+        font-size: 1.2rem;
+        font-weight: 10;
+        font-family: Roboto;
+    }
+    
+    .features-6 .title-first {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 2.5rem;
+        line-height: 53px;
+        width: auto;
+        /* identical to box height */
+        color: #3C4858;
+    }
+    
+    .features-5 .title-first {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 2.5rem;
+        line-height: 53px;
+        /* identical to box height */
+        color: #fff !important;
+    }
+    
+    .features-5 .container,
+    .features-5 .title-first {
+        position: relative;
+        z-index: 2;
+        color: #fff;
+    }
+    
+    .img-crud {
+        margin-left: -4.7rem;
+    }
+    
+    .buttons-under-title {
+        display: none;
+    }
+    
+    .menu {
+        display: none;
+    }
+    
+    .user-delimiter {
+        margin-top: 3rem !important;
+    }
+    
+    @media only screen and (max-width:1280px) {
+        .img-crud {
+            width: 90%;
+            margin-left: 0px;
+        }
+    }
+    
+    @media only screen and (min-width:1024px) {
+        .features-2 .users-auth {
+            position: relative;
+            margin-left: 57px;
+        }
+        .features-2 .users-auth-img {
+            position: relative;
+            margin-left: -60px;
+        }
+    }
+    
+    @media only screen and (max-width: 1024px) {
+        .card-feature-6 {
+            width: 14rem !important;
+            margin: auto;
+        }
+        .card-tittle-feature-6 {
+            width: 11rem;
+            margin: auto;
+        }
+        .image-role {
+            padding-left: 2rem;
+            margin-top: 0;
+        }
+        .icon-lock {
+            margin-left: 0;
+            padding-right: 0;
+        }
+        .img-crud {}
+        .card-feature-6 {
+            width: 10rem;
+        }
+        .features-2 .role .roles {
+            width: 270px;
+        }
+    }
+    
+    @media only screen and (max-width: 768px) {
+        .container-fluid {
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+        .footer nav {
+            float: none !important;
+        }
+        .footer .copyright {
+            float: none !important;
+        }
+        .card-feature-6 {
+            width: 292px;
+            margin: auto;
+        }
+        .features-2 .role .roles {
+            margin: auto;
+        }
+        .image-role {
+            margin-left: 1rem;
+        }
+        .title-second {
+            padding-top: 0;
+            font-size: 0.9rem;
+            line-height: 17px;
+        }
+        .title-first {
+            margin-bottom: 1rem;
+        }
+        .img-crud {
+            margin-left: 0rem;
+        }
+        .card-title .card-features-6 {
+            text-align: center;
+        }
+        .navbar-brand {
+            font-size: 1rem !important;
+        }
+        .break {
+            display: none;
+        }
+        .features-1 .description {
+            margin-top: -6.25rem;
+        }
+        .buttons-under-title {
+            display: block;
+            padding-top: 40px;
+        }
+        .btn-title {
+            font-size: 0.6rem;
+        }
+        .buttons-under-title .button-container {
+            margin-top: 19px;
+            padding: 0px;
+            width: 8rem;
+            height: auto;
+            margin-right: 7px;
+            margin-left: 7px;
+        }
+        .navbar .navbar-brand {
+            display: none !important;
+        }
+        .navbar.navbar-transparent {
+            display: none !important;
+        }
+        .navbar.fixed-top {
+            display: none;
+        }
+        .brand {
+            margin-top: -120px;
+        }
+        .description {
+            font-size: 1.1rem;
+        }
+        .menu {
+            display: inline;
+            position: absolute;
+            margin-left: 50px;
+        }
+        .info {
+            padding: 46px 0 53px;
+        }
+        .features-2 {
+            padding-top: 0;
+        }
+        .features-2 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+        }
+        .features-3 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+        }
+        .features-4 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+        }
+        .features-5 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+        }
+        .features-6 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+            width: 24rem;
+        }
+        .title-first-feature7 {
+            font-size: 2rem;
+            line-height: 40px;
+        }
+        .title-second-feature7 {
+            line-height: 30px;
+            font-size: 1rem;
+        }
+        .features-2 .title-second {
+            font-size: 1rem;
+        }
+        .features-5 .container [class*="col-"] {
+            border: 0px;
+        }
+    }
+    
+    @media only screen and (max-width: 420px) {
+        .user-delimiter {
+            margin-top: 0rem !important;
+        }
+        .title-first {
+            width: auto;
+        }
+        .image-role {
+            margin-left: -1.1rem;
+        }
+        .buttons-under-title {
+            padding-top: 0;
+        }
+        .brand .title-first {
+            width: 16rem;
+            height: auto;
+            font-size: 2.4rem;
+        }
+        .pro-badge {
+            position: static;
+            padding: 0px;
+            width: 2.7rem;
+            height: 1.3rem;
+            display: inline-block;
+            vertical-align: middle;
+            vertical-align: top;
+            margin-top: 4px;
+        }
+        .pro-badge-text {
+            font-size: 1rem;
+            padding-top: 0.05rem;
+            padding-bottom: 0.1rem;
+            padding-left: 0.21rem;
+            margin: auto;
+        }
+    }
+    
+    @media only screen and (max-width: 375px) {
+        .card-tittle-feature-6 {
+            width: 11.3rem;
+            margin: auto;
+        }
+        .features-6 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+            width: 24rem;
+            margin-left: -15px;
+        }
+    }
+    
+    @media only screen and (max-width: 320px) {
+        .features-6 .title-first {
+            font-size: 2rem;
+            line-height: 40px;
+            width: auto;
+            margin: auto;
+        }
+        .row .role .btn {
+            width: 10.43rem;
+            margin-left: -27px;
+        }
+        .card-feature-6 {
+            /* margin-left: -22px; */
+        }
+        .brand .title-first {
+            margin-top: 2rem;
+            margin-bottom: -60px;
+        }
+        .brand .title-first {
+            padding-bottom: 5rem;
+        }
+        .info-title-description {
+            width: 90%;
+        }
+        .buttons-under-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dropdown-menu.dropdown-with-icons .dropdown-item {
+            padding: 0.5rem 1rem 0.75rem 0.75rem;
+        }
+    }

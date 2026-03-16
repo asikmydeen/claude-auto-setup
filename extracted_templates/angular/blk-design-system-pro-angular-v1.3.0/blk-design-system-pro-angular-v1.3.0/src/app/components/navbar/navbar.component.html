@@ -1,0 +1,271 @@
+<nav
+  class="navbar navbar-expand-lg fixed-top navbar-transparent"
+  color-on-scroll="300"
+  id="navbar-top"
+>
+  <div class="container">
+    <div class="navbar-translate">
+      <a
+        class="navbar-brand"
+        href="https://demos.creative-tim.com/blk-design-system-pro-angular/"
+        placement="bottom"
+        target="_blank"
+        tooltip="Designed and Coded by Creative Tim"
+      >
+        <span> BLK• </span> Design System PRO Angular
+      </a>
+      <button
+        aria-controls="navigation-index"
+        aria-label="Toggle navigation"
+        class="navbar-toggler"
+        [attr.aria-expanded]="!isCollapsed"
+        (click)="isCollapsed = !isCollapsed"
+        id="navigation"
+        type="button"
+      >
+        <span class="navbar-toggler-bar bar1"> </span>
+        <span class="navbar-toggler-bar bar2"> </span>
+        <span class="navbar-toggler-bar bar3"> </span>
+      </button>
+    </div>
+    <div class="navbar-collapse" [collapse]="isCollapsed" id="navigation">
+      <div class="navbar-collapse-header">
+        <div class="row">
+          <div class="col-6 collapse-brand">
+            <a> BLK• <span> PRO </span> </a>
+          </div>
+          <div class="col-6 collapse-close text-right">
+            <button
+              aria-controls="navigation-index"
+              aria-label="Toggle navigation"
+              class="navbar-toggler"
+              [attr.aria-expanded]="!isCollapsed"
+              (click)="isCollapsed = !isCollapsed"
+              id="navigation"
+              type="button"
+            >
+              <i class="tim-icons icon-simple-remove"> </i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <ul class="navbar-nav ml-auto">
+        <li class="dropdown nav-item" dropdown>
+          <a
+            class="dropdown-toggle nav-link dropdown-toggle"
+            data-toggle="dropdown"
+            dropdownToggle
+          >
+            <i class="fa fa-cogs d-lg-none d-xl-none"> </i> Getting started
+          </a>
+          <div class="dropdown-menu dropdown-with-icons" *dropdownMenu>
+            <a class="dropdown-item" [routerLink]="['components']">
+              <i class="tim-icons icon-paper"> </i> Components
+            </a>
+            <a class="dropdown-item" [routerLink]="['presentation']">
+              <i class="tim-icons icon-bullet-list-67"> </i> Presentation Page
+            </a>
+            <a
+              class="dropdown-item"
+              href="https://demos.creative-tim.com/blk-design-system-pro-angular/#/documentation/overview"
+            >
+              <i class="tim-icons icon-book-bookmark"> </i> Documentation
+            </a>
+          </div>
+        </li>
+        <li class="nav-item dropdown" dropdown>
+          <a
+            class="nav-link dropdown-toggle dropdown-toggle"
+            data-toggle="dropdown"
+            dropdownToggle
+            id="navbarDropdownMenuLink"
+          >
+            <i aria-hidden="true" class="tim-icons icon-paper"> </i>
+            <p>Sections</p>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu dropdown-menu-right"
+            *dropdownMenu
+          >
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'headers'"
+            >
+              <i class="tim-icons icon-app"> </i> Headers
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'features'"
+            >
+              <i class="tim-icons icon-settings"> </i> Features
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'blogs'"
+            >
+              <i class="tim-icons icon-align-left-2"> </i> Blogs
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'teams'"
+            >
+              <i class="tim-icons icon-user-run"> </i> Teams
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'projects'"
+            >
+              <i class="tim-icons icon-paper"> </i> Projects
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'pricing'"
+            >
+              <i class="tim-icons icon-money-coins"> </i> Pricing
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'testimonials'"
+            >
+              <i class="tim-icons icon-chat-33"> </i> Testimonials
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'contactus'"
+            >
+              <i class="tim-icons icon-mobile"> </i> Contact Us
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'tables'"
+            >
+              <i class="tim-icons icon-chart-bar-32"> </i> Tables
+            </a>
+            <a
+              class="dropdown-item"
+              [routerLink]="['sections']"
+              [fragment]="'accordion'"
+            >
+              <i class="tim-icons icon-paper"> </i> Accordion
+            </a>
+          </div>
+        </li>
+        <li
+          class="nav-item dropdown"
+          dropdown
+          [autoClose]="autoclose"
+          (clickOutside)="autoclose = true"
+        >
+          <a
+            class="nav-link dropdown-toggle dropdown-toggle"
+            data-toggle="dropdown"
+            dropdownToggle
+            id="navbarDropdownMenuLink"
+            (click)="autoclose = false"
+          >
+            <i aria-hidden="true" class="tim-icons icon-book-bookmark"> </i>
+            <p>Examples</p>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu dropdown-menu-right"
+            *dropdownMenu
+          >
+            <a class="dropdown-item" [routerLink]="['about-us']">
+              <i class="tim-icons icon-bulb-63"> </i> About-us
+            </a>
+            <a class="dropdown-item" [routerLink]="['blogpost']">
+              <i class="tim-icons icon-align-center"> </i> Blog Post
+            </a>
+            <a class="dropdown-item" [routerLink]="['blogposts']">
+              <i class="tim-icons icon-chart-bar-32"> </i> Blog Posts
+            </a>
+            <a class="dropdown-item" [routerLink]="['contact-us']">
+              <i class="tim-icons icon-square-pin"> </i> Contact Us
+            </a>
+            <a class="dropdown-item" [routerLink]="['landing']">
+              <i class="tim-icons icon-paper"> </i> Landing Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['pricing']">
+              <i class="tim-icons icon-coins"> </i> Pricing
+            </a>
+            <a class="dropdown-item" [routerLink]="['ecommerce']">
+              <i class="tim-icons icon-basket-simple"> </i> Ecommerce Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['product']">
+              <i class="tim-icons icon-bag-16"> </i> Product Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['profile']">
+              <i class="tim-icons icon-lock-circle"> </i> Profile Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['error']">
+              <i class="tim-icons icon-button-power"> </i> 404 Error Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['error500']">
+              <i class="tim-icons icon-alert-circle-exc"> </i> 500 Error Page
+            </a>
+            <div class="dropdown" dropdown>
+              <a
+                class="dropdown-item dropdown-toggle dropdown-toggle"
+                data-toggle="dropdown"
+                dropdownToggle
+                id="navbarDropdown2"
+                (click)="$event.preventDefault()"
+                href="#ceva"
+              >
+                <i aria-hidden="true" class="tim-icons icon-book-bookmark"> </i>
+                App Pages
+              </a>
+              <div
+                aria-labelledby="navbarDropdown2"
+                class="dropdown-menu"
+                *dropdownMenu
+              >
+                <a class="dropdown-item" [routerLink]="['account-settings']">
+                  <i class="tim-icons icon-lock-circle"> </i> Account Settings
+                </a>
+                <a class="dropdown-item" [routerLink]="['login']">
+                  <i class="tim-icons icon-tablet-2"> </i> Login Page
+                </a>
+                <a class="dropdown-item" [routerLink]="['register']">
+                  <i class="tim-icons icon-laptop"> </i> Register Page
+                </a>
+                <a class="dropdown-item" [routerLink]="['reset']">
+                  <i class="tim-icons icon-molecule-40"> </i> Reset Page
+                </a>
+                <a class="dropdown-item" [routerLink]="['invoice']">
+                  <i class="tim-icons icon-notes"> </i> Invoice Page
+                </a>
+                <a class="dropdown-item" [routerLink]="['checkout']">
+                  <i class="tim-icons icon-basket-simple"> </i> Checkout Page
+                </a>
+                <a class="dropdown-item" [routerLink]="['chat']">
+                  <i class="tim-icons icon-email-85"> </i> Chat Page
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link btn btn-sm btn-default"
+            href="https://www.creative-tim.com/product/blk-design-system-pro-angular"
+            target="_blank"
+          >
+            <p>Buy Now</p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

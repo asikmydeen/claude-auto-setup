@@ -1,0 +1,30 @@
+<!-- snippets/featured-blog.liquid -->
+<h2 class="lead{% if section.settings.post_limit == 1 and section.settings.blog_show_image == false %} title--one-post{% endif %}">
+  <a class="article__heading-link" href="{{ article.url }}">{{ article.title }}</a>
+</h2>
+{% if section.settings.blog_show_excerpt %}
+  <div class="rte rte--indented-images">
+    {{ article.excerpt_or_content | strip_html | truncatewords: 30 }}
+  </div>
+{% endif %}
+
+{% if section.settings.blog_read_more %}
+<div class="mb-2">
+	<a href="{{ article.url }}" class="text-link">{{ 'blogs.article.read_more' | t }} <span class="icon icon-arrow-right" aria-hidden="true"></span></a>
+</div>
+{% endif %}
+
+{% if section.settings.blog_show_author or section.settings.blog_show_date %}
+  <div class="featured-blog__meta d-flex">
+    {% if section.settings.blog_show_author %}
+      <span class="featured-blog__author text-sm">
+        {{ article.author }}
+      </span>
+    {% endif %}
+    {% if section.settings.blog_show_date %}
+      <div class="featured-blog__date text-sm ms-auto">
+        <time datetime="{{ article.published_at | date: '%Y-%m-%dT%H:%M:%SZ' }}" class="date">{{ article.published_at | date: format: 'date' }}</time>
+      </div>
+    {% endif %}
+   </div>
+{% endif %}

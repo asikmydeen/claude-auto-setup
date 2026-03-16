@@ -1,5 +1,10 @@
 {
   "styles": {
+    "dashboard-modern": {
+      "label": "Modern Dashboards",
+      "desc": "AI-ready, shadcn/ui, Tailwind",
+      "icon": "layout-dashboard"
+    },
     "dashboard-material": {
       "label": "Material Design",
       "desc": "Google Material Design language",
@@ -9,6 +14,11 @@
       "label": "Dark Theme",
       "desc": "Dark-mode-first with gradient accents",
       "icon": "moon"
+    },
+    "dashboard-soft": {
+      "label": "Soft / Glass",
+      "desc": "Glassmorphism with soft shadows",
+      "icon": "cloud"
     },
     "dashboard-clean": {
       "label": "Clean / Classic",
@@ -22,6 +32,82 @@
     }
   },
   "templates": [
+    {
+      "id": "argon-dashboard-chakra-pro-main-2.0.0",
+      "category": "react",
+      "style": "clean",
+      "label": "Argon Dashboard (Chakra UI)",
+      "desc": "Clean admin dashboard with charts, tables, and sidebar navigation",
+      "framework": "React",
+      "uiLib": "Chakra UI",
+      "tags": [
+        "dashboard",
+        "admin",
+        "charts"
+      ],
+      "path": "react/argon-dashboard-chakra-pro-main-2.0.0/argon-dashboard-chakra-pro-main",
+      "scripts": [
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "argon-dashboard-pro-material-ui-v3.0.1",
+      "category": "react",
+      "style": "material",
+      "label": "Argon Dashboard (Material UI)",
+      "desc": "Material Design admin panel with RTL support and dark mode",
+      "framework": "React",
+      "uiLib": "Material UI",
+      "tags": [
+        "dashboard",
+        "admin",
+        "material"
+      ],
+      "path": "react/argon-dashboard-pro-material-ui-v3.0.1/argon-dashboard-pro-material-ui-v3.0.1",
+      "scripts": [
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "argon-dashboard-pro-react-v1.2.5",
+      "category": "react",
+      "style": "clean",
+      "label": "Argon Dashboard (Bootstrap)",
+      "desc": "Bootstrap-based admin with responsive card layouts",
+      "framework": "React",
+      "uiLib": "Bootstrap",
+      "tags": [
+        "dashboard",
+        "admin",
+        "bootstrap"
+      ],
+      "path": "react/argon-dashboard-pro-react-v1.2.5/argon-dashboard-pro-react-v1.2.5",
+      "scripts": [
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "argon-design-system-pro-react-v1.0.2",
+      "category": "react",
+      "style": "clean",
+      "label": "Argon Design System",
+      "desc": "Landing page components \u2014 hero, features, pricing, team sections",
+      "framework": "React",
+      "uiLib": "Bootstrap",
+      "tags": [
+        "landing",
+        "marketing",
+        "components"
+      ],
+      "path": "react/argon-design-system-pro-react-v1.0.2/argon-design-system-pro-react-v1.0.2",
+      "scripts": [
+        "start",
+        "build"
+      ]
+    },
     {
       "id": "black-dashboard-pro-react-v1.2.4",
       "category": "react",
@@ -55,6 +141,26 @@
         "marketing"
       ],
       "path": "nextjs/creativetimofficial-astro-launch-ui-pro-8be9d93cdb4cea138c517ba2c70a7355381d347d/creativetimofficial-astro-launch-ui-pro-8be9d93cdb4cea138c517ba2c70a7355381d347d",
+      "scripts": [
+        "dev",
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "horizon-ui-boilerplate-shadcn-pro-3.0.2",
+      "category": "nextjs",
+      "style": "modern",
+      "label": "Horizon AI Dashboard (shadcn)",
+      "desc": "AI-themed dashboard with shadcn/ui \u2014 tables, charts, sidebar",
+      "framework": "Next.js",
+      "uiLib": "shadcn/ui",
+      "tags": [
+        "dashboard",
+        "ai",
+        "modern"
+      ],
+      "path": "nextjs/horizon-ui-boilerplate-shadcn-pro-3.0.2/boilerplate-shadcn-pro-main",
       "scripts": [
         "dev",
         "start",
@@ -98,6 +204,26 @@
       "scripts": [
         "dev",
         "start",
+        "build"
+      ]
+    },
+    {
+      "id": "bootstrap-vue-argon-dashboard-pro-v1.2.0",
+      "category": "vue",
+      "style": "clean",
+      "label": "Argon Dashboard (Vue)",
+      "desc": "Clean admin panel with Vue + BootstrapVue components",
+      "framework": "Vue",
+      "uiLib": "BootstrapVue",
+      "tags": [
+        "dashboard",
+        "admin",
+        "bootstrap"
+      ],
+      "path": "vue/bootstrap-vue-argon-dashboard-pro-v1.2.0/bootstrap-vue-argon-dashboard-pro-v1.2.0",
+      "scripts": [
+        "dev",
+        "serve",
         "build"
       ]
     },
@@ -158,6 +284,44 @@
       "scripts": [
         "dev",
         "serve",
+        "build"
+      ]
+    },
+    {
+      "id": "soft-ui-dashboard-pro-tailwind-v1.1.0",
+      "category": "html-css-js",
+      "style": "soft",
+      "label": "Soft UI Dashboard (Tailwind)",
+      "desc": "Glassmorphism dashboard with soft shadows and rounded cards",
+      "framework": "HTML",
+      "uiLib": "Tailwind",
+      "tags": [
+        "dashboard",
+        "soft",
+        "glassmorphism"
+      ],
+      "path": "html-css-js/soft-ui-dashboard-pro-tailwind-v1.1.0/soft-ui-dashboard-pro-tailwind-v1.1.0",
+      "scripts": [
+        "dev",
+        "build"
+      ]
+    },
+    {
+      "id": "soft-ui-flowbite-pro-v1.0.0",
+      "category": "html-css-js",
+      "style": "soft",
+      "label": "Soft UI + Flowbite",
+      "desc": "Soft design with Flowbite component library and Tailwind",
+      "framework": "HTML",
+      "uiLib": "Flowbite",
+      "tags": [
+        "dashboard",
+        "soft",
+        "flowbite"
+      ],
+      "path": "html-css-js/soft-ui-flowbite-pro-v1.0.0/soft-ui-flowbite-pro-v1.0.0",
+      "scripts": [
+        "start",
         "build"
       ]
     },
@@ -230,6 +394,45 @@
       ],
       "path": "angular/argon-dashboard-pro-angular-v1.5.1/argon-dashboard-pro-angular-v1.5.1",
       "scripts": [
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "black-dashboard-pro-angular-v1.3.0",
+      "category": "angular",
+      "style": "dark",
+      "label": "Black Dashboard (Angular)",
+      "desc": "Dark Angular dashboard with chart.js integration",
+      "framework": "Angular",
+      "uiLib": "Bootstrap",
+      "tags": [
+        "dashboard",
+        "dark",
+        "charts"
+      ],
+      "path": "angular/black-dashboard-pro-angular-v1.3.0/black-dashboard-pro-angular-v1.3.0",
+      "scripts": [
+        "start",
+        "build"
+      ]
+    },
+    {
+      "id": "nuxt-argon-dashboard-pro-v1.4.0",
+      "category": "nuxtjs",
+      "style": "clean",
+      "label": "Argon Dashboard (Nuxt)",
+      "desc": "SSR-ready Nuxt dashboard with clean Argon design",
+      "framework": "Nuxt",
+      "uiLib": "Bootstrap",
+      "tags": [
+        "dashboard",
+        "ssr",
+        "admin"
+      ],
+      "path": "nuxtjs/nuxt-argon-dashboard-pro-v1.4.0/nuxt-argon-dashboard-pro-v1.4.0",
+      "scripts": [
+        "dev",
         "start",
         "build"
       ]

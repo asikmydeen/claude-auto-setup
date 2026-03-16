@@ -1,0 +1,58 @@
+// =========================================================
+// * Vuetify Soft UI Dashboard PRO - v1.0.0
+// =========================================================
+
+// * Product Page:  https://store.vuetifyjs.com/products/vuetify-soft-ui-dashboard-pro
+// * Copyright 2021 Creative Tim (https://www.creative-tim.com)
+
+// Coded by www.creative-tim.com
+
+//  =========================================================
+
+// * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+
+// Variables
+@import "soft-ui-dashboard/variables";
+
+// Mixins
+@import "soft-ui-dashboard/mixins/placeholder";
+@import "soft-ui-dashboard/mixins/background";
+@import "soft-ui-dashboard/mixins/gradients";
+
+// Utilities
+@import "soft-ui-dashboard/utilities";
+
+// Nucleo Icons
+// @import "soft-ui-dashboard/nucleo-svg";
+@import "soft-ui-dashboard/nucleo";
+
+// Components
+@import "soft-ui-dashboard/drawer";
+@import "soft-ui-dashboard/misc";
+@import "soft-ui-dashboard/forms";
+@import "soft-ui-dashboard/buttons";
+@import "soft-ui-dashboard/app-bar";
+@import "soft-ui-dashboard/breadcrumbs";
+@import "soft-ui-dashboard/card";
+@import "soft-ui-dashboard/typography";
+@import "soft-ui-dashboard/checkbox";
+@import "soft-ui-dashboard/progress";
+@import "soft-ui-dashboard/avatar";
+@import "soft-ui-dashboard/media";
+@import "soft-ui-dashboard/table";
+@import "soft-ui-dashboard/header";
+@import "soft-ui-dashboard/separators";
+@import "soft-ui-dashboard/alerts";
+@import "soft-ui-dashboard/timeline";
+@import "soft-ui-dashboard/switch";
+@import "soft-ui-dashboard/pagination";
+@import "soft-ui-dashboard/select";
+
+// Vendors
+@import "soft-ui-dashboard/vendors/sweetalert2";
+@import "soft-ui-dashboard/vendors/fullcalendar";
+@import "soft-ui-dashboard/vendors/quill";
+@import "soft-ui-dashboard/vendors/dropzone";
+@import "soft-ui-dashboard/vendors/photoswipe";
+@import "soft-ui-dashboard/vendors/kanban";

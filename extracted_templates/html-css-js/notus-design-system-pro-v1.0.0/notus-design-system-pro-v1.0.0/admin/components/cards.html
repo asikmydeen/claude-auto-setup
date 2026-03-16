@@ -1,0 +1,1566 @@
+<!--
+=========================================================
+* Notus Design System PRO - v1.0.0
+=========================================================
+
+* Product Page: https://www.creative-tim.com/product/notus-design-system-pro
+* Copyright 2022 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://www.creative-tim.com/license)
+* Coded by Creative Tim
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>
+    Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS
+  </title>
+  <meta name="description" content="Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS">
+  <link rel="shortcut icon" href="../../assets/img/favicon.ico">
+  <link rel="apple-touch-icon" sizes="76x76" href="../../assets/img/favicon.ico">
+  <link rel="stylesheet" href="../../assets/styles/tailwind.min.css">
+  <link rel="stylesheet" href="../../assets/styles/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="../../assets/styles/highlight.css" />
+</head>
+
+<body>
+  <div class="bg-white docs-component-wrapper text-blueGray-700">
+    <!--Nav-->
+    <nav class="fixed top-0 w-full bg-blueGray-900 flex flex-wrap items-center justify-between px-2 py-3 z-9999">
+      <div class="w-full px-4 mx-auto flex flex-wrap items-center justify-between max-h-screen-70 overflow-y-auto">
+        <div class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start">
+          <a class="text-white text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase" href="/notus-design-system-pro">Notus Design System PRO</a>
+          <button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none" type="button" onclick="toggleNavbar('example-collapse-navbar')">
+            <i class="text-white fas fa-bars"></i>
+          </button>
+        </div>
+        <div class="lg:flex flex-grow items-center bg-white lg:bg-transparent lg:shadow-none hidden">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="_blank">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <p class="uppercase font-bold text-xs px-3 pt-6 pb-2 block w-full whitespace-nowrap bg-transparent text-blueGray-400">Pages</p>
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-col lg:flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+        <!-- Navbar mobile -->
+        <div class="flex-grow items-center bg-white lg:bg-transparent lg:shadow-none rounded block pt-1 pb-4 hidden" id="example-collapse-navbar">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="
+                  ">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="bg-white min-h-screen">
+      <div class="flex flex-raw pt-20 justify-center"></div>
+      <div class="mx-auto px-4 container">
+        <div class="flex justify-center my-8 flex-col">
+          <h2 class="text-lg font-medium text-blueGray-600 mb-2"><a class="mr-2" href="#/components#presentation-id">Presentation</a><i class="fas fa-angle-right mr-2"></i><a href="#/components#presentation-id-components">Components</a></h2>
+          <h1 class="text-3xl font-semibold">Cards</h1>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="presentation-id-presentation-id-components-cardinfoicon">Card Stats Mini</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div id="colors" class="flex flew-wrap justify-center items-center absolute w-full left-0 sm:left-auto z-9998" style="width: 100%; bottom: -14px;">
+              <div class="flex flew-wrap justify-center items-center bg-white px-2">
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-blueGray-500 bg-opacity-25" onclick="changeColor(this)" data-color="blueGray"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-red-500 shadow-md" onclick="changeColor(this)" data-color="red"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-orange-500 bg-opacity-25" onclick="changeColor(this)" data-color="orange"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-amber-500 bg-opacity-25" onclick="changeColor(this)" data-color="amber"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-emerald-500 bg-opacity-25" onclick="changeColor(this)" data-color="emerald"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-teal-500 bg-opacity-25" onclick="changeColor(this)" data-color="teal"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-lightBlue-500 bg-opacity-25" onclick="changeColor(this)" data-color="lightBlue"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-indigo-500 bg-opacity-25" onclick="changeColor(this)" data-color="indigo"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-purple-500 bg-opacity-25" onclick="changeColor(this)" data-color="purple"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-pink-500 bg-opacity-25" onclick="changeColor(this)" data-color="pink"></span>
+              </div>
+            </div>
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full md:w-1/2 lg:w-1/4">
+                  <div class="relative flex flex-col min-w-0 break-words bg-white rounded-lg mb-6 xl:mb-0 shadow-lg">
+                    <div class="flex-auto p-4">
+                      <div class="flex flex-wrap">
+                        <div class="relative w-full pr-4 max-w-full flex-grow flex-1">
+                          <h5 class="text-blueGray-400 uppercase font-bold text-xs">Traffic</h5>
+                          <span class="font-bold text-xl">350,897</span>
+                        </div>
+                        <div class="relative w-auto pl-4 flex-initial">
+                          <div class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full bg-red-500"><i class="far fa-chart-bar"></i></div>
+                        </div>
+                      </div>
+                      <p class="text-sm text-blueGray-500 mt-4"><span class="text-emerald-500 mr-2"><i class="fas fa-arrow-up"></i> 3.48%</span><span class="whitespace-nowrap">Since last month</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-1/2 lg:w-1/4"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white rounded-lg mb-6 xl:mb-0 shadow-lg"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-auto p-4"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full pr-4 max-w-full flex-grow flex-1"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-blueGray-400 uppercase font-bold text-xs"</span><span class="nt">&gt;</span>Traffic<span class="nt">&lt;/h5&gt;</span>
+          <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"font-bold text-xl"</span><span class="nt">&gt;</span>350,897<span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-auto pl-4 flex-initial"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full bg-red-500"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"far fa-chart-bar"</span><span class="nt">&gt;&lt;/i&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-sm text-blueGray-500 mt-4"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-emerald-500 mr-2"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-arrow-up"</span><span class="nt">&gt;&lt;/i&gt;</span> 3.48%<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">class=</span><span class="s">"whitespace-nowrap"</span><span class="nt">&gt;</span>Since last month<span class="nt">&lt;/span&gt;&lt;/p&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="admin-id-admin-id-components-cardsettingslarge">Card Settings Large</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full md:w-10/12">
+                  <div class="relative flex flex-col w-full mb-6 shadow-lg rounded-lg bg-white">
+                    <div class="mb-0 p-6 pb-0">
+                      <div class="text-center flex justify-between items-center">
+                        <h6 class="text-xl font-bold mb-0">Account Settings</h6>
+                        <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-lightBlue-500 border-lightBlue-500 active:bg-lightBlue-600 active:border-lightBlue-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md">Save change</button>
+                      </div>
+                    </div>
+                    <div class="flex-auto px-6 pb-6 pt-0">
+                      <form>
+                        <div>
+                          <h6 class="mt-6 mb-2 font-bold">Profile Details</h6>
+                          <hr class="mb-6 border-b-1 border-blueGray-200">
+                          <div class="flex flex-wrap -mx-4">
+                            <div class="w-full px-4 lg:w-6/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Username</label>
+                                <div class="mb-3 pt-0"><input placeholder="Username" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="lucky.jesse"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-6/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Email Address</label>
+                                <div class="mb-3 pt-0"><input placeholder="Email" type="email" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="jesse@example.com"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-6/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">First Name</label>
+                                <div class="mb-3 pt-0"><input placeholder="First Name" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="Lucky"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-6/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Last Name</label>
+                                <div class="mb-3 pt-0"><input placeholder="Last Name" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="Jesse"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="mt-6 mb-2 font-bold">Contact Information</h6>
+                          <hr class="mb-6 border-b-1 border-blueGray-200">
+                          <div class="flex flex-wrap -mx-4">
+                            <div class="w-full px-4 lg:w-12/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Address</label>
+                                <div class="mb-3 pt-0"><input placeholder="Address" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-4/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">City</label>
+                                <div class="mb-3 pt-0"><input placeholder="City" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="New York"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-4/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Country</label>
+                                <div class="mb-3 pt-0"><input placeholder="Country" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="United States"></div>
+                              </div>
+                            </div>
+                            <div class="w-full px-4 lg:w-4/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">Postal Code</label>
+                                <div class="mb-3 pt-0"><input placeholder="Postal Code" type="text" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 " value="44444444"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="mt-6 mb-2 font-bold">About me</h6>
+                          <hr class="mb-6 border-b-1 border-blueGray-200">
+                          <div class="flex flex-wrap -mx-4">
+                            <div class="w-full px-4 lg:w-12/12">
+                              <div class="relative w-full mb-3">
+                                <label class="block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1" for="grid-password">About me</label>
+                                <div class="mb-3 pt-0"><textarea placeholder="About me" rows="4" type="textarea" class="border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 ">A beautiful Dashboard for HTML &amp; Tailwind CSS.</textarea></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-10/12"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col w-full mb-6 shadow-lg rounded-lg bg-white"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-0 p-6 pb-0"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-center flex justify-between items-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-xl font-bold mb-0"</span><span class="nt">&gt;</span>Account Settings<span class="nt">&lt;/h6&gt;</span>
+        <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-lightBlue-500 border-lightBlue-500 active:bg-lightBlue-600 active:border-lightBlue-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;</span>Save change<span class="nt">&lt;/button&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex-auto px-6 pb-6 pt-0"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;form&gt;</span>
+        <span class="nt">&lt;div&gt;</span>
+          <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mt-6 mb-2 font-bold"</span><span class="nt">&gt;</span>Profile Details<span class="nt">&lt;/h6&gt;</span>
+          <span class="nt">&lt;hr</span> <span class="na">class=</span><span class="s">"mb-6 border-b-1 border-blueGray-200"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-6/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Username<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Username"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"lucky.jesse"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-6/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Email Address<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Email"</span> <span class="na">type=</span><span class="s">"email"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"jesse@example.com"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-6/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>First Name<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"First Name"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"Lucky"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-6/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Last Name<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Last Name"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"Jesse"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>
+          <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mt-6 mb-2 font-bold"</span><span class="nt">&gt;</span>Contact Information<span class="nt">&lt;/h6&gt;</span>
+          <span class="nt">&lt;hr</span> <span class="na">class=</span><span class="s">"mb-6 border-b-1 border-blueGray-200"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-12/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Address<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Address"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-4/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>City<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"City"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"New York"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-4/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Country<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Country"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"United States"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-4/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>Postal Code<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;input</span> <span class="na">placeholder=</span><span class="s">"Postal Code"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span> <span class="na">value=</span><span class="s">"44444444"</span><span class="nt">&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>
+          <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mt-6 mb-2 font-bold"</span><span class="nt">&gt;</span>About me<span class="nt">&lt;/h6&gt;</span>
+          <span class="nt">&lt;hr</span> <span class="na">class=</span><span class="s">"mb-6 border-b-1 border-blueGray-200"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4 lg:w-12/12"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full mb-3"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;label</span> <span class="na">class=</span><span class="s">"block uppercase text-blueGray-500 text-xs font-bold mb-2 ml-1"</span> <span class="na">for=</span><span class="s">"grid-password"</span><span class="nt">&gt;</span>About me<span class="nt">&lt;/label&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-3 pt-0"</span><span class="nt">&gt;&lt;textarea</span> <span class="na">placeholder=</span><span class="s">"About me"</span> <span class="na">rows=</span><span class="s">"4"</span> <span class="na">type=</span><span class="s">"textarea"</span> <span class="na">class=</span><span class="s">"border-blueGray-300 px-3 py-2 text-sm  w-full placeholder-blueGray-200 text-blueGray-700 relative bg-white rounded-md outline-none focus:ring focus:ring-lightBlue-500 focus:ring-1 focus:border-lightBlue-500 border border-solid transition duration-200 "</span><span class="nt">&gt;</span>A beautiful Dashboard for HTML <span class="ni">&amp;amp;</span> Tailwind CSS.<span class="nt">&lt;/textarea&gt;&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/form&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="admin-id-admin-id-components-cardsettingslarge">Card Dashboard Profile</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full md:w-3/4 lg:w-1/3">
+                  <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg mt-16">
+                    <div class="px-6">
+                      <div class="flex flex-wrap justify-center">
+                        <div class="w-full flex justify-center">
+                          <div class="relative"><img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg" class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"></div>
+                        </div>
+                        <div class="w-fulltext-center mt-20">
+                          <div class="flex justify-center lg:pt-4 pt-8 pb-0">
+                            <div class="p-3 text-center"><span class="text-xl font-bold block uppercase tracking-wide text-blueGray-700">138</span><span class="text-sm text-blueGray-400">Projects</span></div>
+                            <div class="p-3 text-center"><span class="text-xl font-bold block uppercase tracking-wide text-blueGray-700">3,660</span><span class="text-sm text-blueGray-400">Tasks</span></div>
+                            <div class="p-3 text-center"><span class="text-xl font-bold block uppercase tracking-wide text-blueGray-700">35+</span><span class="text-sm text-blueGray-400">Team Size</span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-center mt-2">
+                        <h3 class="text-xl font-bold leading-normal mb-2">Jenna Stones</h3>
+                        <div class="text-xs mt-0 mb-2 text-blueGray-400 font-bold uppercase"><i class="fas fa-map-marker-alt mr-2 text-blueGray-400 opacity-75"></i>New York, USA</div>
+                      </div>
+                      <div class="mt-6 py-6 border-t border-blueGray-200 text-center">
+                        <div class="flex flex-wrap justify-center">
+                          <div class="w-full px-4">
+                            <p class="font-light leading-relaxed mb-4">An artist of considerable range, Jenna the name taken by Melbourne-raised, Brooklyn-based Nick Murphy writes, performs and records all of his own music, giving it a warm.</p>
+                            <a href="javascript:;" class="font-normal text-lightBlue-500 hover:text-lightBlue-600">Show more</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full md:w-3/4 lg:w-1/3"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg mt-16"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap justify-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full flex justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span> <span class="na">class=</span><span class="s">"shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"</span><span class="nt">&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-fulltext-center mt-20"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-center lg:pt-4 pt-8 pb-0"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-3 text-center"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-xl font-bold block uppercase tracking-wide text-blueGray-700"</span><span class="nt">&gt;</span>138<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-sm text-blueGray-400"</span><span class="nt">&gt;</span>Projects<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-3 text-center"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-xl font-bold block uppercase tracking-wide text-blueGray-700"</span><span class="nt">&gt;</span>3,660<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-sm text-blueGray-400"</span><span class="nt">&gt;</span>Tasks<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-3 text-center"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-xl font-bold block uppercase tracking-wide text-blueGray-700"</span><span class="nt">&gt;</span>35+<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-sm text-blueGray-400"</span><span class="nt">&gt;</span>Team Size<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-center mt-2"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-xl font-bold leading-normal mb-2"</span><span class="nt">&gt;</span>Jenna Stones<span class="nt">&lt;/h3&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"text-xs mt-0 mb-2 text-blueGray-400 font-bold uppercase"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-map-marker-alt mr-2 text-blueGray-400 opacity-75"</span><span class="nt">&gt;&lt;/i&gt;</span>New York, USA<span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mt-6 py-6 border-t border-blueGray-200 text-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap justify-center"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full px-4"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"font-light leading-relaxed mb-4"</span><span class="nt">&gt;</span>An artist of considerable range, Jenna the name taken by Melbourne-raised, Brooklyn-based Nick Murphy writes, performs and records all of his own music, giving it a warm.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"font-normal text-lightBlue-500 hover:text-lightBlue-600"</span><span class="nt">&gt;</span>Show more<span class="nt">&lt;/a&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="admin-id-admin-id-components-cardfulltable">Card Full Table</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <div class="relative flex flex-col min-w-0 break-words w-full mb-8 shadow-lg rounded-lg bg-white text-blueGray-700">
+                    <div class="px-6 py-4 border-0">
+                      <div class="flex flex-wrap items-center">
+                        <div class="relative w-full max-w-full flex-grow flex-1">
+                          <h3 class="font-bold text-lg text-blueGray-700">Card Tables</h3>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="block w-full overflow-x-auto">
+                      <table class="items-center w-full bg-transparent border-collapse">
+                        <thead>
+                          <tr>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200">Project</th>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200">Budget</th>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200">Status</th>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200">Users</th>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200">Completion</th>
+                            <th class="px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><img src="https://demos.creative-tim.com/notus-pro-react/static/media/bootstrap.bd712487.jpg" class="h-12 w-12 bg-white rounded-full border p-1" alt="..."> <span class="ml-3 font-bold NaN">Argon Design System</span></div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">$2,500 USD</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><i class="fas fa-circle mr-2 text-orange-500"></i>pending</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">
+                                <div class="flex items-center">
+                                  <div>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 1</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 2</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 3</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png">
+                                      <div class="hidden " data-popper-placement="top" style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);" data-popper-escaped="">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 4</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <small class="pl-2 font-bold mb-1"></small>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px">
+                              <div class="flex items-center">
+                                <span class="mr-2">60%</span>
+                                <div class="relative w-full">
+                                  <div class="overflow-hidden h-2 text-xs flex rounded bg-red-200">
+                                    <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500" style="width: 60%;"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right">
+                              <div class="relative">
+                                <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-cog"></i><i class="ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "></i></button>
+                                <div class="block  z-50">
+                                  <div class="origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Edit Profile</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Settings</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Log out</a></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><img src="https://demos.creative-tim.com/notus-pro-react/static/media/angular.b5045666.jpg" class="h-12 w-12 bg-white rounded-full border p-1" alt="..."> <span class="ml-3 font-bold NaN">Angular Now UI Kit PRO</span></div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">$1,800 USD</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><i class="fas fa-circle mr-2 text-emerald-500"></i>completed</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">
+                                <div class="flex items-center">
+                                  <div>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 1</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 2</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 3</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png">
+                                      <div class="hidden " data-popper-placement="top" style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);" data-popper-escaped="">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 4</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <small class="pl-2 font-bold mb-1"></small>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px">
+                              <div class="flex items-center">
+                                <span class="mr-2">100%</span>
+                                <div class="relative w-full">
+                                  <div class="overflow-hidden h-2 text-xs flex rounded bg-emerald-200">
+                                    <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500" style="width: 100%;"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right">
+                              <div class="relative">
+                                <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-cog"></i><i class="ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "></i></button>
+                                <div class="block  z-50">
+                                  <div class="origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Edit Profile</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Settings</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Log out</a></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><img src="https://demos.creative-tim.com/notus-pro-react/static/media/sketch.a6af780a.jpg" class="h-12 w-12 bg-white rounded-full border p-1" alt="..."> <span class="ml-3 font-bold NaN">Black Dashboard Sketch</span></div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">$3,150 USD</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><i class="fas fa-circle mr-2 text-red-500"></i>delayed</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">
+                                <div class="flex items-center">
+                                  <div>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 1</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 2</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 3</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png">
+                                      <div class="hidden " data-popper-placement="top" style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);" data-popper-escaped="">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 4</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <small class="pl-2 font-bold mb-1"></small>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px">
+                              <div class="flex items-center">
+                                <span class="mr-2">73%</span>
+                                <div class="relative w-full">
+                                  <div class="overflow-hidden h-2 text-xs flex rounded bg-red-200">
+                                    <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500" style="width: 73%;"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right">
+                              <div class="relative">
+                                <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-cog"></i><i class="ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "></i></button>
+                                <div class="block  z-50">
+                                  <div class="origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Edit Profile</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Settings</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Log out</a></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><img src="https://demos.creative-tim.com/notus-pro-react/static/media/react.0e8c9066.jpg" class="h-12 w-12 bg-white rounded-full border p-1" alt="..."> <span class="ml-3 font-bold NaN">Material Dashboard</span></div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">$4,400 USD</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><i class="fas fa-circle mr-2 text-red-500"></i>delayed</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">
+                                <div class="flex items-center">
+                                  <div>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 1</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 2</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 3</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png">
+                                      <div class="hidden " data-popper-placement="top" style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);" data-popper-escaped="">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 4</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <small class="pl-2 font-bold mb-1"></small>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px">
+                              <div class="flex items-center">
+                                <span class="mr-2">90%</span>
+                                <div class="relative w-full">
+                                  <div class="overflow-hidden h-2 text-xs flex rounded bg-teal-200">
+                                    <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-500" style="width: 90%;"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right">
+                              <div class="relative">
+                                <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-cog"></i><i class="ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "></i></button>
+                                <div class="block  z-50">
+                                  <div class="origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Edit Profile</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Settings</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Log out</a></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><img src="https://demos.creative-tim.com/notus-pro-react/static/media/vue.43bd93a8.jpg" class="h-12 w-12 bg-white rounded-full border p-1" alt="..."> <span class="ml-3 font-bold NaN">Vue Material Dashboard</span></div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">$2,200 USD</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center"><i class="fas fa-circle mr-2 text-emerald-500"></i>completed</div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+                              <div class="flex items-center">
+                                <div class="flex items-center">
+                                  <div>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 1</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 2</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg">
+                                      <div class="hidden ">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 3</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                    <a class="text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8" href="javascript:;">
+                                      <img alt="..." class="rounded-full w-full" src="https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png">
+                                      <div class="hidden " data-popper-placement="top" style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);" data-popper-escaped="">
+                                        <div class="border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded">
+                                          <div class="py-1 px-2 text-center rounded text-white bg-black">Team 4</div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <small class="pl-2 font-bold mb-1"></small>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px">
+                              <div class="flex items-center">
+                                <span class="mr-2">100%</span>
+                                <div class="relative w-full">
+                                  <div class="overflow-hidden h-2 text-xs flex rounded bg-emerald-200">
+                                    <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500" style="width: 100%;"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right">
+                              <div class="relative">
+                                <button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-cog"></i><i class="ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "></i></button>
+                                <div class="block  z-50">
+                                  <div class="origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Edit Profile</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Settings</a><a href="javascript:;" class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100">Log out</a></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words w-full mb-8 shadow-lg rounded-lg bg-white text-blueGray-700"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 py-4 border-0"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap items-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full max-w-full flex-grow flex-1"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"font-bold text-lg text-blueGray-700"</span><span class="nt">&gt;</span>Card Tables<span class="nt">&lt;/h3&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block w-full overflow-x-auto"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;table</span> <span class="na">class=</span><span class="s">"items-center w-full bg-transparent border-collapse"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;thead&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;</span>Project<span class="nt">&lt;/th&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;</span>Budget<span class="nt">&lt;/th&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;</span>Status<span class="nt">&lt;/th&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;</span>Users<span class="nt">&lt;/th&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;</span>Completion<span class="nt">&lt;/th&gt;</span>
+            <span class="nt">&lt;th</span> <span class="na">class=</span><span class="s">"px-6 align-middle border border-solid py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-bold text-left bg-blueGray-100 text-blueGray-500 border-blueGray-200"</span><span class="nt">&gt;&lt;/th&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+        <span class="nt">&lt;/thead&gt;</span>
+        <span class="nt">&lt;tbody&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/bootstrap.bd712487.jpg"</span> <span class="na">class=</span><span class="s">"h-12 w-12 bg-white rounded-full border p-1"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span> <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"ml-3 font-bold NaN"</span><span class="nt">&gt;</span>Argon Design System<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>$2,500 USD<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-circle mr-2 text-orange-500"</span><span class="nt">&gt;&lt;/i&gt;</span>pending<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 1<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 2<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 3<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span> <span class="na">data-popper-placement=</span><span class="s">"top"</span> <span class="na">style=</span><span class="s">"position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);"</span> <span class="na">data-popper-escaped=</span><span class="s">""</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 4<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;small</span> <span class="na">class=</span><span class="s">"pl-2 font-bold mb-1"</span><span class="nt">&gt;&lt;/small&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"mr-2"</span><span class="nt">&gt;</span>60%<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"overflow-hidden h-2 text-xs flex rounded bg-red-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"</span> <span class="na">style=</span><span class="s">"width: 60%;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog"</span><span class="nt">&gt;&lt;/i&gt;&lt;i</span> <span class="na">class=</span><span class="s">"ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block  z-50"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Edit Profile<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Settings<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Log out<span class="nt">&lt;/a&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/angular.b5045666.jpg"</span> <span class="na">class=</span><span class="s">"h-12 w-12 bg-white rounded-full border p-1"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span> <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"ml-3 font-bold NaN"</span><span class="nt">&gt;</span>Angular Now UI Kit PRO<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>$1,800 USD<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-circle mr-2 text-emerald-500"</span><span class="nt">&gt;&lt;/i&gt;</span>completed<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 1<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 2<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 3<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span> <span class="na">data-popper-placement=</span><span class="s">"top"</span> <span class="na">style=</span><span class="s">"position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);"</span> <span class="na">data-popper-escaped=</span><span class="s">""</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 4<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;small</span> <span class="na">class=</span><span class="s">"pl-2 font-bold mb-1"</span><span class="nt">&gt;&lt;/small&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"mr-2"</span><span class="nt">&gt;</span>100%<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"overflow-hidden h-2 text-xs flex rounded bg-emerald-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"</span> <span class="na">style=</span><span class="s">"width: 100%;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog"</span><span class="nt">&gt;&lt;/i&gt;&lt;i</span> <span class="na">class=</span><span class="s">"ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block  z-50"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Edit Profile<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Settings<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Log out<span class="nt">&lt;/a&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/sketch.a6af780a.jpg"</span> <span class="na">class=</span><span class="s">"h-12 w-12 bg-white rounded-full border p-1"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span> <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"ml-3 font-bold NaN"</span><span class="nt">&gt;</span>Black Dashboard Sketch<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>$3,150 USD<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-circle mr-2 text-red-500"</span><span class="nt">&gt;&lt;/i&gt;</span>delayed<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 1<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 2<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 3<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span> <span class="na">data-popper-placement=</span><span class="s">"top"</span> <span class="na">style=</span><span class="s">"position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);"</span> <span class="na">data-popper-escaped=</span><span class="s">""</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 4<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;small</span> <span class="na">class=</span><span class="s">"pl-2 font-bold mb-1"</span><span class="nt">&gt;&lt;/small&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"mr-2"</span><span class="nt">&gt;</span>73%<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"overflow-hidden h-2 text-xs flex rounded bg-red-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"</span> <span class="na">style=</span><span class="s">"width: 73%;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog"</span><span class="nt">&gt;&lt;/i&gt;&lt;i</span> <span class="na">class=</span><span class="s">"ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block  z-50"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Edit Profile<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Settings<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Log out<span class="nt">&lt;/a&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/react.0e8c9066.jpg"</span> <span class="na">class=</span><span class="s">"h-12 w-12 bg-white rounded-full border p-1"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span> <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"ml-3 font-bold NaN"</span><span class="nt">&gt;</span>Material Dashboard<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>$4,400 USD<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-circle mr-2 text-red-500"</span><span class="nt">&gt;&lt;/i&gt;</span>delayed<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 1<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 2<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 3<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span> <span class="na">data-popper-placement=</span><span class="s">"top"</span> <span class="na">style=</span><span class="s">"position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);"</span> <span class="na">data-popper-escaped=</span><span class="s">""</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 4<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;small</span> <span class="na">class=</span><span class="s">"pl-2 font-bold mb-1"</span><span class="nt">&gt;&lt;/small&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"mr-2"</span><span class="nt">&gt;</span>90%<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"overflow-hidden h-2 text-xs flex rounded bg-teal-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-500"</span> <span class="na">style=</span><span class="s">"width: 90%;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog"</span><span class="nt">&gt;&lt;/i&gt;&lt;i</span> <span class="na">class=</span><span class="s">"ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block  z-50"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Edit Profile<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Settings<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Log out<span class="nt">&lt;/a&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+          <span class="nt">&lt;tr&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/vue.43bd93a8.jpg"</span> <span class="na">class=</span><span class="s">"h-12 w-12 bg-white rounded-full border p-1"</span> <span class="na">alt=</span><span class="s">"..."</span><span class="nt">&gt;</span> <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"ml-3 font-bold NaN"</span><span class="nt">&gt;</span>Vue Material Dashboard<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>$2,200 USD<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-circle mr-2 text-emerald-500"</span><span class="nt">&gt;&lt;/i&gt;</span>completed<span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-1-800x800.fa5a7ac2.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 1<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-2-800x800.2f02b23c.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 2<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-3-800x800.19201574.jpg"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 3<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"text-white bg-blueGray-500 inline-flex items-center justify-center shadow-lg rounded rounded-full relative border-2 border-white -ml-4 hover:z-1 w-8 h-8"</span> <span class="na">href=</span><span class="s">"javascript:;"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">class=</span><span class="s">"rounded-full w-full"</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/team-4-470x470.4ef82ef4.png"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hidden "</span> <span class="na">data-popper-placement=</span><span class="s">"top"</span> <span class="na">style=</span><span class="s">"position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate(688px, 1518px);"</span> <span class="na">data-popper-escaped=</span><span class="s">""</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"border-0 mb-3 block z-50 font-normal leading-normal text-sm text-left no-underline break-words rounded"</span><span class="nt">&gt;</span>
+                          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"py-1 px-2 text-center rounded text-white bg-black"</span><span class="nt">&gt;</span>Team 4<span class="nt">&lt;/div&gt;</span>
+                        <span class="nt">&lt;/div&gt;</span>
+                      <span class="nt">&lt;/div&gt;</span>
+                    <span class="nt">&lt;/a&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                  <span class="nt">&lt;small</span> <span class="na">class=</span><span class="s">"pl-2 font-bold mb-1"</span><span class="nt">&gt;&lt;/small&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 min-w-140-px"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex items-center"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"mr-2"</span><span class="nt">&gt;</span>100%<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"overflow-hidden h-2 text-xs flex rounded bg-emerald-200"</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"</span> <span class="na">style=</span><span class="s">"width: 100%;"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                  <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+            <span class="nt">&lt;td</span> <span class="na">class=</span><span class="s">"border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 pb-6 pl-6 text-right"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-blueGray-800 bg-white border-white active:bg-blueGray-100 active:border-blueGray-100 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-cog"</span><span class="nt">&gt;&lt;/i&gt;&lt;i</span> <span class="na">class=</span><span class="s">"ml-2 fas fa-caret-down transition-all duration-100 ease-in-out transform "</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"block  z-50"</span><span class="nt">&gt;</span>
+                  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"origin-top-right bg-white text-base float-left p-2 border list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-100 ease-in transform opacity-0 scale-95 absolute "</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Edit Profile<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Settings<span class="nt">&lt;/a&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">"text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100"</span><span class="nt">&gt;</span>Log out<span class="nt">&lt;/a&gt;&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+              <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;/td&gt;</span>
+          <span class="nt">&lt;/tr&gt;</span>
+        <span class="nt">&lt;/tbody&gt;</span>
+      <span class="nt">&lt;/table&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="admin-id-admin-id-components-cardfulltable">Card ChartJS</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div id="colors" class="flex flew-wrap justify-center items-center absolute w-full left-0 sm:left-auto z-9998" style="width: 100%; bottom: -14px;">
+              <div class="flex flew-wrap justify-center items-center bg-white px-2">
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-blueGray-500 bg-opacity-25" onclick="changeColor(this)" data-color="blueGray"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-red-500 bg-opacity-25" onclick="changeColor(this)" data-color="red"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-orange-500 bg-opacity-25" onclick="changeColor(this)" data-color="orange"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-amber-500 bg-opacity-25" onclick="changeColor(this)" data-color="amber"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-emerald-500 bg-opacity-25" onclick="changeColor(this)" data-color="emerald"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-teal-500 bg-opacity-25" onclick="changeColor(this)" data-color="teal"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-lightBlue-500 bg-opacity-25" onclick="changeColor(this)" data-color="lightBlue"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-indigo-500 shadow-sm" onclick="changeColor(this)" data-color="indigo"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-purple-500 bg-opacity-25" onclick="changeColor(this)" data-color="purple"></span>
+                <span class="cursor-pointer w-6 h-6 rounded last:mr-0 mr-2 border border-solid border-blueGray-100 bg-pink-500 bg-opacity-25" onclick="changeColor(this)" data-color="pink"></span>
+              </div>
+            </div>
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <div class="relative flex flex-col min-w-0 break-words w-full mb-8 shadow-lg rounded-lg bg-indigo-900">
+                    <div class="rounded-t mb-0 px-4 py-3 bg-transparent">
+                      <div class="flex flex-wrap items-center">
+                        <div class="relative w-full max-w-full flex-grow flex-1">
+                          <h6 class="uppercase mb-1 text-xs font-semibold text-blueGray-200">Overview</h6>
+                          <h2 class="text-xl font-semibold text-white">Sales value</h2>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-4 flex-auto">
+                      <div class="relative h-350-px">
+                        <canvas width="738" height="218" id="line-chart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words w-full mb-8 shadow-lg rounded-lg bg-indigo-900"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"rounded-t mb-0 px-4 py-3 bg-transparent"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap items-center"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative w-full max-w-full flex-grow flex-1"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"uppercase mb-1 text-xs font-semibold text-blueGray-200"</span><span class="nt">&gt;</span>Overview<span class="nt">&lt;/h6&gt;</span>
+          <span class="nt">&lt;h2</span> <span class="na">class=</span><span class="s">"text-xl font-semibold text-white"</span><span class="nt">&gt;</span>Sales value<span class="nt">&lt;/h2&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-4 flex-auto"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative h-350-px"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;canvas</span> <span class="na">width=</span><span class="s">"738"</span> <span class="na">height=</span><span class="s">"218"</span> <span class="na">id=</span><span class="s">"line-chart"</span><span class="nt">&gt;&lt;/canvas&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../assets/js/popper.js"></script>
+  <script src="../../assets/js/plugins/chart.min.js"></script>
+  <!--  Google Maps Plugin    -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+  <script src="../../assets/js/map.js"></script>
+  <script src="../../assets/js/notus.js"></script>
+</body>
+<footer class="relative pt-8 pb-6 mt-8">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-wrap">
+      <div class="w-full md:w-6/12 px-4">
+        <h4 class="text-xl leading-normal font-bold">Let's keep in touch!</h4>
+        <h5 class="leading-normal mt-1 mb-2 text-blueGray-500">Find us on any of these platforms, we respond within 1-2 business days.</h5>
+        <div class="mt-6">
+          <a href="https://www.twitter.com/creativetim" target="_blank">
+            <i class="fab fa-twitter  bg-white text-twitter-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.facebook.com/creativetim" target="_blank">
+            <i class="fab fa-facebook-square bg-white text-facebook-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"> </i>
+          </a>
+          <a href="https://www.dribbble.com/creativetim" target="_blank">
+            <i class="fab fa-dribbble bg-white text-dribbble-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.github.com/creativetimofficial" target="_blank">
+            <i class="fab fa-github bg-white text-github-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+        </div>
+      </div>
+      <div class="w-full md:w-6/12 px-4">
+        <div class="flex flex-wrap items-top mb-6">
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Useful Links</span>
+            <ul class="list-unstyled">
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/presentation" target="_blank">About Us</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/blog" target="_blank">Blog</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.github.com/creativetimofficial/tailwind-starter-kit" target="_blank">Github</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/bootstrap-themes/free" target="_blank">Free Products</a>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Other Resources</span>
+            <ul class="list-unstyled">
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/license" target="_blank">License</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/terms" target="_blank">Terms &amp; Conditions</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/privacy" target="_blank">Privacy Policy</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/contact-us" target="_blank">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="my-6 border-blueGray-200">
+    <div class="flex flex-wrap items-center md:justify-between justify-center">
+      <div class="w-full md:w-4/12 px-4 mx-auto text-center">
+        <div class="text-sm text-blueGray-500 py-1">Copyright © 2021
+          <a href="https://www.creative-tim.com" class="text-blueGray-500 hover:text-blueGray-600 font-semibold" target="_blank">Creative Tim</a>
+          . All rights reserved.
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</html>

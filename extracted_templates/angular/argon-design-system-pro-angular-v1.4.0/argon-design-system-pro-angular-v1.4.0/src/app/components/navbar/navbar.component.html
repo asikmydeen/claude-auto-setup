@@ -1,0 +1,479 @@
+<nav
+  class="navbar navbar-main navbar-expand-lg navbar-dark headroom"
+  id="navbar-main"
+>
+  <div class="container">
+    <a class="navbar-brand mr-lg-5" [routerLink]="['/index']">
+      <img src="assets/img/brand/argon-white.png" id="brand-logo"/>
+    </a>
+    <button
+      aria-controls="navbar_global"
+      aria-label="Toggle navigation"
+      class="navbar-toggler"
+      [attr.aria-expanded]="!isCollapsed"
+      (click)="isCollapsed = !isCollapsed"
+      id="navbar_global"
+      type="button"
+    >
+      <span class="navbar-toggler-icon"> </span>
+    </button>
+    <div
+      class="navbar-collapse"
+      [isAnimated]="true"
+      [collapse]="isCollapsed"
+      id="navbar_global"
+    >
+      <div class="navbar-collapse-header">
+        <div class="row">
+          <div class="col-6 collapse-brand">
+            <a [routerLink]="['/index']">
+              <img src="assets/img/brand/blue.png" />
+            </a>
+          </div>
+          <div class="col-6 collapse-close">
+            <button
+              aria-controls="navbar_global"
+              aria-label="Toggle navigation"
+              class="navbar-toggler"
+              [attr.aria-expanded]="!isCollapsed"
+              (click)="isCollapsed = !isCollapsed"
+              id="navbar_global"
+              type="button"
+            >
+              <span> </span> <span> </span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <ul class="navbar-nav navbar-nav-hover align-items-lg-center ml-lg-auto" *ngIf="mobileView()">
+        <li class="nav-item dropdown" dropdown>
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            dropdownToggle
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-ui-04 d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Elements </span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-xl" *dropdownMenu >
+            <div class="dropdown-menu-inner">
+              <a class="media d-flex align-items-center" [routerLink]="['/index']">
+                <div
+                  class="icon icon-shape bg-gradient-primary rounded-circle text-white"
+                >
+                  <i class="ni ni-spaceship"> </i>
+                </div>
+                <div class="media-body ml-3">
+                  <h6 class="heading text-primary mb-md-1">Elements</h6>
+                  <p class="description d-none d-md-inline-block mb-0">
+                    Learn how to use compiling Scss, change brand colors and
+                    more.
+                  </p>
+                </div>
+              </a>
+              <a
+                class="media d-flex align-items-center"
+                [routerLink]="['/presentation']"
+              >
+                <div
+                  class="icon icon-shape bg-gradient-warning rounded-circle text-white"
+                >
+                  <i class="ni ni-palette"> </i>
+                </div>
+                <div class="media-body ml-3">
+                  <h6 class="heading text-primary mb-md-1">Presentation</h6>
+                  <p class="description d-none d-md-inline-block mb-0">
+                    Learn more about colors, typography, icons and the grid
+                    system we used for .
+                  </p>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-menu-footer">
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/overview"
+              >
+                <i class="ni ni-atom"> </i> Getting Started
+              </a>
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/colors"
+              >
+                <i class="ni ni-ui-04"> </i> Foundation
+              </a>
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/alerts"
+              >
+                <i class="ni ni-archive-2"> </i> Components
+              </a>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item dropdown" dropdown>
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            dropdownToggle
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-app d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Design Blocks </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+            *dropdownMenu
+          >
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'headers'">
+              <i class="ni ni-album-2 text-info"> </i> Headers
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'features'">
+              <i class="ni ni-settings text-danger"> </i> Features
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'blogs'">
+              <i class="ni ni-align-left-2 text-primary"> </i> Blogs
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'teams'">
+              <i class="ni ni-user-run text-danger"> </i> Teams
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'projects'">
+              <i class="ni ni-paper-diploma text-purple"> </i> Projects
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'pricing'">
+              <i class="ni ni-money-coins text-pink"> </i> Pricing
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'testimonials'">
+              <i class="ni ni-chat-round text-muted"> </i> Testimonials
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'contactus'">
+              <i class="ni ni-mobile-button text-success"> </i> Contact Us
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'tables'">
+              <i class="ni ni-chart-bar-32 text-default"> </i> Tables
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'accordion'">
+              <i class="ni ni-collection text-yellow"> </i> Accordion
+            </a>
+          </div>
+        </li>
+        <li class="nav-item dropdown" dropdown>
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            dropdownToggle
+            role="button"
+          >
+            <i class="ni ni-single-copy-04 d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Examples </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+            *dropdownMenu
+          >
+            <a class="dropdown-item" [routerLink]="['/examples/about-us']">
+              <i class="ni ni-tie-bow text-warning"> </i> About-us
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/blog-post']">
+              <i class="ni ni-align-center text-info"> </i> Blog Post
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/blog-posts']">
+              <i class="ni ni-chart-bar-32 text-yellow"> </i> Blog Posts
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/contact-us']">
+              <i class="ni ni-square-pin text-danger"> </i> Contact Us
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/landing-page']">
+              <i class="ni ni-planet text-purple"> </i> Landing Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/pricing-page']">
+              <i class="ni ni-money-coins text-success"> </i> Pricing
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/ecommerce']">
+              <i class="ni ni-box-2 text-pink"> </i> Ecommerce Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/product-page']">
+              <i class="ni ni-bag-17 text-primary"> </i> Product Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/profile-page']">
+              <i class="ni ni-circle-08 text-info"> </i> Profile Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/error']">
+              <i class="ni ni-button-power text-warning"> </i> 404 Error Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/500-error']">
+              <i class="ni ni-ungroup text-yellow"> </i> 500 Error Page
+            </a>
+          </div>
+        </li>
+        <li class="nav-item dropdown" dropdown>
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            dropdownToggle
+            role="button"
+          >
+            <i class="ni ni-tablet-button d-lg-none"> </i>
+            <span class="nav-link-inner--text"> App Pages </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+            *dropdownMenu
+          >
+            <a class="dropdown-item"  [routerLink]="['/examples/account-settings']">
+              <i class="ni ni-lock-circle-open text-muted"> </i> Account
+              Settings
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/login-page']">
+              <i class="ni ni-tv-2 text-danger"> </i> Login Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/register-page']">
+              <i class="ni ni-air-baloon text-pink"> </i> Register Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/reset-page']">
+              <i class="ni ni-atom text-info"> </i> Reset Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/invoice-page']">
+              <i class="ni ni-bullet-list-67 text-success"> </i> Invoice Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/checkout-page']">
+              <i class="ni ni-basket text-orange"> </i> Checkout Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/chat-page']">
+              <i class="ni ni-chat-round text-primary"> </i> Chat Page
+            </a>
+          </div>
+        </li>
+      </ul>
+      <ul class="navbar-nav navbar-nav-hover align-items-lg-center ml-lg-auto" *ngIf="!mobileView()">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-ui-04 d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Elements </span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-xl">
+            <div class="dropdown-menu-inner">
+              <a class="media d-flex align-items-center" [routerLink]="['/index']">
+                <div
+                  class="icon icon-shape bg-gradient-primary rounded-circle text-white"
+                >
+                  <i class="ni ni-spaceship"> </i>
+                </div>
+                <div class="media-body ml-3">
+                  <h6 class="heading text-primary mb-md-1">Elements</h6>
+                  <p class="description d-none d-md-inline-block mb-0">
+                    Learn how to use compiling Scss, change brand colors and
+                    more.
+                  </p>
+                </div>
+              </a>
+              <a
+                class="media d-flex align-items-center"
+                [routerLink]="['/presentation']"
+              >
+                <div
+                  class="icon icon-shape bg-gradient-warning rounded-circle text-white"
+                >
+                  <i class="ni ni-palette"> </i>
+                </div>
+                <div class="media-body ml-3">
+                  <h6 class="heading text-primary mb-md-1">Presentation</h6>
+                  <p class="description d-none d-md-inline-block mb-0">
+                    Learn more about colors, typography, icons and the grid
+                    system we used for .
+                  </p>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-menu-footer">
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/overview"
+              >
+                <i class="ni ni-atom"> </i> Getting Started
+              </a>
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/colors"
+              >
+                <i class="ni ni-ui-04"> </i> Foundation
+              </a>
+              <a
+                class="dropdown-item"
+                href="https://demos.creative-tim.com/argon-design-system-pro-angular/documentation/alerts"
+              >
+                <i class="ni ni-archive-2"> </i> Components
+              </a>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-app d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Design Blocks </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+          >
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'headers'">
+              <i class="ni ni-album-2 text-info"> </i> Headers
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'features'">
+              <i class="ni ni-settings text-danger"> </i> Features
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'blogs'">
+              <i class="ni ni-align-left-2 text-primary"> </i> Blogs
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'teams'">
+              <i class="ni ni-user-run text-danger"> </i> Teams
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'projects'">
+              <i class="ni ni-paper-diploma text-purple"> </i> Projects
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'pricing'">
+              <i class="ni ni-money-coins text-pink"> </i> Pricing
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'testimonials'">
+              <i class="ni ni-chat-round text-muted"> </i> Testimonials
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'contactus'">
+              <i class="ni ni-mobile-button text-success"> </i> Contact Us
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'tables'">
+              <i class="ni ni-chart-bar-32 text-default"> </i> Tables
+            </a>
+            <a class="dropdown-item" [routerLink]="['sections']"
+            [fragment]="'accordion'">
+              <i class="ni ni-collection text-yellow"> </i> Accordion
+            </a>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-single-copy-04 d-lg-none"> </i>
+            <span class="nav-link-inner--text"> Examples </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+          >
+            <a class="dropdown-item" [routerLink]="['/examples/about-us']">
+              <i class="ni ni-tie-bow text-warning"> </i> About-us
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/blog-post']">
+              <i class="ni ni-align-center text-info"> </i> Blog Post
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/blog-posts']">
+              <i class="ni ni-chart-bar-32 text-yellow"> </i> Blog Posts
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/contact-us']">
+              <i class="ni ni-square-pin text-danger"> </i> Contact Us
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/landing-page']">
+              <i class="ni ni-planet text-purple"> </i> Landing Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/pricing-page']">
+              <i class="ni ni-money-coins text-success"> </i> Pricing
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/ecommerce']">
+              <i class="ni ni-box-2 text-pink"> </i> Ecommerce Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/product-page']">
+              <i class="ni ni-bag-17 text-primary"> </i> Product Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/profile-page']">
+              <i class="ni ni-circle-08 text-info"> </i> Profile Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/error']">
+              <i class="ni ni-button-power text-warning"> </i> 404 Error Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/500-error']">
+              <i class="ni ni-ungroup text-yellow"> </i> 500 Error Page
+            </a>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link"
+            data-toggle="dropdown"
+            href="javascript:;"
+            role="button"
+          >
+            <i class="ni ni-tablet-button d-lg-none"> </i>
+            <span class="nav-link-inner--text"> App Pages </span>
+          </a>
+          <div
+            aria-labelledby="navbarDropdownMenuLink"
+            class="dropdown-menu"
+          >
+            <a class="dropdown-item"  [routerLink]="['/examples/account-settings']">
+              <i class="ni ni-lock-circle-open text-muted"> </i> Account
+              Settings
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/login-page']">
+              <i class="ni ni-tv-2 text-danger"> </i> Login Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/register-page']">
+              <i class="ni ni-air-baloon text-pink"> </i> Register Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/reset-page']">
+              <i class="ni ni-atom text-info"> </i> Reset Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/invoice-page']">
+              <i class="ni ni-bullet-list-67 text-success"> </i> Invoice Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/checkout-page']">
+              <i class="ni ni-basket text-orange"> </i> Checkout Page
+            </a>
+            <a class="dropdown-item" [routerLink]="['/examples/chat-page']">
+              <i class="ni ni-chat-round text-primary"> </i> Chat Page
+            </a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,274 @@
+<div class="wrapper">
+    {% if section.settings.heading != blank %}
+      <div class="section-header text-center">
+        <h3 class="font-weight-bold mb-0 section-header__title mb-2">{{ section.settings.heading | escape }}</h3>
+        {% if section.settings.description != blank %}
+        <p class="mb-0"> {{ section.settings.description | escape }} </p>
+        {% endif %}
+      </div>
+    {% endif %}
+  
+    <div class="grid collection-grid">
+        {% comment %}
+          Show up to 12 accordions.
+        {% endcomment %}
+      
+        {% assign isEmpty = true %}
+        {% assign accordion_index = 0 %}
+        {% assign accordion_count = 0 %}
+        {% assign accordion_limit = section.blocks.size %}
+      
+        {% comment %}
+          Add one to the accordionlimit to offset chance of Frontpage being included
+        {% endcomment %}
+        {% assign accordion_limit = accordion_limit | plus: 1 %}
+
+        {% comment %}
+          Calculate number of accordions to show, making sure Frontpage isn't one
+        {% endcomment %}
+        {% for accordion in section.blocks limit: accordion_limit %}
+            {% assign accordion_count = accordion_count | plus: 1 %}
+        {% endfor %}
+
+        {% if accordion_count > 0 %}
+          {% assign isEmpty = false %}
+        {% endif %}
+
+        {% assign divisible_by_three = accordion_count | modulo: 3 %}
+        {% assign divisible_by_two = accordion_count | modulo: 2 %}
+      
+        {% comment %}
+          Loop through the accordions to display
+        {% endcomment %}
+      	
+      <div class="grid__item one-whole text-center mb-3">
+      	<div class="accordion-group">
+          <div class="accordion">
+          {% for block in section.blocks limit: accordion_limit %}
+
+            	<div class="accordion-item">
+                 <button class="accordion-header d-flex align-items-center pt-4 pb-2 px-1">
+                   {% if block.settings.title != blank %}
+                    <p class="mb-0 font-weight-bold">{{ block.settings.title }}</p>
+                   {% else %}
+                    <p class="mb-0">Test title</p>
+                   {% endif %}
+                   <i class="arrow fas fa-angle-down text-lg ms-auto"></i>
+                </button>
+
+                <div class="accordion-panel pt-0 pb-4 px-1">
+                  {% if block.settings.description != blank %}
+                   {{ block.settings.description }}
+                  {% else %}
+                   Test description
+                  {% endif %}
+                </div>
+               </div>
+
+          {% endfor %}
+
+          </div>
+        </div>
+       </div>
+   
+    </div>
+</div>
+
+{% schema %}
+  {
+    "name":"FAQ",
+	"max_blocks": 12,
+    "settings": [
+      {
+        "id": "heading",
+        "type": "text",
+        "label": "Heading",
+		"default": {
+          "cs": "FAQ Titul",
+          "da": "FAQ Titel",
+          "de": "FAQ Titel",
+          "en": "FAQ Title",
+          "es": "FAQ Título",
+          "fi": "FAQ Otsikko",
+          "fr": "FAQ Titre",
+          "it": "FAQ Titolo",
+          "ja": "FAQ 題名",
+          "ko": "FAQ 제목",
+          "nb": "FAQ Tittel",
+          "nl": "FAQ Titel",
+          "pl": "FAQ Tytuł",
+          "pt-BR": "FAQ Título",
+          "pt-PT": "FAQ Título",
+          "sv": "FAQ Titel",
+          "th": "FAQ ชื่อ",
+          "tr": "FAQ Başlık",
+          "vi": "FAQ Tiêu đề",
+          "zh-CN": "FAQ 标题",
+          "zh-TW": "FAQ 标题"
+        }
+      },
+	  {
+        "id": "description",
+        "type": "text",
+        "label": "Description",
+        "default": {
+          "cs": "FAQ Popis",
+          "da": "FAQ Beskrivelse",
+          "de": "FAQ Beschreibung",
+          "en": "FAQ Description",
+          "es": "FAQ Descripción",
+          "fi": "FAQ Kuvaus",
+          "fr": "FAQ Description",
+          "it": "FAQ Descrizione",
+          "ja": "FAQ 説明",
+          "ko": "FAQ 설명",
+          "nb": "FAQ Beskrivelse",
+          "nl": "FAQ Beschrijving",
+          "pl": "FAQ Opis",
+          "pt-BR": "FAQ Descrição",
+          "pt-PT": "FAQ Descrição",
+          "sv": "FAQ Beskrivning",
+          "th": "FAQ คำอธิบาย",
+          "tr": "FAQ Açıklama",
+          "vi": "FAQ Sự miêu tả",
+          "zh-CN": "FAQ 描述",
+          "zh-TW": "FAQ 描述"
+        }
+      }
+    ],
+   "presets": [
+      {
+      	"name": "FAQ",
+      	"category": "Collection",
+        "blocks": [
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          }
+        ]
+      }
+     ],
+    "blocks": [
+        {
+          "type": "quote",
+          "name": {
+            "cs": "Accordion",
+            "da": "Accordion",
+            "de": "Accordion",
+            "en": "Accordion",
+            "es": "Acordeón",
+            "fi": "Accordion",
+            "fr": "Accordion",
+            "it": "Accordion",
+            "ja": "Accordion",
+            "ko": "Accordion",
+            "nb": "Accordion",
+            "nl": "Accordion",
+            "pl": "Accordion",
+            "pt-BR": "Accordion",
+            "pt-PT": "Accordion",
+            "sv": "Accordion",
+            "th": "Accordion",
+            "tr": "Accordion",
+            "vi": "Accordion",
+            "zh-CN": "Accordion",
+            "zh-TW": "Accordion"
+          },
+          "settings": [
+			{
+			  "type": "text",
+			  "id": "title",
+              "label": "Title",
+			  "default": {
+                "cs": "Accordion Titul",
+                "da": "Accordion Titel",
+                "de": "Accordion Titel",
+                "en": "Accordion Title",
+                "es": "Accordion Título",
+                "fi": "Accordion Otsikko",
+                "fr": "Accordion Titre",
+                "it": "Accordion Titolo",
+                "ja": "Accordion 題名",
+                "ko": "Accordion 제목",
+                "nb": "Accordion Tittel",
+                "nl": "Accordion Titel",
+                "pl": "Accordion Tytuł",
+                "pt-BR": "Accordion Título",
+                "pt-PT": "Accordion Título",
+                "sv": "Accordion Titel",
+                "th": "Accordion ชื่อ",
+                "tr": "Accordion Başlık",
+                "vi": "Accordion Tiêu đề",
+                "zh-CN": "Accordion 标题",
+                "zh-TW": "Accordion 标题"
+              }
+			},
+     		 {
+			  "type": "richtext",
+			  "id": "description",
+              "label": "Description",
+			  "default": {
+                "cs": "<p>Accordion Popis</p>",
+                "da": "<p>Accordion Beskrivelse</p>",
+                "de": "<p>Accordion Beschreibung</p>",
+				"en": "<p>Accordion Description</p>",
+                "es": "<p>Accordion Descripción</p>",
+                "fi": "<p>Accordion Kuvaus</p>",
+                "fr": "<p>Accordion Description</p>",
+                "it": "<p>Accordion Descrizione</p>",
+                "ja": "<p>Accordion 説明</p>",
+                "ko": "<p>Accordion 설명</p>",
+                "nb": "<p>Accordion Beskrivelse</p>",
+                "nl": "<p>Accordion Beschrijving</p>",
+                "pl": "<p>Accordion Opis</p>",
+                "pt-BR": "<p>Accordion Descrição</p>",
+                "pt-PT": "<p>Accordion Descrição</p>",
+                "sv": "<p>Accordion Beskrivning</p>",
+                "th": "<p>Accordion คำอธิบาย</p>",
+                "tr": "<p>Accordion Açıklama</p>",
+                "vi": "<p>Accordion Sự miêu tả</p>",
+                "zh-CN": "<p>Accordion 描述</p>",
+                "zh-TW": "<p>Accordion 描述</p>"
+              }
+			}
+		  ]
+        }
+      ]
+
+  }
+{% endschema %}
+
+<script>
+  
+var acc = document.getElementsByClassName("accordion-header");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+    acc[i].onclick = function(){
+      	var el = this;
+        this.classList.toggle("active");
+       
+
+        this.nextElementSibling.classList.add("collapsing");
+      	
+      if(!this.nextElementSibling.classList.contains('show')){
+          setTimeout(function () {
+            el.nextElementSibling.style.height = el.nextElementSibling.children[0].offsetHeight + 'px';
+          }, 100);
+      }
+
+      setTimeout(function () {
+           el.nextElementSibling.classList.remove("collapsing");
+           el.nextElementSibling.classList.toggle("show");
+           el.nextElementSibling.style.height = '';
+        }, 200);
+      	
+  }
+}
+
+</script>

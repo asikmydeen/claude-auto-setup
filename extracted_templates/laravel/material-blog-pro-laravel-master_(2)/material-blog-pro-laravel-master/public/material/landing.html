@@ -1,0 +1,632 @@
+<!--
+ =========================================================
+ Material Kit PRO - v2.1.1
+ =========================================================
+
+ Product Page: https://www.creative-tim.com/product/material-kit-pro
+ Copyright 2019 Creative Tim (https://www.creative-tim.com)
+
+ Coded by Creative Tim
+
+ =========================================================
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="apple-touch-icon" sizes="76x76" href="../material/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="../material/img/favicon.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>
+        Material Blog PRO Laravel by Creative Tim & UPDIVISION
+    </title>
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+    <!--     Fonts and icons     -->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons|Material+Icons+Outlined" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+    <!-- CSS Files -->
+    <link href="../material/css/material-kit.css" rel="stylesheet" />
+    <!-- CSS Just for demo purpose, don't include it in your project -->
+    <link href="../material/demo/demo.css" rel="stylesheet" />
+    <link href="../material/demo/vertical-nav.css" rel="stylesheet" />
+    <link href="../material/css/landing.css?t=1.1" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+</head>
+
+<body class="blog-posts sidebar-collapse">
+    <nav class="navbar navbar-color-on-scroll navbar-transparent fixed-top navbar-expand-lg " color-on-scroll="100" id="sectionsNav">
+        <div class="container">
+            <div class="navbar-translate">
+                <a class="navbar-brand" href="https://material-blog-pro-laravel.creative-tim.com/">
+                    Material Blog PRO with Laravel 
+                </a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ml-auto">
+
+                    <li class="button-container dropdown nav-item mr-lg-2">
+                        <a href="" target="_blank" class="btn btn-info btn-round btn-block dropdown-toggle uppercase" data-toggle="dropdown">
+                            Laravel Login as
+                        </a>
+                        <div class="dropdown-menu dropdown-with-icons">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=1" class="dropdown-item mx-2">
+                                <strong>Admin</strong>&nbsp;to manage the blog
+                            </a>
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=2" class="dropdown-item mx-2">
+                                <strong>Author</strong>&nbsp;to manage articles
+                            </a>
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=3" class="dropdown-item mx-2">
+                                <strong>Member</strong>&nbsp;to comment
+                            </a>
+                        </div>
+                    </li>
+                    <li class="button-container nav-item iframe-extern">
+                        <a href=" https://www.creative-tim.com/product/material-blog-pro-laravel" target="_blank" class="btn btn-rose btn-round btn-block">
+                            <i class="material-icons">shopping_cart</i> Buy Now
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="page-header header-filter header-small" data-parallax="true" style="background-image: url('../material/img/dg2.jpg');">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 ml-auto mr-auto text-center">
+                    <div class="brand">
+                        <h1 class="title-first">Material Blog Laravel
+                            <div class="pro-badge">
+                                <p class="pro-badge-text">Pro</p>
+                            </div>
+                        </h1>
+                        <h3 class="title-second">Premium Bootstrap blog with Laravel administration<br> and a Material frontend</h3>
+                        <div class="buttons-under-title">
+                            <li class="button-container nav-item mr-lg-2" style="display: inline-block;">
+                                <a href="" target="_blank" class="btn btn-info btn-round btn-block btn-title dropdown-toggle uppercase d-flex justify-content-center align-items-center" data-toggle="dropdown">
+                                    Laravel Login as
+                                </a>
+                                <div class="dropdown-menu dropdown-with-icons zindex-dropdown">
+                                    <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=1" class="dropdown-item mx-2">
+                                        <strong>Admin</strong>&nbsp;to manage the blog
+                                    </a>
+                                    <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=2" class="dropdown-item mx-2">
+                                        <strong>Author</strong>&nbsp;to manage articles
+                                    </a>
+                                    <a href="https://material-blog-pro-laravel.creative-tim.com/login?role=3" class="dropdown-item mx-2">
+                                        <strong>Member</strong>&nbsp;to comment
+                                    </a>
+                                </div>
+                            </li>
+                            <li class="button-container nav-item iframe-extern" style="display: inline-block;">
+                                <a href=" https://www.creative-tim.com/product/material-blog-pro-laravel" target="_blank" class="btn btn-rose btn-round btn-block btn-title">
+                                    <i class="material-icons">shopping_cart</i> Buy Now
+                                </a>
+                            </li>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="main main-raised">
+        <nav class="navbar navbar-expand-lg bg-white">
+            <div class="container">
+                <div class="navbar-translate">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" aria-expanded="false" aria-label="Toggle navigation" data-target="#pagesNav">
+                                <span class="sr-only">{{ ('Toggle navigation') }}</span>
+                                <span class="navbar-toggler-icon"></span>
+                                <span class="navbar-toggler-icon"></span>
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                    <span class="float-left menu">Menu</span>
+                </div>
+                <div class="collapse navbar-collapse" id="pagesNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/" class="nav-link"><strong>Homepage</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/material/landing.html" class="nav-link"><strong>Presentation</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/category/travel" class="nav-link"><strong>Travel</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/category/food" class="nav-link"><strong>Food</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/category/technology" class="nav-link"><strong>Technology</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/category/fashion" class="nav-link"><strong>Fashion</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/category/health" class="nav-link"><strong>Health</strong></a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="https://material-blog-pro-laravel.creative-tim.com/all_articles" class="nav-link"><strong>All Articles</strong></a>
+                        </li>
+                    </ul>
+                    <form action="https://material-blog-pro-laravel.creative-tim.com/search" class="form-inline ml-auto">
+                        <div class="form-group no-border nav-category-search">
+                            <input type="text" class="form-control" name="searching" placeholder="Search">
+                        </div>
+                        <button type="submit" style="margin-right: 30px;" class="btn btn-white btn-just-icon btn-round">
+                            <i class="material-icons">search</i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="section">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 ml-auto mr-auto">
+                            <div class="features-1">
+                                <div class="row">
+                                    <div class="col-md-10 ml-auto mr-auto">
+                                        <h3 class="description">More than just a few example pages in a UI kit, Material Blog PRO Laravel comes with a fully-implemented backend and all the core features you need in a blog, right out of the box.</h3>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info">
+                                            <div class="icon" style="color:#EA2C6D">
+                                                <i class="material-icons">fingerprint</i>
+                                            </div>
+                                            <h4 class="info-title">Role-based<br> authentication</h4>
+                                            <p class="info-title-description">Three default user roles with different<br class="break"> permission levels to access and edit the<br class="break"> blog: admin, author, member.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info">
+                                            <div class="icon icon-info">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">security</i>
+                                            </div>
+                                            <h4 class="info-title">Out of the box CRUD <br>functionalities</h4>
+                                            <p class="info-title-description">Fully-implemented content and user<br class="break"> management. Everything an admin<br class="break"> should be able to do.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info">
+                                            <div class="icon icon-success">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">dashboard</i>
+                                            </div>
+                                            <h4 class="info-title">Additional Material<br> goodies</h4>
+                                            <p class="info-title-description">You also get Material Kit PRO and<br class="break"> Material Dashboard PRO for free,<br class="break"> with the blog.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info">
+                                            <div class="icon icon-success" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">layers</i>
+                                            </div>
+                                            <h4 class="info-title">Pre-built example<br> pages</h4>
+                                            <p class="info-title-description">Get inspired and go from prototyping<br class="break"> to delivery faster with the included <br class="break">example pages.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="features-2">
+                                <div class="row">
+                                    <div class="col-md-12 ml-0 mr-0 text-center">
+                                        <h1 class="title-first">Role-based authentication</h1>
+                                        <h5 class="description title-second" style="font-weight: 500;">CONTROL WHO ACCESSES YOUR BLOG</h5>
+                                    </div>
+                                </div>
+
+                                <div class="row role">
+                                    <div class="col-md-8 col-sm-12 order-md order-md-1 users-auth-img">
+                                        <img class="image-role img-fluid" src="../material/img/landing_img1.jpg">
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 order-md-0 users-auth">
+                                        <div class="row roles">
+                                            <p class="info-title-description"><b style="color:black"><i _ngcontent-vgw-c19="" class="material-icons icon-image-preview icon-lock">lock</i>Admins</b> can handle both content and user management. This means adding, editing and deleting articles,
+                                                categories & tags, as well as users and roles.</p>
+                                        </div>
+                                        <div class="row roles">
+                                            <p class="info-title-description"><b style="color:black"><i _ngcontent-vgw-c19="" class="material-icons icon-image-preview icon-lock">lock</i>Authors</b> can manage content. They can add, edit or detele articles, categories and tags and edit
+                                                their own profile information.</p>
+                                        </div>
+                                        <div class="row roles">
+                                            <p class="info-title-description"><b style="color:black"><i _ngcontent-vgw-c19="" class="material-icons icon-image-preview icon-lock">lock</i>Members</b> can only comment on articles, once logged in. They can also edit their profile information.
+                                            </p>
+                                        </div>
+
+                                        <div class="row roles d-flex justify-content-center">
+                                            <a href="https://material-blog-pro-laravel.creative-tim.com/login" target="_blank" class="btn btn-rose btn-round btn-block ">
+                                                <i class="material-icons">remove_red_eye </i> LOG IN AS ROLE
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="features-3">
+                                <div class="row justify-content-md-center">
+                                    <div class="col-md-12 col-md-offset-2 text-center ">
+                                        <h2 class="title-first">Ready to use CRUDs</h2>
+                                        <h5 class="description title-second">MANAGE CONTENT AND USERS</h5>
+                                        <h5 class="description-subtitle">The Laravel-powered backend takes care of everything an admin should<br class="break"> be able to do. You get fully implemented content and user management<br class="break"> functionalities. </h5>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div>
+                                            <img class="img-fluid img-crud" src="../material/img/landing_img2.jpg">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="features-4">
+                                <div class="row justify-content-md-center">
+                                    <div class="col-md-12 col-md-offset-2 text-center ">
+                                        <h3 class="title-first">MANAGE OUT OF THE BOX:</h3>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" style="margin:auto;" class="material-icons icon-image-preview">category</i>
+                                            </div>
+                                            <h4 class="info-title text-center">CATEGORIES</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 30%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">You can create categories for articles and add a suggestive picture and description for each category, in addition to editing and deleting categories.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/category" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">local_offer</i>
+                                            </div>
+                                            <h4 class="info-title text-center">TAGS</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">You can edit, delete and add article tags and color-code them for a better user experience. Tags make browsing articles a lot easier and more intuitive.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/tag" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">menu_book</i>
+                                            </div>
+                                            <h4 class="info-title text-center">ARTICLES</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">This is probably one of the functionalities which will save you the most time, as every article has a picture, belongs to a category and can have multiple tags.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/article" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row user-delimiter">
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">person</i>
+                                            </div>
+                                            <h4 class="info-title text-center">USERS</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">Users and their roles are listed, with the possibility of adding new ones or editing and deleting existing ones.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/user" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">verified_user</i>
+                                            </div>
+                                            <h4 class="info-title text-center">ROLES</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">Each user has an assigned role, which you can edit or delete. The roles dictate the user`s privilege levels.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/role" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info ">
+                                            <div class="icon icon-info d-flex justify-content-center" style="color: #9C27B4;">
+                                                <i _ngcontent-vgw-c19="" class="material-icons icon-image-preview">recent_actors</i>
+                                            </div>
+                                            <h4 class="info-title text-center">PROFILES</h4>
+                                            <div class="progress progress-line-primary w-50 mt-2 mb-3" style="margin:auto">
+                                                <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+                                                    <span class="sr-only">60% Complete</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-center w-75" style="margin:auto">You have the option of editing the logged in user`s profile, including personal details and password.
+                                            </p>
+                                            <div class="row d-flex justify-content-center" style="margin-top:30px">
+                                                <a href="https://material-blog-pro-laravel.creative-tim.com/admin/profile" target="_blank" class="btn btn-block btn-manage" style="margin:auto">
+                                                    <div class="text-button-manager d-flex justify-content-center">LIVE PREVIEW</div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="team-5" style="background: radial-gradient(88.53% 88.51% at 41.49% 13.68%, #6A6A69 46.23%, #444444 94.53%);">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 ml-auto mr-auto text-center">
+                        <h2 class="title-first-feature7 text-white">More than some example pages</h2>
+                        <h5 class="title-second-feature7 text-white">BEAUTIFULLY FUNCTIONAL DESIGNS FOR FRONTEND & BACKEND</h5>
+                        <h5 class="description w-75 description-examples text-white" style="margin:auto">
+                            There`s more to simple design than you think. Especially when there`s a lot going on beneath the surface. You can use these functional designs as example pages, or, better yet, simply as they are.</h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3 class="title-page-section text-white">Admin dashboard</h3>
+                    <img class="image-section5" src="../material/img/landing_img3.png">
+                </div>
+                <div class="row">
+                    <h3 class="title-page-section text-white">Profile administration</h3>
+                    <img class="image-section5" src="../material/img/landing_img4.png">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="title-page-section text-white text-center">Articles by author</h3>
+                        <img class="image-section5" src="../material/img/landing_img5.png">
+                        <h3 class="title-page-section text-white text-center">Category page</h3>
+                        <img class="image-section5" src="../material/img/landing_img7.png">
+                        <h3 class="title-page-section text-white text-center">Article by tag</h3>
+                        <img class="image-section5" src="../material/img/landing_img9.png">
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="title-page-section text-white text-center">Homepage</h3>
+                        <img class="image-section5" src="../material/img/landing_img6.png">
+                        <h3 class="title-page-section text-white text-center">Article page</h3>
+                        <img class="image-section5" src="../material/img/landing_img8.png">
+                        <h3 class="title-page-section text-white text-center">Login page</h3>
+                        <img class="image-section5" src="../material/img/landing_img10.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="features-6">
+            <div class="row justify-content-md-center">
+                <div class="col-md-12 col-md-offset-2 text-center ">
+                    <img class="image-head" src="../material/img/landing_img12.png">
+                    <h2 class="title-first mt-5 text-center">Additional Material goodies included</h2>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="card card-pricing card-plain">
+                            <div class="card-body ">
+                                <p class="text-card text-center">
+                                    The blog`s frontend is built using Material Kit PRO and Material Dashboard PRO, which you also get, for free, in addition to the blog. This means extra goodies such as hundreads of handcrafted elements and example pages.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="card card-pricing card-plain">
+                            <div class="card-body ">
+                                <h3 class="card-title card-tittle-feature-6">
+                                    MATERIAL KIT PRO
+                                </h3>
+                                <ul>
+                                    <li class="text-center">
+                                        <b>1000 </b> Handcrafted elements</li>
+                                    <li class="text-center">
+                                        <b>7 </b> Customized plugins</li>
+                                    <li class="text-center">
+                                        <b>11 </b> Example pages</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Bootstrap based</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Documentation</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Fully responsive</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer justify-content-center">
+                                <a href="https://material-blog-pro-laravel.creative-tim.com/material/index.html" class="btn btn-rose btn-round">
+                                        View Demo
+                                      </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="card card-pricing card-plain">
+                            <div class="card-body ">
+                                <h3 class="card-title card-feature-6">
+                                    MATERIAL DASHBOARD PRO
+                                </h3>
+                                <ul>
+                                    <li class="text-center">
+                                        <b>200 </b> Handcrafted elements</li>
+                                    <li class="text-center">
+                                        <b>15</b> Customized plugins</li>
+                                    <li class="text-center">
+                                        <b>8 </b> Example pages</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Bootstrap based</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Documentation</li>
+                                    <li class="text-center">
+                                        <b><i class="material-icons text-success">check</i></b> Fully responsive</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer justify-content-center">
+                                <a href="https://material-blog-pro-laravel.creative-tim.com/material/material-dashboard-pro/examples/dashboard.html" class="btn btn-info btn-round">
+                                                View Demo
+                                              </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="features-5" style="background-image: url('../material/img/landing_img13.png')">
+            <div class="col-md-8 ml-auto mr-auto text-center">
+                <h2 class="title-first text-white">Behind the scenes</h2>
+                <h5 class="title description-text" style="margin:auto">
+                    These are the core Laravel components we used to make the magic happen.</h5>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="info">
+                            <div class="icon">
+                                <i _ngcontent-kvy-c19="" class="material-icons icon-image-preview">all_inbox</i>
+                            </div>
+                            <h4 class="info-title">Eloquent ORM</h4>
+                            <p>Beautiful, simple ActiveRecord implementation for working with your database. </p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info">
+                            <div class="icon">
+                                <i _ngcontent-kvy-c19="" class="material-icons icon-image-preview">alarm</i>
+                            </div>
+                            <h4 class="info-title">Events</h4>
+                            <p>Simple observer implementation, allowing you to subscribe and listen for various events. </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="info">
+                            <div class="icon">
+                                <i _ngcontent-kvy-c19="" class="material-icons icon-image-preview">lock</i>
+                            </div>
+                            <h4 class="info-title">Gates & policies</h4>
+                            <p>The two primary ways of authorizing user actions against a given resource in Laravel. </p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info">
+                            <div class="icon">
+                                <i _ngcontent-kvy-c19="" class="material-icons icon-image-preview">wb_cloudy</i>
+                            </div>
+                            <h4 class="info-title">File storage</h4>
+                            <p>Laravel provides a powerful filesystem abstraction. It`s amazingly simple to switch between storages. </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer footer-white footer-big">
+        <div class="container-fluid">
+            <nav class="float-left">
+                <ul>
+                    <li>
+                        <a href="https://www.creative-tim.com">
+                                    Creative Tim
+                                </a>
+                    </li>
+                    <li>
+                        <a target="_blank" href="https://www.updivision.com">
+                                        UPDIVISION
+                                    </a>
+                    </li>
+                    <li>
+                        <a href="https://www.creative-tim.com/license">
+                                   Licenses
+                                </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="copyright float-right">
+                &copy;
+                <script>
+                    document.write(new Date().getFullYear())
+                </script>, made with <i class="material-icons">favorite</i> by
+                <a href="https://www.creative-tim.com" target="_blank">Creative Tim</a> and <a href="https://www.updivision.com" target="_blank"> UPDIVISION </a> for a better web.
+            </div>
+        </div>
+    </footer>
+    <!--   Core JS Files   -->
+    <script src="../material/js/core/jquery.min.js" type="text/javascript"></script>
+    <script src="../material/js/core/popper.min.js" type="text/javascript"></script>
+    <script src="../material/js/core/bootstrap-material-design.min.js" type="text/javascript"></script>
+    <script src="../material/js/plugins/moment.min.js"></script>
+    <!--	Plugin for the Datepicker, full documentation here: https://github.com/Eonasdan/bootstrap-datetimepicker -->
+    <script src="../material/js/plugins/bootstrap-datetimepicker.js" type="text/javascript"></script>
+    <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+    <script src="../material/js/plugins/nouislider.min.js" type="text/javascript"></script>
+    <!--  Google Maps Plugin    -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+    <!--	Plugin for Tags, full documentation here: https://github.com/bootstrap-tagsinput/bootstrap-tagsinputs  -->
+    <script src="../material/js/plugins/bootstrap-tagsinput.js"></script>
+    <!--	Plugin for Select, full documentation here: http://silviomoreto.github.io/bootstrap-select -->
+    <script src="../material/js/plugins/bootstrap-selectpicker.js" type="text/javascript"></script>
+    <!--	Plugin for Fileupload, full documentation here: http://www.jasny.net/bootstrap/javascript/#fileinput -->
+    <script src="../material/js/plugins/jasny-bootstrap.min.js" type="text/javascript"></script>
+    <!--	Plugin for Small Gallery in Product Page -->
+    <script src="../material/js/plugins/jquery.flexisel.js" type="text/javascript"></script>
+    <!-- Plugins for presentation and navigation  -->
+    <script src="../material/demo/modernizr.js" type="text/javascript"></script>
+    <script src="../material/demo/vertical-nav.js" type="text/javascript"></script>
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!-- Js With initialisations For Demo Purpose, Don't Include it in Your Project -->
+    <script src="../material/demo/demo.js" type="text/javascript"></script>
+    <!-- Control Center for Material Kit: parallax effects, scripts for the example pages etc -->
+    <script src="../material/js/material-kit.js?v=2.1.1" type="text/javascript"></script>
+</body>
+
+</html>

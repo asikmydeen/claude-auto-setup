@@ -1,0 +1,14 @@
+[
+  {
+    "role_code": "ADMIN",
+    "description": "Admin"
+  },
+  {
+    "role_code": "CREATOR",
+    "description": "Creator"
+  },
+  {
+    "role_code": "MEMBER",
+    "description": "Member"
+  }
+]

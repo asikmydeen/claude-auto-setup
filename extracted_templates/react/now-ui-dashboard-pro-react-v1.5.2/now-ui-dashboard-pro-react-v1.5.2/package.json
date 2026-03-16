@@ -1,0 +1,71 @@
+{
+  "name": "now-ui-dashboard-pro-react",
+  "version": "1.5.2",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "4.6.2",
+    "chart.js": "3.9.1",
+    "classnames": "2.3.2",
+    "match-sorter": "6.3.1",
+    "moment": "2.29.4",
+    "sass": "1.62.1",
+    "nouislider": "15.4.0",
+    "perfect-scrollbar": "1.5.5",
+    "react": "18.2.0",
+    "react-big-calendar": "1.6.9",
+    "react-bootstrap-sweetalert": "5.2.0",
+    "react-bootstrap-switch": "15.5.3",
+    "react-bootstrap-wizard": "0.0.9",
+    "react-chartjs-2": "3.3.0",
+    "react-datetime": "3.2.0",
+    "react-dom": "18.2.0",
+    "react-jvectormap": "0.0.16",
+    "react-notification-alert": "0.0.13",
+    "react-router-dom": "6.11.1",
+    "react-scripts": "5.0.1",
+    "react-select": "5.7.3",
+    "react-table": "7.8.0",
+    "react-tagsinput": "3.20.1",
+    "reactstrap": "8.10.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "compile-sass": "node-sass src/assets/scss/now-ui-dashboard.scss src/assets/css/now-ui-dashboard.css",
+    "minify-sass": "node-sass src/assets/scss/now-ui-dashboard.scss src/assets/css/now-ui-dashboard.min.css --output-style compressed",
+    "map-sass": "node-sass src/assets/scss/now-ui-dashboard.scss src/assets/css/now-ui-dashboard.css --source-map true",
+    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "devDependencies": {
+    "typescript": "5.0.4"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "optionalDependencies": {
+    "@babel/core": "7.21.8"
+  },
+  "overrides": {
+    "svgo": "3.0.2",
+    "fsevents": "2.3.2",
+    "chokidar": "3.5.3"
+  }
+}

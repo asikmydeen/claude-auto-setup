@@ -1,0 +1,364 @@
+<div class="wrapper">
+  <div class="section mt-5">
+    <div class="container">
+      <h2 class="title">Chat</h2>
+      <div class="row flex-row">
+        <div class="col-lg-4">
+          <div class="card card-plain">
+            <form class="card-header mb-3">
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  placeholder="Search contact"
+                  type="text"
+                />
+
+                <div class="input-group-append">
+                  <span class="input-group-text">
+                    <i class="tim-icons icon-zoom-split"> </i>
+                  </span>
+                </div>
+              </div>
+            </form>
+            <div class="list-group list-group-chat list-group-flush">
+              <a class="list-group-item active" href="javascript:void(0)">
+                <div class="media">
+                  <img alt="Image" class="avatar" src="assets/img/p10.jpg" />
+
+                  <div class="media-body ml-2">
+                    <div class="justify-content-between align-items-center">
+                      <h6 class="mb-0">
+                        Charlie Watson
+                        <span class="badge badge-success"> </span>
+                      </h6>
+                      <div><small> Typing... </small></div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+              <a class="list-group-item" href="javascript:void(0)">
+                <div class="media">
+                  <img alt="Image" class="avatar" src="assets/img/johana.jpg" />
+
+                  <div class="media-body ml-2">
+                    <div class="justify-content-between align-items-center">
+                      <h6 class="mb-0">Jane Doe</h6>
+                      <div><small class="text-muted"> 1 hour ago </small></div>
+                    </div>
+                    <span
+                      class="text-muted text-small col-11 p-0 text-truncate d-block"
+                    >
+                      Computer users and programmers
+                    </span>
+                  </div>
+                </div>
+              </a>
+              <a class="list-group-item" href="javascript:void(0)">
+                <div class="media">
+                  <img alt="Image" class="avatar" src="assets/img/ryan.png" />
+
+                  <div class="media-body ml-2">
+                    <div class="justify-content-between align-items-center">
+                      <h6 class="mb-0">Mila Skylar</h6>
+                      <div><small class="text-muted"> 24 min ago </small></div>
+                    </div>
+                    <span
+                      class="text-muted text-small col-11 p-0 text-truncate d-block"
+                    >
+                      You can subscribe to receive weekly...
+                    </span>
+                  </div>
+                </div>
+              </a>
+              <a class="list-group-item" href="javascript:void(0)">
+                <div class="media">
+                  <img
+                    alt="Image"
+                    class="avatar"
+                    src="assets/img/kareya-saleh.jpg"
+                  />
+
+                  <div class="media-body ml-2">
+                    <div class="justify-content-between align-items-center">
+                      <h6 class="mb-0">Sofia Scarlett</h6>
+                      <div><small class="text-muted"> 7 hours ago </small></div>
+                    </div>
+                    <span
+                      class="text-muted text-small col-11 p-0 text-truncate d-block"
+                    >
+                      It's an effective resource regardless..
+                    </span>
+                  </div>
+                </div>
+              </a>
+              <a class="list-group-item" href="javascript:void(0)">
+                <div class="media">
+                  <img
+                    alt="Image"
+                    class="avatar"
+                    src="assets/img/christian.jpg"
+                  />
+
+                  <div class="media-body ml-2">
+                    <div class="justify-content-between align-items-center">
+                      <h6 class="mb-0">Tom Klein</h6>
+                      <div><small class="text-muted"> 1 day ago </small></div>
+                    </div>
+                    <span
+                      class="text-muted text-small col-11 p-0 text-truncate d-block"
+                    >
+                      Be sure to check it out if your dev pro...
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card card-plain">
+            <div class="card-header d-inline-block">
+              <div class="row">
+                <div class="col-md-10">
+                  <div class="media align-items-center">
+                    <img alt="Image" class="avatar" src="assets/img/p10.jpg" />
+
+                    <div class="media-body">
+                      <h6 class="mb-0 d-block">Charlie Watson</h6>
+                      <span class="text-muted text-small">
+                        last seen today at 1:53am
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <button
+                    class="btn btn-link btn-info"
+                    placement="top"
+                    tooltip="Video call"
+                    type="button"
+                  >
+                    <i class="tim-icons icon-video-66"> </i>
+                  </button>
+                </div>
+                <div class="col-md-1">
+                  <div class="dropdown" dropdown>
+                    <button
+                      class="btn btn-link btn-primary"
+                      data-toggle="dropdown"
+                      dropdownToggle
+                      type="button"
+                    >
+                      <i class="tim-icons icon-settings"> </i>
+                    </button>
+                    <div
+                      class="dropdown-menu dropdown-menu-right"
+                      *dropdownMenu
+                    >
+                      <a class="dropdown-item" href="javascript:void(0)">
+                        <i class="tim-icons icon-single-02"> </i> Profile
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)">
+                        <i class="tim-icons icon-volume-98"> </i> Mute
+                        conversation
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)">
+                        <i class="tim-icons icon-lock-circle"> </i> Block
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)">
+                        <i class="tim-icons icon-chat-33"> </i> Clear chat
+                      </a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" href="javascript:void(0)">
+                        <i class="tim-icons icon-simple-remove"> </i> Delete
+                        chat
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row justify-content-start">
+                <div class="col-auto">
+                  <div class="card">
+                    <div class="card-body p-2">
+                      <p class="mb-1">
+                        It contains a lot of good lessons about effective
+                        practices
+                      </p>
+                      <div>
+                        <small class="opacity-60">
+                          <i class="far fa-clock"> </i> 3:14am
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-end text-right">
+                <div class="col-auto">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body p-2">
+                      <p class="mb-1">
+                        Can it generate daily design links that include essays
+                        and data visualizations ? <br />
+                      </p>
+                      <div>
+                        <small class="opacity-60"> 3:30am </small>
+                        <i class="tim-icons icon-check-2"> </i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-4">
+                <div class="col-md-12 text-center">
+                  <span class="badge text-white"> Wed, 3:27pm </span>
+                </div>
+              </div>
+              <div class="row justify-content-start">
+                <div class="col-auto">
+                  <div class="card">
+                    <div class="card-body p-2">
+                      <p class="mb-1">
+                        Yeah! Responsive Design is geared towards those trying
+                        to build web apps
+                      </p>
+                      <div>
+                        <small class="opacity-60">
+                          <i class="far fa-clock"> </i> 4:31pm
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-end text-right">
+                <div class="col-auto">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body p-2">
+                      <p class="mb-1">Excellent, I want it now !</p>
+                      <div>
+                        <small class="opacity-60"> 4:40pm </small>
+                        <i class="tim-icons icon-check-2"> </i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-start">
+                <div class="col-auto">
+                  <div class="card">
+                    <div class="card-body p-2">
+                      <p class="mb-1">
+                        You can easily get it; The content here is all free
+                      </p>
+                      <div>
+                        <small class="opacity-60">
+                          <i class="far fa-clock"> </i> 4:42pm
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-end text-right">
+                <div class="col-auto">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body p-2">
+                      <p class="mb-1">
+                        Awesome, blog is important source material for anyone
+                        who creates apps? beacuse these blogs offer a lot of
+                        information about website development.
+                      </p>
+                      <div>
+                        <small class="opacity-60"> 4:46pm </small>
+                        <i class="tim-icons icon-check-2"> </i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-start">
+                <div class="col-5">
+                  <div class="card">
+                    <div class="card-body p-2">
+                      <div class="col-12 p-0">
+                        <img
+                          alt="Rounded image"
+                          class="img-fluid rounded mb-1"
+                          src="assets/img/luke.jpg"
+                        />
+                      </div>
+                      <div>
+                        <small class="opacity-60">
+                          <i class="far fa-clock"> </i> 4:47pm
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-end text-right">
+                <div class="col-auto">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body p-2">
+                      <p class="mb-0">
+                        At the end of the day "¦ the native dev apps is where
+                        users are
+                      </p>
+                      <div>
+                        <small class="opacity-60"> 4:47pm </small>
+                        <i class="tim-icons icon-check-2"> </i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-start">
+                <div class="col-auto">
+                  <div class="card">
+                    <div class="card-body p-2">
+                      <div class="spinner">
+                        <div class="bounce1"></div>
+                        <div class="bounce2"></div>
+                        <div class="bounce3"></div>
+                      </div>
+                      <p class="d-inline-block mr-2">Typing...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer d-block">
+              <form class="align-items-center">
+                <div
+                  class="input-group d-flex"
+                  [ngClass]="{ 'input-group-focus': focus === true }"
+                >
+                  <div class="input-group-prepend d-flex">
+                    <span class="input-group-text">
+                      <i class="tim-icons icon-pencil"> </i>
+                    </span>
+                  </div>
+                  <input
+                    class="form-control form-control-lg"
+                    placeholder="Your message"
+                    type="text"
+                    (blur)="focus = false"
+                    (focus)="focus = true"
+                  />
+
+                  <button class="btn btn-simple btn-primary ml-2">
+                    <i class="tim-icons icon-send"> </i>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

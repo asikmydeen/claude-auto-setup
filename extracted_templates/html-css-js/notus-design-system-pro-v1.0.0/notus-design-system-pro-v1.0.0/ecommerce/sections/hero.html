@@ -1,0 +1,592 @@
+<!--
+=========================================================
+* Notus Design System PRO - v1.0.0
+=========================================================
+
+* Product Page: https://www.creative-tim.com/product/notus-design-system-pro
+* Copyright 2022 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://www.creative-tim.com/license)
+* Coded by Creative Tim
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>
+    Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS
+  </title>
+  <meta name="description" content="Notus Design System PRO by Creative Tim | Premium UI Kit and Admin for Tailwind CSS">
+  <link rel="shortcut icon" href="../../assets/img/favicon.ico">
+  <link rel="apple-touch-icon" sizes="76x76" href="../../assets/img/favicon.ico">
+  <link rel="stylesheet" href="../../assets/styles/tailwind.min.css">
+  <link rel="stylesheet" href="../../assets/styles/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="../../assets/styles/highlight.css" />
+</head>
+
+<body>
+  <div class="bg-white docs-component-wrapper text-blueGray-700">
+    <!--Nav-->
+    <nav class="fixed top-0 w-full bg-blueGray-900 flex flex-wrap items-center justify-between px-2 py-3 z-9999">
+      <div class="w-full px-4 mx-auto flex flex-wrap items-center justify-between max-h-screen-70 overflow-y-auto">
+        <div class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start">
+          <a class="text-white text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase" href="/notus-design-system-pro">Notus Design System PRO</a>
+          <button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none" type="button" onclick="toggleNavbar('example-collapse-navbar')">
+            <i class="text-white fas fa-bars"></i>
+          </button>
+        </div>
+        <div class="lg:flex flex-grow items-center bg-white lg:bg-transparent lg:shadow-none hidden">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="_blank">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-white" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i></a>
+                <div class=" block absolute origin-top-left bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <p class="uppercase font-bold text-xs px-3 pt-6 pb-2 block w-full whitespace-nowrap bg-transparent text-blueGray-400">Pages</p>
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-col lg:flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+        <!-- Navbar mobile -->
+        <div class="flex-grow items-center bg-white lg:bg-transparent lg:shadow-none rounded block pt-1 pb-4 hidden" id="example-collapse-navbar">
+          <ul class="flex flex-col lg:flex-row list-none mr-auto lg:items-center">
+            <li>
+              <a class="hover:opacity-75 lg:text-white px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-150 ease-in-out text-blueGray-800" href="https://www.creative-tim.com/learning-lab/tailwind/js/overview/notus" target="
+                  ">Documentation</a>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Components
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base float-left p-2 pt-0 list-none text-left rounded-lg shadow-lg w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4 py-2">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#presentation-id">Presentation</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#admin-id">Admin</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#e-commerce-id">E-commerce</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#blog-id">Blog</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#authentication-id">Authentication</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#misc-id">Misc</a>
+                      </div>
+                    </div>
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../#error-id">Error</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="inline-block group">
+                <a class="hover:opacity-75 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold transition-all duration-200 ease-in-out text-blueGray-800" href="javascript:;">Example Pages
+                  <i class="ml-1 fas fa-caret-down"></i>
+                </a>
+                <div class=" block absolute origin-top bg-white text-base p-2 pt-0 list-none text-left rounded-lg shadow-lg min-w-48 transition-all duration-200 ease-in-out transform scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100 border ml-3">
+                  <div class="flex flex-wrap max-lg:pl-4">
+                    <div class="w-full">
+                      <div class="pl-0">
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/chat/chat.html">Chat</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/checkout/checkout.html">Checkout</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/e-commerce/e-commerce.html">E-Commerce</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/invoice/invoice.html">Invoice</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/pricing/pricing.html">Pricing</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/product/product.html">Product</a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/profile/profile.html">Profile </a>
+                        <a class="text-sm px-3 py-2 block w-full whitespace-nowrap bg-transparent hover:bg-blueGray-100 rounded transition-all duration-100" href="../../example/settings/settings.html">Settings </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-facebook text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Share</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500 lg:text-white fab fa-twitter text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Tweet</span></a>
+            </li>
+            <li>
+              <a class="text-blueGray-800 hover:text-blueGray-600 px-3 py-4 lg:py-2 flex items-center text-xs uppercase font-bold" href="javascript:;"><i class="text-blueGray-500  lg:text-white fab fa-github text-lg leading-lg "></i><span class="lg:hidden inline-block ml-2">Star</span></a>
+            </li>
+          </ul>
+          <ul class="flex flex-row list-none lg:ml-auto lg:items-center">
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-js" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-white bg-blueGray-800 border-blueGray-800 active:bg-blueGray-900 active:border-blueGray-900 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold mr-2">Check FREE</a>
+            </li>
+            <li>
+              <a href="https://www.creative-tim.com/product/notus-design-system-pro" class="text-xs mx-2 px-4 py-2 shadow hover:shadow-md text-blueGray-800 bg-blueGray-100 border-blueGray-100 active:bg-blueGray-300 active:border-blueGray-300 rounded outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold">Buy PRO</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="bg-white min-h-screen">
+      <div class="flex flex-raw pt-20 justify-center"></div>
+      <div class="mx-auto px-4 container">
+        <div class="flex justify-center my-8 flex-col">
+          <h2 class="text-lg font-medium text-blueGray-600 mb-2"><a class="mr-2" href="#/components#presentation-id">Presentation</a><i class="fas fa-angle-right mr-2"></i><a href="#/components#presentation-id-components">Sections</a></h2>
+          <h1 class="text-3xl font-semibold">Hero</h1>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="e-commerce-id-e-commerce-id-sections-hero8">Hero 1</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <section class="relative pb-12 mt-12 bg-blueGray-100 pt-20">
+                    <div class="container mx-auto px-4">
+                      <div class="mb-12 flex flex-wrap -mx-4 justify-start">
+                        <div class="px-4 relative w-full lg:w-8/12 text-left">
+                          <h6 class="mb-2 text-lg font-bold uppercase text-orange-500">Have you seen us?</h6>
+                          <h2 class="text-4xl font-bold mt-0 mb-1 text-blueGray-700">Our recent products</h2>
+                          <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-400">The time is now for it to be okay to be great. People in this world shun people for being great.</p>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap -mx-4">
+                        <div class="px-4 relative w-full lg:w-3/12">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg">
+                            <div class="px-6"><img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/ecommerce-2.366b1564.jpg" class="w-full"></div>
+                            <div class="px-6 py-6 flex-auto">
+                              <h6 class="text-sm font-bold uppercase mt-0 mb-1 text-pink-500">Trending</h6>
+                              <h5 class="text-2xl font-semibold mt-0 mb-2">Gucci Blazer</h5>
+                              <p class="text-blueGray-500 leading-relaxed">This Gucci blazer has been crafted in Italy from hard-wearing black textured-leather</p>
+                              <div class="flex justify-between mt-2"><span class="text-blueGray-700 text-xl mt-1">€1,990</span><button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-pink-500 border-pink-500 active:bg-pink-600 active:border-pink-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-heart"></i></button></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="px-4 relative w-full lg:w-3/12">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg">
+                            <div class="px-6"><img alt="..." src="../../assets/img/pages/shorts.png" class="w-full"></div>
+                            <div class="px-6 py-6 flex-auto">
+                              <h6 class="text-sm font-bold uppercase mt-0 mb-1 text-pink-500">Popular</h6>
+                              <h5 class="text-2xl font-semibold mt-0 mb-2">Balmain</h5>
+                              <p class="text-blueGray-500 leading-relaxed">Balmains mid-rise skinny jeans are cut with stretch to ensure they retain their second-skin fit but move comfortably.</p>
+                              <div class="flex justify-between mt-2"><span class="text-blueGray-700 text-xl mt-1">€459</span><button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-heart"></i></button></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="px-4 relative w-full lg:w-3/12">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg">
+                            <div class="px-6"><img alt="..." src="../../assets/img/pages/shirt.png" class="w-full"></div>
+                            <div class="px-6 py-6 flex-auto">
+                              <h6 class="text-sm font-bold uppercase mt-0 mb-1 text-pink-500">Popular</h6>
+                              <h5 class="text-2xl font-semibold mt-0 mb-2">Balenciaga</h5>
+                              <p class="text-blueGray-500 leading-relaxed">Balenciaga black textured-leather wallet is finished with the labels iconic Giant studs. This is where you can...</p>
+                              <div class="flex justify-between mt-2"><span class="text-blueGray-700 text-xl mt-1">€559</span><button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-heart"></i></button></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="px-4 relative w-full lg:w-3/12">
+                          <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg">
+                            <div class="px-6"><img alt="..." src="../../assets/img/pages/jeans.png" class="w-full"></div>
+                            <div class="px-6 py-6 flex-auto">
+                              <h6 class="text-sm font-bold uppercase mt-0 mb-1 text-pink-500">Trending</h6>
+                              <h5 class="text-2xl font-semibold mt-0 mb-2">D G</h5>
+                              <p class="text-blueGray-500 leading-relaxed">Dolce Gabbanas Greta tote has been crafted in Italy from hard-wearing red textured-leather.</p>
+                              <div class="flex justify-between mt-2"><span class="text-blueGray-700 text-xl mt-1">€ 1,359</span><button class="inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"><i class="fas fa-heart"></i></button></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"relative pb-12 mt-12 bg-blueGray-100 pt-20"</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-start"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-left"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"mb-2 text-lg font-bold uppercase text-orange-500"</span><span class="nt">&gt;</span>Have you seen us?<span class="nt">&lt;/h6&gt;</span>
+                <span class="nt">&lt;h2</span> <span class="na">class=</span><span class="s">"text-4xl font-bold mt-0 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>Our recent products<span class="nt">&lt;/h2&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-400"</span><span class="nt">&gt;</span>The time is now for it to be okay to be great. People in this world shun people for being great.<span class="nt">&lt;/p&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/ecommerce-2.366b1564.jpg"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 py-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-sm font-bold uppercase mt-0 mb-1 text-pink-500"</span><span class="nt">&gt;</span>Trending<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold mt-0 mb-2"</span><span class="nt">&gt;</span>Gucci Blazer<span class="nt">&lt;/h5&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>This Gucci blazer has been crafted in Italy from hard-wearing black textured-leather<span class="nt">&lt;/p&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-between mt-2"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-blueGray-700 text-xl mt-1"</span><span class="nt">&gt;</span>€1,990<span class="nt">&lt;/span&gt;&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-pink-500 border-pink-500 active:bg-pink-600 active:border-pink-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-heart"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"../../assets/img/pages/shorts.png"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 py-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-sm font-bold uppercase mt-0 mb-1 text-pink-500"</span><span class="nt">&gt;</span>Popular<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold mt-0 mb-2"</span><span class="nt">&gt;</span>Balmain<span class="nt">&lt;/h5&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Balmains mid-rise skinny jeans are cut with stretch to ensure they retain their second-skin fit but move comfortably.<span class="nt">&lt;/p&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-between mt-2"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-blueGray-700 text-xl mt-1"</span><span class="nt">&gt;</span>€459<span class="nt">&lt;/span&gt;&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-heart"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"../../assets/img/pages/shirt.png"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 py-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-sm font-bold uppercase mt-0 mb-1 text-pink-500"</span><span class="nt">&gt;</span>Popular<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold mt-0 mb-2"</span><span class="nt">&gt;</span>Balenciaga<span class="nt">&lt;/h5&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Balenciaga black textured-leather wallet is finished with the labels iconic Giant studs. This is where you can...<span class="nt">&lt;/p&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-between mt-2"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-blueGray-700 text-xl mt-1"</span><span class="nt">&gt;</span>€559<span class="nt">&lt;/span&gt;&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-heart"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-3/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"../../assets/img/pages/jeans.png"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 py-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-sm font-bold uppercase mt-0 mb-1 text-pink-500"</span><span class="nt">&gt;</span>Trending<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h5</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold mt-0 mb-2"</span><span class="nt">&gt;</span>D G<span class="nt">&lt;/h5&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Dolce Gabbanas Greta tote has been crafted in Italy from hard-wearing red textured-leather.<span class="nt">&lt;/p&gt;</span>
+                      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex justify-between mt-2"</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">"text-blueGray-700 text-xl mt-1"</span><span class="nt">&gt;</span>€ 1,359<span class="nt">&lt;/span&gt;&lt;button</span> <span class="na">class=</span><span class="s">"inline-block outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase border border-solid font-bold last:mr-0 mr-2  text-white bg-red-500 border-red-500 active:bg-red-600 active:border-red-600 text-xs px-3 py-2 shadow hover:shadow-md rounded-md"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-heart"</span><span class="nt">&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+       <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/section&gt;</span>
+ <span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-16">
+          <div class="flex flex-wrap flex-row items-center justify-between my-4">
+            <div>
+              <h2 class="text-xl font-bold ct-component-name-title" id="e-commerce-id-e-commerce-id-sections-hero9">Hero 2</h2>
+            </div>
+            <div class="inline-flex flex-wrap flex-row items-center">
+              <div class="bg-blueGray-100 border border-blueGray-100 rounded-lg">
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border bg-white text-blueGray-600 border-blueGray-400" onclick="setOpenTab(this, 'preview')">
+                  <i class="fas fa-eye mr-2 text-lightBlue-600"> </i>Preview
+                </button>
+                <button class="inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg border text-blueGray-500 border-transparent" onclick="setOpenTab(this, 'code')">
+                  <i class="fas fa-code mr-2 "></i>Code
+                </button>
+              </div>
+              <div class="relative">
+                <span class="-top-8 -left-4 absolute text-white rounded-lg py-1 px-2 bg-blueGray-800 transition-all duration-200 ease-in-out transform scale-0 opacity-0 ">Copied</span>
+                <button class="group inline-flex items-center justify-center outline-none focus:outline-none align-middle transition-all duration-150 ease-in-out uppercase font-bold text-xs py-2 px-3 text-center rounded-lg bg-white text-blueGray-600 focus:text-lightBlue-600" onclick="copyCode(this)">
+                  <i class="far fa-clone transition-all duration-200 ease-in-out transform group-focus:rotate-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="border border-solid border-blueGray-200 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 rounded-lg">
+            <div class="px-4 py-5 flex-auto ct-docs-frame">
+              <div class="relative flex flex-wrap justify-center ">
+                <div class="w-full">
+                  <section class="relative py-12">
+                    <div class="container mx-auto px-4">
+                      <div class="mb-12 flex flex-wrap -mx-4 justify-start">
+                        <div class="px-4 relative w-full lg:w-8/12 text-left">
+                          <span class="text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2">Have you seen us?</span>
+                          <h3 class="text-3xl font-bold mt-3 mb-1 text-blueGray-700">Our recent products</h3>
+                          <p class="mt-2 mb-4 text-xl leading-relaxed text-blueGray-500">The time is now for it to be okay to be great. People in this world shun people for being great.</p>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap -mx-4">
+                        <div class="px-4 relative w-full md:w-4/12">
+                          <div class="shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6">
+                            <div class="p-6"><img alt="..." src="../../assets/img/ecommerce-1.jpg" class="w-full"></div>
+                            <div class="px-6 pb-6 flex-auto">
+                              <h6 class="text-red-500 font-bold uppercase text-sm mb-2"><i class="fas fa-calendar-check mr-1 opacity-75"></i> Wearing</h6>
+                              <h4 class="text-2xl font-semibold leading-tight mt-0 mb-2 my-4"><a href="javascript:;" class="">Check our latest collection</a></h4>
+                              <p class="text-blueGray-500 leading-relaxed">Yesterday, this was an essential fabric and its news reader app Paper. It is design-focused wool called out...</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="px-4 relative w-full md:w-4/12">
+                          <div class="shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6">
+                            <div class="p-6"><img alt="..." src="../../assets/img/p2.png" class="w-full"></div>
+                            <div class="px-6 pb-6 flex-auto">
+                              <h6 class="text-red-500 font-bold uppercase text-sm mb-2"><i class="fas fa-calendar-check mr-1 opacity-75"></i> Fashion</h6>
+                              <h4 class="text-2xl font-semibold leading-tight mt-0 mb-2 my-4"><a href="javascript:;" class="">Wardrobe essentials</a></h4>
+                              <p class="text-blueGray-500 leading-relaxed">Argon is a great free UI package based on Bootstrap 4 that includes the most important components and features.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="px-4 relative w-full md:w-4/12">
+                          <div class="shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6">
+                            <div class="p-6"><img alt="..." src="https://demos.creative-tim.com/notus-pro-react/static/media/linth3.41699b02.svg" class="w-full"></div>
+                            <div class="px-6 pb-6 flex-auto">
+                              <h6 class="text-red-500 font-bold uppercase text-sm mb-2"><i class="fas fa-calendar-check mr-1 opacity-75"></i> Fashion</h6>
+                              <h4 class="text-2xl font-semibold leading-tight mt-0 mb-2 my-4"><a href="javascript:;" class="">Wardrobe essentials</a></h4>
+                              <p class="text-blueGray-500 leading-relaxed">Trends may come and go, but wardrobe essentials are here to stay. Basic pieces tend to be universal across.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+              <div class="relative hidden">
+                <div class="docs-code-preview bg-blueGray-800 overflow-x-auto rounded-lg p-5">
+                  <figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;section</span> <span class="na">class=</span><span class="s">"relative py-12"</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container mx-auto px-4"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"mb-12 flex flex-wrap -mx-4 justify-start"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full lg:w-8/12 text-left"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"text-pink-500 bg-pink-200 text-xs font-bold inline-block py-1 uppercase uppercase last:mr-0 mr-1 leading-tight rounded px-2"</span><span class="nt">&gt;</span>Have you seen us?<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">"text-3xl font-bold mt-3 mb-1 text-blueGray-700"</span><span class="nt">&gt;</span>Our recent products<span class="nt">&lt;/h3&gt;</span>
+                <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"mt-2 mb-4 text-xl leading-relaxed text-blueGray-500"</span><span class="nt">&gt;</span>The time is now for it to be okay to be great. People in this world shun people for being great.<span class="nt">&lt;/p&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"flex flex-wrap -mx-4"</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-4/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"../../assets/img/ecommerce-1.jpg"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 pb-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-red-500 font-bold uppercase text-sm mb-2"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-calendar-check mr-1 opacity-75"</span><span class="nt">&gt;&lt;/i&gt;</span> Wearing<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-tight mt-0 mb-2 my-4"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">""</span><span class="nt">&gt;</span>Check our latest collection<span class="nt">&lt;/a&gt;&lt;/h4&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Yesterday, this was an essential fabric and its news reader app Paper. It is design-focused wool called out...<span class="nt">&lt;/p&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-4/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"../../assets/img/p2.png"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 pb-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-red-500 font-bold uppercase text-sm mb-2"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-calendar-check mr-1 opacity-75"</span><span class="nt">&gt;&lt;/i&gt;</span> Fashion<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-tight mt-0 mb-2 my-4"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">""</span><span class="nt">&gt;</span>Wardrobe essentials<span class="nt">&lt;/a&gt;&lt;/h4&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Argon is a great free UI package based on Bootstrap 4 that includes the most important components and features.<span class="nt">&lt;/p&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-4 relative w-full md:w-4/12"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"shadow-lg rounded-lg overflow-hidden relative flex flex-col min-w-0 break-words bg-white w-full mb-6"</span><span class="nt">&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"p-6"</span><span class="nt">&gt;&lt;img</span> <span class="na">alt=</span><span class="s">"..."</span> <span class="na">src=</span><span class="s">"https://demos.creative-tim.com/notus-pro-react/static/media/linth3.41699b02.svg"</span> <span class="na">class=</span><span class="s">"w-full"</span><span class="nt">&gt;&lt;/div&gt;</span>
+                   <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"px-6 pb-6 flex-auto"</span><span class="nt">&gt;</span>
+                      <span class="nt">&lt;h6</span> <span class="na">class=</span><span class="s">"text-red-500 font-bold uppercase text-sm mb-2"</span><span class="nt">&gt;&lt;i</span> <span class="na">class=</span><span class="s">"fas fa-calendar-check mr-1 opacity-75"</span><span class="nt">&gt;&lt;/i&gt;</span> Fashion<span class="nt">&lt;/h6&gt;</span>
+                      <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">"text-2xl font-semibold leading-tight mt-0 mb-2 my-4"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"javascript:;"</span> <span class="na">class=</span><span class="s">""</span><span class="nt">&gt;</span>Wardrobe essentials<span class="nt">&lt;/a&gt;&lt;/h4&gt;</span>
+                      <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"text-blueGray-500 leading-relaxed"</span><span class="nt">&gt;</span>Trends may come and go, but wardrobe essentials are here to stay. Basic pieces tend to be universal across.<span class="nt">&lt;/p&gt;</span>
+                   <span class="nt">&lt;/div&gt;</span>
+                <span class="nt">&lt;/div&gt;</span>
+             <span class="nt">&lt;/div&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+       <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/section&gt;</span>
+ <span class="nt">&lt;/div&gt;</span></code></pre>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../assets/js/popper.js"></script>
+  <script src="../../assets/js/plugins/chart.min.js"></script>
+  <!--  Google Maps Plugin    -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+  <script src="../../assets/js/map.js"></script>
+  <script src="../../assets/js/notus.js"></script>
+</body>
+<footer class="relative pt-8 pb-6 mt-8">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-wrap">
+      <div class="w-full md:w-6/12 px-4">
+        <h4 class="text-xl leading-normal font-bold">Let's keep in touch!</h4>
+        <h5 class="leading-normal mt-1 mb-2 text-blueGray-500">Find us on any of these platforms, we respond within 1-2 business days.</h5>
+        <div class="mt-6">
+          <a href="https://www.twitter.com/creativetim" target="_blank">
+            <i class="fab fa-twitter  bg-white text-twitter-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.facebook.com/creativetim" target="_blank">
+            <i class="fab fa-facebook-square bg-white text-facebook-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"> </i>
+          </a>
+          <a href="https://www.dribbble.com/creativetim" target="_blank">
+            <i class="fab fa-dribbble bg-white text-dribbble-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+          <a href="https://www.github.com/creativetimofficial" target="_blank">
+            <i class="fab fa-github bg-white text-github-regular shadow-lg font-lg p-3 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2 inline-block text-center"></i>
+          </a>
+        </div>
+      </div>
+      <div class="w-full md:w-6/12 px-4">
+        <div class="flex flex-wrap items-top mb-6">
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Useful Links</span>
+            <ul class="list-unstyled">
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/presentation" target="_blank">About Us</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/blog" target="_blank">Blog</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.github.com/creativetimofficial/tailwind-starter-kit" target="_blank">Github</a>
+              </li>
+              <li>
+                <a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/bootstrap-themes/free" target="_blank">Free Products</a>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-6/12 xl:w-4/12 pt-6 md:pt-0 md:px-4 ml-auto">
+            <span class="block uppercase text-xs font-bold mb-2">Other Resources</span>
+            <ul class="list-unstyled">
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://www.creative-tim.com/license" target="_blank">License</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/terms" target="_blank">Terms &amp; Conditions</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/privacy" target="_blank">Privacy Policy</a></li>
+              <li><a class="text-blueGray-500 hover:text-blueGray-700 block pb-2 text-sm" href="https://creative-tim.com/contact-us" target="_blank">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="my-6 border-blueGray-200">
+    <div class="flex flex-wrap items-center md:justify-between justify-center">
+      <div class="w-full md:w-4/12 px-4 mx-auto text-center">
+        <div class="text-sm text-blueGray-500 py-1">Copyright © 2021
+          <a href="https://www.creative-tim.com" class="text-blueGray-500 hover:text-blueGray-600 font-semibold" target="_blank">Creative Tim</a>
+          . All rights reserved.
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</html>

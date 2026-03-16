@@ -1,0 +1,116 @@
+.colored-toast-error {
+  background-color: $danger  !important
+}
+
+.colored-toast-error .swal2-html-container {
+  color: $white;
+  font-size: 12px !important;
+}
+
+.colored-toast-success {
+  background-color: $success  !important
+}
+
+.colored-toast-success .swal2-html-container {
+  color: $white;
+  font-size: 12px !important;
+}
+
+.argon-error {
+  position: relative;
+  color: $danger;
+}
+
+.removeImage {
+  padding: 0px 7px 0px 7px !important;
+  margin-left: -7px;
+  background-color: $danger;
+  color: $white;
+}
+
+.uploadImage::file-selector-button {
+  visibility: hidden;
+}
+
+.uploadImage::-webkit-file-upload-button {
+  visibility: hidden;
+}
+
+.userprofile-button {
+  color: #3A416F;
+  z-index: 1;
+  margin-bottom: -0.2rem !important;
+  margin-right: -0.2rem !important;
+  pointer-events: none;
+}
+
+.mw-30 {
+  max-width: 30% !important;
+}
+
+@media (max-width: 768px) {
+  .w-100-userprofile {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .m-usercard {
+    margin: 0px 22px 0px 22px;
+  }
+}
+
+#registerValidation .argon-error {
+  bottom: 11px;
+}
+
+.profile-image {
+  object-fit: cover !important;
+}
+
+.width-image-preview {
+  max-width: 260px;
+}
+
+.item-image {
+  width: 100px;
+  height: auto;
+}
+
+.buttons-image-item {
+  height: 30px !important;
+  padding: 0.3rem 0.7rem !important;
+}
+
+.description-item-block {
+  height: 11rem !important;
+}
+
+.search-block {
+  position: absolute;
+  right: 15px;
+  margin-top: 22px;
+}
+
+@media (max-width: 480px) {
+  .search-block {
+    margin-left: 1.5rem;
+    position: absolute;
+    right: auto;
+    margin-top: 0;
+  }
+}
+
+.search-input-table { 
+	font-size: 0.875rem;
+  color: #495057;
+  border: 1px solid #e9ecef;
+  border-radius: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .buttons-action-image {
+    font-size: 0.6rem !important;
+    height: 1.5rem !important;
+  }
+}

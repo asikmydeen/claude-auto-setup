@@ -1,0 +1,259 @@
+<div class="wrapper">
+    {% if section.settings.heading != blank %}
+      <div class="section-header text-center">
+        <h3 class="font-weight-bold mb-2 section-header__title">{{ section.settings.heading | escape }}</h3>
+        {% if section.settings.subheading != blank %}
+         <p>{{ section.settings.subheading | escape }}</p>
+      	{% endif %}
+      </div>
+    {% endif %}
+  
+    <div class="grid collection-grid">
+        {% comment %}
+          Show up to 9 testimonials.
+        {% endcomment %}
+      
+        {% assign isEmpty = true %}
+        {% assign testimonial_index = 0 %}
+        {% assign testimonial_count = 0 %}
+        {% assign testimonial_limit = section.blocks.size %}
+      
+        {% comment %}
+          Add one to the testimonial limit to offset chance of Frontpage being included
+        {% endcomment %}
+        {% assign testimonial_limit = testimonial_limit | plus: 1 %}
+
+        {% comment %}
+          Calculate number of testimonials to show, making sure Frontpage isn't one
+        {% endcomment %}
+        {% for testimonial in section.blocks limit: testimonial_limit %}
+            {% assign testimonial_count = testimonial_count | plus: 1 %}
+        {% endfor %}
+
+        {% if testimonial_count > 0 %}
+          {% assign isEmpty = false %}
+        {% endif %}
+
+        {% assign divisible_by_three = testimonial_count | modulo: 3 %}
+        {% assign divisible_by_two = testimonial_count | modulo: 2 %}
+      
+        {% comment %}
+          Loop through the testimonials to display
+        {% endcomment %}
+        {% for block in section.blocks limit: testimonial_limit %}
+      		
+      	{% assign testimonial_index = testimonial_index | plus: 1 %}
+      		
+      	  {% if testimonial_count == 1 %}
+          <div class="grid__item one-whole min-height-250 text-center mb-5">
+          {% elsif testimonial_count == 2 or testimonial_count == 4 or testimonial_count == 8 %}
+          <div class="grid__item one-whole min-height-250 medium--one-half large--one-half text-center mb-5">
+          {% elsif testimonial_count == 5 %}
+            {% if testimonial_index == 4 or testimonial_index == 5 %}
+          		<div class="grid__item one-whole min-height-250 medium--one-half large--one-half text-center mb-5">
+            {% else %}
+                <div class="grid__item one-whole min-height-250 medium--one-third large--one-third text-center mb-5">
+            {% endif %}
+          {% elsif testimonial_count == 7 %}
+            {% if testimonial_index == 7 %}
+          		<div class="grid__item one-whole min-height-250 text-center mb-5">
+            {% else %}
+                <div class="grid__item one-whole min-height-250 medium--one-third large--one-third text-center mb-5">
+            {% endif %}
+          {% else %}
+          <div class="grid__item one-whole min-height-250 medium--one-third large--one-third text-center mb-5">
+          {% endif %}
+            {% if block.settings.show_image %}
+             {% if block.settings.image != blank %}
+              <noscript>
+                {{ block.settings.image | img_url: '600x600' | img_tag: block.settings.image.alt, 'feature-row__image-no-js' }}
+              </noscript>
+              <div class="feature-row__image-wrapper">
+                {% assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' %}
+                <img class="lazyload avatar shadow rounded-circle mb-2"
+                  src="{{ block.settings.image | img_url: '100x100' }}"
+                  data-src="{{ img_url }}"
+                  data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                  data-aspectratio="{{ block.settings.image.aspect_ratio }}"
+                  data-sizes="auto"
+                  alt="{{ block.settings.image.alt | escape }}">
+              </div>
+            {% else %}
+              {{ 'image' | placeholder_svg_tag: 'placeholder-svg' | replace: 'placeholder-svg', 'placeholder-svg avatar shadow rounded-circle mb-2' }}
+            {% endif %}
+           {% endif %}
+            
+           {% if block.settings.quote != blank %}
+            	{% if block.settings.show_image %}
+      				<div class="rte-setting">{{ block.settings.quote }}</div>
+            	{% else %}
+            		<div class="rte-setting mt-6">{{ block.settings.quote }}</div>
+            	{% endif %}
+           {% endif %}
+            
+           {% if block.settings.author != blank %}
+            <div class="text-sm font-weight-bold">{{ block.settings.author }}</div>
+           {% endif %}
+          </div>
+        {% endfor %}
+   
+    </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Testimonials",
+	"max_blocks": 9,
+    "settings": [
+      {
+        "id": "heading",
+        "type": "text",
+        "label": "Heading",
+        "default": "Testimonials"
+      },
+      {
+        "id": "subheading",
+        "type": "text",
+        "label": "Subheading",
+		"default": "Here’s what our customer have to say"
+      }
+    ],
+   "presets": [
+      {
+      	"name": "Testimonials",
+      	"category": "Collection",
+        "blocks": [
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          }
+        ]
+      }
+     ],
+    "blocks": [
+        {
+          "type": "quote",
+          "name": {
+            "cs": "Svědectví",
+            "da": "Vidnesbyrd",
+            "de": "Zeugnis",
+            "en": "Testimonial",
+            "es": "Testimonial",
+            "fi": "Suositus",
+            "fr": "Témoignage",
+            "it": "Testimonianza",
+            "ja": "お客様の声。",
+            "ko": "증명서",
+            "nb": "Rekommendation",
+            "nl": "Getuigenis",
+            "pl": "Zaświadczenie",
+            "pt-BR": "Testemunho",
+            "pt-PT": "Testemunho",
+            "sv": "Rekommendation",
+            "th": "ข้อความรับรอง",
+            "tr": "Referans",
+            "vi": "Lời chứng thực",
+            "zh-CN": "感言",
+            "zh-TW": "感言"
+          },
+          "settings": [
+             {
+              "type": "checkbox",
+              "id": "show_image",
+              "label": {
+                "cs": "Zobrazit obrázek",
+                "da": "Vis billede",
+                "de": "Bild anzeigen",
+                "en": "Show image",
+                "es": "Mostrar imagen",
+                "fi": "Näytä kuva",
+                "fr": "Afficher l'image",
+                "it": "Mostra immagine",
+                "ja": "画像を表示",
+                "ko": "이미지 표시",
+                "nb": "Vis bilde",
+                "nl": "Toon afbeelding",
+                "pl": "Pokaż obraz",
+                "pt-BR": "Mostrar imagem",
+                "pt-PT": "Mostrar imagem",
+                "sv": "Visa bild",
+                "th": "แสดงภาพ",
+                "tr": "Resmi göster",
+                "vi": "Hiển thị hình ảnh",
+                "zh-CN": "顯示圖片",
+                "zh-TW": "顯示圖片"
+              },
+              "default": true
+            },
+			{
+			  "type": "image_picker",
+			  "id": "image",
+              "label": "Image"
+			},
+			{
+              "type": "text",
+              "id": "author",
+              "label": "Author",
+              "default": {
+                "cs": "Jméno autora",
+                "da": "Forfatterens navn",
+                "de": "Name des Autors",
+                "en": "Author's name",
+                "es": "Nombre del autor",
+                "fi": "Kirjoittajan nimi",
+                "fr": "Le nom de l'auteur",
+                "it": "Nome dell'autore",
+                "ja": "著者の名前",
+                "ko": "저자 이름",
+                "nb": "Forfatterens navn",
+                "nl": "Auteursnaam",
+                "pl": "Imię autora",
+                "pt-BR": "Nome do autor",
+                "pt-PT": "Nome do autor",
+                "sv": "Författarens namn",
+                "th": "ชื่อผู้แต่ง",
+                "tr": "Yazarın ismi",
+                "vi": "Tên tác giả",
+                "zh-CN": "作者姓名",
+                "zh-TW": "作者姓名"
+              }
+            },
+            {
+              "type": "richtext",
+              "id": "quote",
+              "label": "Text",
+              "default": {
+                "cs": "<p>Přidejte recenze a posudky zákazníků, abyste předvedli spokojené zákazníky svého obchodu.</p>",
+                "da": "<p>Tilføj kundeanmeldelser og udtalelser for at vise din butiks tilfredse kunder.</p>",
+                "de": "<p>Fügen Sie Kundenbewertungen und Erfahrungsberichte hinzu, um die zufriedenen Kunden Ihres Shops zu präsentieren.</p>",
+                "en": "<p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>",
+                "es": "<p>Agregue reseñas y testimonios de clientes para mostrar a los clientes satisfechos de su tienda.</p>",
+                "fi": "<p>Lisää asiakkaiden arvosteluja ja suosituksia, jotta voit esitellä kauppasi tyytyväisiä asiakkaita.</p>",
+                "fr": "<p>Ajoutez des avis et des témoignages de clients pour présenter les clients satisfaits de votre magasin.</p>",
+                "it": "<p>Aggiungi recensioni e testimonianze dei clienti per mostrare i clienti soddisfatti del tuo negozio.</p>",
+                "ja": "<p>顧客のレビューや紹介文を追加して、ストアの満足している顧客を紹介します。</p>",
+                "ko": "<p>고객 리뷰와 평가를 추가하여 매장의 행복한 고객을 보여주세요.</p>",
+                "nb": "<p>Legg til kundeanmeldelser og attester for å vise frem butikkens fornøyde kunder.</p>",
+                "nl": "<p>Voeg klantrecensies en getuigenissen toe om de tevreden klanten van uw winkel te laten zien.</p>",
+                "pl": "<p>Dodaj recenzje klientów i referencje, aby zaprezentować zadowolonych klientów swojego sklepu.</p>",
+                "pt-BR": "<p>Adicione comentários e depoimentos de clientes para mostrar os clientes satisfeitos de sua loja.</p>",
+                "pt-PT": "<p>Adicione comentários e depoimentos de clientes para mostrar os clientes satisfeitos de sua loja.</p>",
+                "sv": "<p>Lägg till kundrecensioner och vittnesmål för att visa upp din butiks nöjda kunder.</p>",
+                "th": "<p>เพิ่มบทวิจารณ์ของลูกค้าและคำรับรองเพื่อแสดงให้ลูกค้าเห็นว่าร้านของคุณมีความสุข</p>",
+                "tr": "<p>Mağazanızın mutlu müşterilerini sergilemek için müşteri yorumları ve referansları ekleyin.</p>",
+                "vi": "<p>Thêm đánh giá và lời chứng thực của khách hàng để giới thiệu những khách hàng hài lòng của cửa hàng bạn.</p>",
+                "zh-CN": "<p>添加客户评论和推荐以展示您商店的满意客户。</p>",
+                "zh-TW": "<p>添加客户评论和推荐以展示您商店的满意客户。</p>"
+              }
+            }
+		  ]
+        }
+      ]
+
+  }
+{% endschema %}

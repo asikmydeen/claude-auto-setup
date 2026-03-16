@@ -1,0 +1,209 @@
+<div class="wrapper">
+    <div class="grid collection-grid">
+        {% comment %}
+          Show up to 6 features.
+        {% endcomment %}
+      
+        {% assign isEmpty = true %}
+        {% assign feature_index = 0 %}
+        {% assign feature_count = 0 %}
+        {% assign feature_limit = section.blocks.size %}
+      
+        {% comment %}
+          Add one to the feature limit to offset chance of Frontpage being included
+        {% endcomment %}
+        {% assign feature_limit = feature_limit | plus: 1 %}
+
+        {% comment %}
+          Calculate number of features to show, making sure Frontpage isn't one
+        {% endcomment %}
+        {% for feature in section.blocks limit: feature_limit %}
+            {% assign feature_count = feature_count | plus: 1 %}
+        {% endfor %}
+
+        {% if feature_count > 0 %}
+          {% assign isEmpty = false %}
+        {% endif %}
+
+        {% assign divisible_by_three = feature_count | modulo: 3 %}
+        {% assign divisible_by_two = feature_count | modulo: 2 %}
+      
+        {% comment %}
+          Loop through the features to display
+        {% endcomment %}
+        {% for block in section.blocks limit: feature_limit %}
+      		
+      	  {% if feature_count == 1 %}
+          <div class="grid__item one-whole text-center mb-5">
+          {% elsif feature_count == 2 %}
+          <div class="grid__item one-whole medium--one-half large--one-half text-center mb-5">
+          {% elsif feature_count == 5 %}
+          <div class="grid__item one-whole medium--one-fifth large--one-fifth text-center mb-5">
+          {% elsif feature_count == 3 or feature_count == 6 %}
+          <div class="grid__item one-whole medium--one-third large--one-third text-center mb-5">
+          {% else %}
+          <div class="grid__item one-whole medium--one-quarter large--one-quarter text-center mb-5">
+          {% endif %}
+           {% if block.settings.image != blank %}
+            <noscript>
+              {{ block.settings.image | img_url: '600x600' | img_tag: block.settings.image.alt, 'feature-row__image-no-js' }}
+            </noscript>
+            <div class="feature-row__image-wrapper width-30 height-30 mx-auto mb-2 background-contain background-center background-repeat-none" style="background-image:url('{{ block.settings.image | img_url: '300x300' }}')">
+              
+            </div>
+          {% else %}
+            <div class="feature-row__image-wrapper width-30 height-30 mx-auto mb-2 background-contain background-center background-repeat-none" style="background-image:url('{{ "delivery.png" | asset_url }}')">
+              
+            </div>
+          
+          {% endif %}
+            
+           {% if block.settings.heading != blank %}
+            <div class="text-lg font-weight-bold mb-2">{{ block.settings.heading }}</div>
+           {% endif %}
+            
+           {% if block.settings.subheading != blank %}
+      			<div class="rte-setting text-sm">{{ block.settings.subheading }}</div>
+           {% endif %}
+            
+          </div>
+        {% endfor %}
+   
+    </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Features",
+	"max_blocks": 6,
+    "settings": [],
+   "presets": [
+      {
+      	"name": "Features",
+      	"category": "Collection",
+        "blocks": [
+          {
+            "type": "quote",
+       		"settings": {
+              "heading": "2 Days Shipping",
+     		  "subheading": "<p>Safest and most environmentally form of commercial transport.</p>"
+            }
+          },
+          {
+            "type": "quote",
+     	    "settings": {
+              "heading": "3 Years Guarantee", 
+     		  "subheading": "<p>Legal term more comprehensive and of higher import.</p>"
+            }
+          },
+          {
+            "type": "quote",
+     	    "settings": {
+              "heading": "Free Return", 
+     		  "subheading": "<p>Safest and most environmentally form of commercial transport.</p>"
+            }
+          },
+      	  {
+            "type": "quote",
+     	    "settings": {
+              "heading": "24/7 Support", 
+     		  "subheading": "<p>We provide high-quality services all around the world.</p>"
+            }
+          }
+        ]
+      }
+     ],
+    "blocks": [
+        {
+          "type": "quote",
+          "name": {
+            "cs": "Kolekce",
+            "da": "Kollektion",
+            "de": "Kategorie",
+            "en": "Feature",
+            "es": "Colección",
+            "fi": "Kokoelma",
+            "fr": "Collection",
+            "it": "Collezione",
+            "ja": "コレクション",
+            "ko": "컬렉션",
+            "nb": "Samling",
+            "nl": "Collectie",
+            "pl": "Kolekcja",
+            "pt-BR": "Coleção",
+            "pt-PT": "Coleção",
+            "sv": "Produktserie",
+            "th": "คอลเลกชัน",
+            "tr": "Koleksiyon",
+            "vi": "Bộ sưu tập",
+            "zh-CN": "收藏",
+            "zh-TW": "商品系列"
+          },
+          "settings": [
+			{
+			  "type": "image_picker",
+			  "id": "image",
+              "label": "Icon"
+			},
+			{
+              "type": "text",
+              "id": "heading",
+              "label": "Heading",
+              "default": {
+                "cs": "2 dny odeslání",
+                "da": "2 dages forsendelse",
+                "de": "2 Tage Versand",
+                "en": "2 Days Shipping",
+                "es": "Envío en 2 días",
+                "fi": "2 päivän toimitus",
+                "fr": "2 jours d'expédition",
+                "it": "Spedizione in 2 giorni",
+                "ja": "2日間の発送",
+                "ko": "2일 배송",
+                "nb": "2 dager frakt",
+                "nl": "2 dagen verzending",
+                "pl": "2 dni wysyłki",
+                "pt-BR": "2 dias de envio",
+                "pt-PT": "2 dias de envio",
+                "sv": "2 dagars frakt",
+                "th": "จัดส่ง 2 วัน",
+                "tr": "2 Gün Kargo",
+                "vi": "2 ngày vận chuyển",
+                "zh-CN": "2 天发货",
+                "zh-TW": "2 天发货"
+              }
+            },
+            {
+              "type": "richtext",
+              "id": "subheading",
+              "label": "Text",
+              "default": {
+                  "cs": "<p>Nejbezpečnější a nejekologičtější forma komerční dopravy.</p>",
+                  "da": "<p>Den sikreste og mest miljømæssige form for kommerciel transport.</p>",
+                  "de": "<p>Sicherste und umweltfreundlichste Form des Wirtschaftsverkehrs.</p>",
+                  "en": "<p>Safest and most environmentally form of commercial transport.</p>",
+                  "es": "<p>La forma de transporte comercial más segura y ecológica.</p>",
+                  "fi": "<p>Turvallisin ja ympäristöystävällisin kaupallinen liikenne.</p>",
+                  "fr": "<p>Le moyen de transport commercial le plus sûr et le plus écologique.</p>",
+                  "it": "<p>La forma di trasporto commerciale più sicura ed ecologica.</p>",
+                  "ja": "<p>最も安全で環境に優しい形態の商業輸送。</p>",
+                  "ko": "<p>가장 안전하고 가장 환경적인 형태의 상업용 운송 수단.</p>",
+                  "nb": "<p>Tryggeste og mest miljømessige form for kommersiell transport.</p>",
+                  "nl": "<p>Veiligste en meest milieuvriendelijke vorm van commercieel vervoer.</p>",
+                  "pl": "<p>Najbezpieczniejsza i najbardziej ekologiczna forma transportu komercyjnego.</p>",
+                  "pt-BR": "<p>A forma de transporte comercial mais segura e ecologicamente correta.</p>",
+                  "pt-PT": "<p>A forma de transporte comercial mais segura e ecologicamente correta.</p>",
+                  "sv": "<p>Säkraste och mest miljömässiga kommersiella transporter.</p>",
+                  "th": "<p>รูปแบบการขนส่งเชิงพาณิชย์ที่ปลอดภัยและเป็นมิตรกับสิ่งแวดล้อมมากที่สุด</p>",
+                  "tr": "<p>Ticari taşımacılığın en güvenli ve en çevre dostu şekli.</p>",
+                  "vi": "<p>Hình thức vận tải thương mại an toàn nhất và thân thiện với môi trường nhất.</p>",
+                  "zh-CN": "<p>最安全、最环保的商业运输方式。</p>",
+                  "zh-TW": "<p>最安全、最环保的商业运输方式。</p>"
+                }
+            }
+		  ]
+        }
+      ]
+
+  }
+{% endschema %}

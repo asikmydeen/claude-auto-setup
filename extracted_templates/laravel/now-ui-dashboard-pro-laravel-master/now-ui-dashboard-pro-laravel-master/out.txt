@@ -1,0 +1,710 @@
+├── app
+│   ├── Category.php
+│   ├── Console
+│   │   ├── comments
+│   │   │   └── DeleteOldUsers.php
+│   │   └── Kernel.php
+│   ├── Exceptions
+│   │   └── Handler.php
+│   ├── Http
+│   │   ├── Controllers
+│   │   │   ├── Auth
+│   │   │   │   ├── ForgotPasswordController.php
+│   │   │   │   ├── LoginController.php
+│   │   │   │   ├── RegisterController.php
+│   │   │   │   ├── ResetPasswordController.php
+│   │   │   │   └── VerificationController.php
+│   │   │   ├── CategoryController.php
+│   │   │   ├── Controller.php
+│   │   │   ├── HomeController.php
+│   │   │   ├── ItemController.php
+│   │   │   ├── PageController.php
+│   │   │   ├── ProfileController.php
+│   │   │   ├── RoleController.php
+│   │   │   ├── TagController.php
+│   │   │   └── UserController.php
+│   │   ├── Kernel.php
+│   │   ├── Middleware
+│   │   │   ├── Authenticate.php
+│   │   │   ├── CheckForMaintenanceMode.php
+│   │   │   ├── EncryptCookies.php
+│   │   │   ├── RedirectIfAuthenticated.php
+│   │   │   ├── TrimStrings.php
+│   │   │   ├── TrustProxies.php
+│   │   │   └── VerifyCsrfToken.php
+│   │   └── Requests
+│   │       ├── CategoryRequest.php
+│   │       ├── ItemRequest.php
+│   │       ├── PasswordRequest.php
+│   │       ├── ProfileRequest.php
+│   │       ├── RoleRequest.php
+│   │       ├── TagRequest.php
+│   │       └── UserRequest.php
+│   ├── Item.php
+│   ├── Observers
+│   │   ├── ItemObserver.php
+│   │   └── UserObserver.php
+│   ├── Policies
+│   │   ├── CategoryPolicy.php
+│   │   ├── ItemPolicy.php
+│   │   ├── RolePolicy.php
+│   │   ├── TagPolicy.php
+│   │   └── UserPolicy.php
+│   ├── Providers
+│   │   ├── AppServiceProvider.php
+│   │   ├── AuthServiceProvider.php
+│   │   ├── BroadcastServiceProvider.php
+│   │   ├── EventServiceProvider.php
+│   │   └── RouteServiceProvider.php
+│   ├── Role.php
+│   ├── Rules
+│   │   └── CurrentPasswordCheckRule.php
+│   ├── Tag.php
+│   └── User.php
+├── artisan
+├── bootstrap
+│   ├── app.php
+│   └── cache
+│       ├── .gitignore
+│       ├── packages.php
+│       └── services.php
+├── CHANGELOG.md
+├── composer.json
+├── composer.lock
+├── config
+│   ├── app.php
+│   ├── auth.php
+│   ├── broadcasting.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── hashing.php
+│   ├── items.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── queue.php
+│   ├── services.php
+│   ├── session.php
+│   └── view.php
+├── database
+│   ├── factories
+│   │   └── UserFactory.php
+│   ├── .gitignore
+│   ├── migrations
+│   │   ├── 2014_10_12_100000_create_password_resets_table.php
+│   │   ├── 2019_01_15_100000_create_roles_table.php
+│   │   ├── 2019_01_15_110000_create_users_table.php
+│   │   ├── 2019_01_17_121504_create_categories_table.php
+│   │   ├── 2019_01_21_130422_create_tags_table.php
+│   │   ├── 2019_01_21_163402_create_items_table.php
+│   │   ├── 2019_01_21_163414_create_item_tag_table.php
+│   │   ├── 2019_03_06_132557_add_photo_column_to_users_table.php
+│   │   ├── 2019_03_06_143255_add_fields_to_items_table.php
+│   │   └── 2019_03_20_090438_add_color_tags_table.php
+│   └── seeds
+│       ├── CategoriesTableSeeder.php
+│       ├── DatabaseSeeder.php
+│       ├── ItemsTableSeeder.php
+│       ├── RolesTableSeeder.php
+│       ├── TagsTableSeeder.php
+│       └── UsersTableSeeder.php
+├── .editorconfig
+├── .env
+├── .env.example
+├── .git
+│   ├── branches
+│   ├── COMMIT_EDITMSG
+│   ├── config
+│   ├── description
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   └── update.sample
+│   ├── index
+│   ├── info
+│   │   └── exclude
+│   ├── logs
+│   │   ├── HEAD
+│   │   └── refs
+│   │       ├── heads
+│   │       │   ├── develop
+│   │       │   ├── feature
+│   │       │   │   ├── 12th4b
+│   │       │   │   ├── 12th4x
+│   │       │   │   ├── 12th5b
+│   │       │   │   ├── 12th62
+│   │       │   │   ├── 12th69
+│   │       │   │   ├── #12th70
+│   │       │   │   ├── 12th9p
+│   │       │   │   ├── #12thap
+│   │       │   │   ├── 12thcp
+│   │       │   │   ├── 12thd0
+│   │       │   │   ├── demo
+│   │       │   │   └── feature
+│   │       │   │       └── #12thd0
+│   │       │   └── master
+│   │       └── remotes
+│   │           └── origin
+│   │               ├── develop
+│   │               └── feature
+│   │                   ├── 12th4b
+│   │                   ├── 12th4x
+│   │                   ├── 12th5b
+│   │                   ├── 12th62
+│   │                   ├── 12th69
+│   │                   ├── #12th70
+│   │                   ├── 12th9p
+│   │                   ├── #12thap
+│   │                   ├── 12thcp
+│   │                   ├── 12thd0
+│   │                   └── demo
+│   ├── objects
+│   │   ├── info
+│   │   └── pack
+│   ├── ORIG_HEAD
+│   ├── packed-refs
+│   └── refs
+│       ├── heads
+│       │   ├── develop
+│       │   ├── feature
+│       │   │   ├── 12th4b
+│       │   │   ├── 12th4x
+│       │   │   ├── 12th5b
+│       │   │   ├── 12th62
+│       │   │   ├── 12th69
+│       │   │   ├── #12th70
+│       │   │   ├── 12th9p
+│       │   │   ├── #12thap
+│       │   │   ├── 12thcp
+│       │   │   ├── 12thd0
+│       │   │   ├── demo
+│       │   │   └── feature
+│       │   │       └── #12thd0
+│       │   └── master
+│       ├── remotes
+│       │   └── origin
+│       │       ├── develop
+│       │       └── feature
+│       │           ├── 12th4b
+│       │           ├── 12th4x
+│       │           ├── 12th5b
+│       │           ├── 12th62
+│       │           ├── 12th69
+│       │           ├── #12th70
+│       │           ├── 12th9p
+│       │           ├── #12thap
+│       │           ├── 12thcp
+│       │           ├── 12thd0
+│       │           └── demo
+│       └── tags
+├── .gitattributes
+├── .gitignore
+├── ISSUE_TEMPLATE.md
+├── out.txt
+├── package.json
+├── phpunit.xml
+├── public
+│   ├── assets
+│   │   ├── css
+│   │   │   ├── bootstrap.min.css
+│   │   │   ├── bootstrap.min.css.map
+│   │   │   └── now-ui-dashboard.min.css
+│   │   ├── demo
+│   │   │   ├── demo.css
+│   │   │   ├── demo.js
+│   │   │   ├── docs.css
+│   │   │   ├── docs.min.css
+│   │   │   ├── docs.min.js
+│   │   │   ├── jquery.sharrre.js
+│   │   │   ├── src
+│   │   │   │   └── application.js
+│   │   │   └── vendor
+│   │   │       ├── anchor.min.js
+│   │   │       ├── clipboard.min.js
+│   │   │       ├── holder.min.js
+│   │   │       └── split.min.js
+│   │   ├── fonts
+│   │   │   ├── nucleo-license.md
+│   │   │   ├── nucleo-outline.eot
+│   │   │   ├── nucleo-outline.ttf
+│   │   │   ├── nucleo-outline.woff
+│   │   │   └── nucleo-outline.woff2
+│   │   ├── img
+│   │   │   ├── apple-icon.png
+│   │   │   ├── AU.png
+│   │   │   ├── balmain.jpg
+│   │   │   ├── bg13.jpg
+│   │   │   ├── bg14.jpg
+│   │   │   ├── bg15.jpg
+│   │   │   ├── bg16.jpg
+│   │   │   ├── bg1.jpg
+│   │   │   ├── bg3.jpg
+│   │   │   ├── bg5.jpg
+│   │   │   ├── BR.png
+│   │   │   ├── default-avatar.png
+│   │   │   ├── DE.png
+│   │   │   ├── emilyz.jpg
+│   │   │   ├── favicon.png
+│   │   │   ├── GB.png
+│   │   │   ├── header.jpg
+│   │   │   ├── image_placeholder.jpg
+│   │   │   ├── james.jpg
+│   │   │   ├── mike.jpg
+│   │   │   ├── now-logo.png
+│   │   │   ├── placeholder.jpg
+│   │   │   ├── prada.jpg
+│   │   │   ├── RO.png
+│   │   │   ├── saint-laurent.jpg
+│   │   │   └── US.png
+│   │   ├── js
+│   │   │   ├── core
+│   │   │   │   ├── bootstrap.min.js
+│   │   │   │   ├── jquery.min.js
+│   │   │   │   └── popper.min.js
+│   │   │   ├── now-ui-dashboard.min.js
+│   │   │   └── plugins
+│   │   │       ├── bootstrap-datetimepicker.js
+│   │   │       ├── bootstrap-notify.js
+│   │   │       ├── bootstrap-selectpicker.js
+│   │   │       ├── bootstrap-switch.js
+│   │   │       ├── bootstrap-tagsinput.js
+│   │   │       ├── chartjs.min.js
+│   │   │       ├── fullcalendar.min.js
+│   │   │       ├── jasny-bootstrap.min.js
+│   │   │       ├── jquery.bootstrap-wizard.js
+│   │   │       ├── jquery.dataTables.min.js
+│   │   │       ├── jquery-jvectormap.js
+│   │   │       ├── jquery.validate.min.js
+│   │   │       ├── moment.min.js
+│   │   │       ├── nouislider.min.js
+│   │   │       ├── perfect-scrollbar.jquery.min.js
+│   │   │       └── sweetalert2.min.js
+│   │   └── scss
+│   │       ├── now-ui-dashboard
+│   │       │   ├── _alerts.scss
+│   │       │   ├── _badges.scss
+│   │       │   ├── _buttons.scss
+│   │       │   ├── cards
+│   │       │   │   ├── _card-background.scss
+│   │       │   │   ├── _card-chart.scss
+│   │       │   │   ├── _card-collapse.scss
+│   │       │   │   ├── _card-contributions.scss
+│   │       │   │   ├── _card-info-area.scss
+│   │       │   │   ├── _card-lock.scss
+│   │       │   │   ├── _card-map.scss
+│   │       │   │   ├── _card-plain.scss
+│   │       │   │   ├── _card-pricing.scss
+│   │       │   │   ├── _card-profile.scss
+│   │       │   │   ├── _card-signup.scss
+│   │       │   │   ├── _card-stats-mini.scss
+│   │       │   │   ├── _card-stats.scss
+│   │       │   │   ├── _card-subcategories.scss
+│   │       │   │   ├── _card-testimonials.scss
+│   │       │   │   ├── _card-user.scss
+│   │       │   │   └── _card-wizard.scss
+│   │       │   ├── _cards.scss
+│   │       │   ├── _carousel.scss
+│   │       │   ├── _checkboxes-radio.scss
+│   │       │   ├── _dropdown.scss
+│   │       │   ├── _example-pages.scss
+│   │       │   ├── _fixed-plugin.scss
+│   │       │   ├── _footers.scss
+│   │       │   ├── _images.scss
+│   │       │   ├── _info-areas.scss
+│   │       │   ├── _inputs.scss
+│   │       │   ├── _media-queries.scss
+│   │       │   ├── _misc.scss
+│   │       │   ├── mixins
+│   │       │   │   ├── _badges.scss
+│   │       │   │   ├── _buttons.scss
+│   │       │   │   ├── _cards.scss
+│   │       │   │   ├── _dropdown.scss
+│   │       │   │   ├── _inputs.scss
+│   │       │   │   ├── _modals.scss
+│   │       │   │   ├── _page-header.scss
+│   │       │   │   ├── _popovers.scss
+│   │       │   │   ├── _sidebar.scss
+│   │       │   │   ├── _social-buttons.scss
+│   │       │   │   ├── _tags.scss
+│   │       │   │   ├── _transparency.scss
+│   │       │   │   ├── _vendor-prefixes.scss
+│   │       │   │   └── _wizard.scss
+│   │       │   ├── _mixins.scss
+│   │       │   ├── _modals.scss
+│   │       │   ├── _navbar.scss
+│   │       │   ├── _nucleo-outline.scss
+│   │       │   ├── _page-header.scss
+│   │       │   ├── _pagination.scss
+│   │       │   ├── _pills.scss
+│   │       │   ├── plugins
+│   │       │   │   ├── _plugin-animate-bootstrap-notify.scss
+│   │       │   │   ├── _plugin-bootstrap-select.scss
+│   │       │   │   ├── _plugin-bootstrap-switch.scss
+│   │       │   │   ├── _plugin-card-wizard.scss
+│   │       │   │   ├── _plugin-datatables.net.scss
+│   │       │   │   ├── _plugin-datetimepicker.scss
+│   │       │   │   ├── _plugin-fullcalendar.scss
+│   │       │   │   ├── _plugin-jasny-fileupload.scss
+│   │       │   │   ├── _plugin-jquery.jvectormap.scss
+│   │       │   │   ├── _plugin-nouislider.scss
+│   │       │   │   ├── _plugin-perfect-scrollbar.scss
+│   │       │   │   └── _plugin-tagsinput.scss
+│   │       │   ├── _popups.scss
+│   │       │   ├── _progress.scss
+│   │       │   ├── _responsive.scss
+│   │       │   ├── _rtl.scss
+│   │       │   ├── _sections.scss
+│   │       │   ├── _sidebar-and-main-panel.scss
+│   │       │   ├── _social-buttons.scss
+│   │       │   ├── _tables.scss
+│   │       │   ├── _tabs.scss
+│   │       │   ├── _timeline.scss
+│   │       │   ├── _typography.scss
+│   │       │   └── _variables.scss
+│   │       └── now-ui-dashboard.scss
+│   ├── docs
+│   │   ├── components
+│   │   │   ├── badge.html
+│   │   │   ├── breadcrumb.html
+│   │   │   ├── buttons.html
+│   │   │   ├── card.html
+│   │   │   ├── collapse.html
+│   │   │   ├── colors.html
+│   │   │   ├── dropdowns.html
+│   │   │   ├── forms.html
+│   │   │   ├── google-maps.html
+│   │   │   ├── modal.html
+│   │   │   ├── navbar.html
+│   │   │   ├── navs.html
+│   │   │   ├── nucleo-icons.html
+│   │   │   ├── pagination.html
+│   │   │   ├── popovers.html
+│   │   │   ├── progress.html
+│   │   │   ├── rtl-support.html
+│   │   │   ├── tables.html
+│   │   │   ├── tooltips.html
+│   │   │   └── typography.html
+│   │   ├── getting-started
+│   │   │   ├── build-tools.html
+│   │   │   ├── file-structure.html
+│   │   │   ├── frontend-assets.html
+│   │   │   ├── laravel-setup.html
+│   │   │   └── license.html
+│   │   ├── laravel
+│   │   │   ├── category-management.html
+│   │   │   ├── item-management.html
+│   │   │   ├── profile-edit.html
+│   │   │   ├── role-management.html
+│   │   │   ├── tag-management.html
+│   │   │   └── user-management.html
+│   │   ├── plugins
+│   │   │   ├── bootstrap-notify.html
+│   │   │   ├── bootstrap-switch.html
+│   │   │   ├── chart-js.html
+│   │   │   ├── datetimepicker.html
+│   │   │   ├── fileupload-jasny.html
+│   │   │   ├── fullcalendar.html
+│   │   │   ├── jquery-tagsinput.html
+│   │   │   ├── jquery-validation.html
+│   │   │   ├── jvector-map.html
+│   │   │   ├── perfect-scrollbar.html
+│   │   │   ├── select-bootstrap.html
+│   │   │   ├── sliders.html
+│   │   │   └── sweet-alert-2.html
+│   │   ├── .vs
+│   │   │   └── documentation
+│   │   │       └── v15
+│   │   └── .vscode
+│   ├── index.php
+│   └── now
+│       ├── css
+│       │   ├── bootstrap.min.css
+│       │   ├── bootstrap.min.css.map
+│       │   ├── now-ui-dashboard.css
+│       │   ├── now-ui-dashboard.css.map
+│       │   └── now-ui-dashboard.min.css
+│       ├── demo
+│       │   ├── demo.css
+│       │   └── demo.js
+│       ├── docs
+│       ├── fonts
+│       │   ├── nucleo-license.md
+│       │   ├── nucleo-outline.eot
+│       │   ├── nucleo-outline.ttf
+│       │   ├── nucleo-outline.woff
+│       │   └── nucleo-outline.woff2
+│       ├── img
+│       │   ├── apple-icon.png
+│       │   ├── AU.png
+│       │   ├── balmain.jpg
+│       │   ├── bg13.jpg
+│       │   ├── bg14.jpg
+│       │   ├── bg15.jpg
+│       │   ├── bg16.jpg
+│       │   ├── bg1.jpg
+│       │   ├── bg3.jpg
+│       │   ├── bg5.jpg
+│       │   ├── BR.png
+│       │   ├── default-avatar.png
+│       │   ├── DE.png
+│       │   ├── emilyz.jpg
+│       │   ├── favicon.png
+│       │   ├── GB.png
+│       │   ├── header.jpg
+│       │   ├── image_placeholder.jpg
+│       │   ├── james.jpg
+│       │   ├── mike.jpg
+│       │   ├── now-logo.png
+│       │   ├── placeholder.jpg
+│       │   ├── prada.jpg
+│       │   ├── RO.png
+│       │   ├── saint-laurent.jpg
+│       │   └── US.png
+│       ├── js
+│       │   ├── core
+│       │   │   ├── bootstrap.min.js
+│       │   │   ├── jquery.min.js
+│       │   │   └── popper.min.js
+│       │   ├── now-ui-dashboard.js
+│       │   ├── now-ui-dashboard.js.map
+│       │   ├── now-ui-dashboard.min.js
+│       │   └── plugins
+│       │       ├── bootstrap-datetimepicker.js
+│       │       ├── bootstrap-notify.js
+│       │       ├── bootstrap-selectpicker.js
+│       │       ├── bootstrap-switch.js
+│       │       ├── bootstrap-tagsinput.js
+│       │       ├── chartjs.min.js
+│       │       ├── fullcalendar.min.js
+│       │       ├── jasny-bootstrap.min.js
+│       │       ├── jquery.bootstrap-wizard.js
+│       │       ├── jquery.dataTables.min.js
+│       │       ├── jquery-jvectormap.js
+│       │       ├── jquery.validate.min.js
+│       │       ├── moment.min.js
+│       │       ├── nouislider.min.js
+│       │       ├── perfect-scrollbar.jquery.min.js
+│       │       └── sweetalert2.min.js
+│       └── scss
+│           ├── now-ui-dashboard
+│           │   ├── _alerts.scss
+│           │   ├── _badges.scss
+│           │   ├── _buttons.scss
+│           │   ├── cards
+│           │   │   ├── _card-background.scss
+│           │   │   ├── _card-chart.scss
+│           │   │   ├── _card-collapse.scss
+│           │   │   ├── _card-contributions.scss
+│           │   │   ├── _card-info-area.scss
+│           │   │   ├── _card-lock.scss
+│           │   │   ├── _card-map.scss
+│           │   │   ├── _card-plain.scss
+│           │   │   ├── _card-pricing.scss
+│           │   │   ├── _card-profile.scss
+│           │   │   ├── _card-signup.scss
+│           │   │   ├── _card-stats-mini.scss
+│           │   │   ├── _card-stats.scss
+│           │   │   ├── _card-subcategories.scss
+│           │   │   ├── _card-testimonials.scss
+│           │   │   ├── _card-user.scss
+│           │   │   └── _card-wizard.scss
+│           │   ├── _cards.scss
+│           │   ├── _carousel.scss
+│           │   ├── _checkboxes-radio.scss
+│           │   ├── _dropdown.scss
+│           │   ├── _example-pages.scss
+│           │   ├── _fixed-plugin.scss
+│           │   ├── _footers.scss
+│           │   ├── _images.scss
+│           │   ├── _info-areas.scss
+│           │   ├── _inputs.scss
+│           │   ├── _media-queries.scss
+│           │   ├── _misc.scss
+│           │   ├── mixins
+│           │   │   ├── _badges.scss
+│           │   │   ├── _buttons.scss
+│           │   │   ├── _cards.scss
+│           │   │   ├── _dropdown.scss
+│           │   │   ├── _inputs.scss
+│           │   │   ├── _modals.scss
+│           │   │   ├── _page-header.scss
+│           │   │   ├── _popovers.scss
+│           │   │   ├── _sidebar.scss
+│           │   │   ├── _social-buttons.scss
+│           │   │   ├── _tags.scss
+│           │   │   ├── _transparency.scss
+│           │   │   ├── _vendor-prefixes.scss
+│           │   │   └── _wizard.scss
+│           │   ├── _mixins.scss
+│           │   ├── _modals.scss
+│           │   ├── _navbar.scss
+│           │   ├── _nucleo-outline.scss
+│           │   ├── _page-header.scss
+│           │   ├── _pagination.scss
+│           │   ├── _pills.scss
+│           │   ├── plugins
+│           │   │   ├── _plugin-animate-bootstrap-notify.scss
+│           │   │   ├── _plugin-bootstrap-select.scss
+│           │   │   ├── _plugin-bootstrap-switch.scss
+│           │   │   ├── _plugin-card-wizard.scss
+│           │   │   ├── _plugin-datatables.net.scss
+│           │   │   ├── _plugin-datetimepicker.scss
+│           │   │   ├── _plugin-fullcalendar.scss
+│           │   │   ├── _plugin-jasny-fileupload.scss
+│           │   │   ├── _plugin-jquery.jvectormap.scss
+│           │   │   ├── _plugin-nouislider.scss
+│           │   │   ├── _plugin-perfect-scrollbar.scss
+│           │   │   └── _plugin-tagsinput.scss
+│           │   ├── _popups.scss
+│           │   ├── _progress.scss
+│           │   ├── _responsive.scss
+│           │   ├── _rtl.scss
+│           │   ├── _sections.scss
+│           │   ├── _sidebar-and-main-panel.scss
+│           │   ├── _social-buttons.scss
+│           │   ├── _tables.scss
+│           │   ├── _tabs.scss
+│           │   ├── _timeline.scss
+│           │   ├── _typography.scss
+│           │   └── _variables.scss
+│           └── now-ui-dashboard.scss
+├── README.md
+├── resources
+│   ├── lang
+│   │   └── en
+│   │       ├── auth.php
+│   │       ├── pagination.php
+│   │       ├── passwords.php
+│   │       └── validation.php
+│   └── views
+│       ├── alerts
+│       │   ├── errors.blade.php
+│       │   ├── error_self_update.blade.php
+│       │   ├── feedback.blade.php
+│       │   ├── migrations_check.blade.php
+│       │   └── success.blade.php
+│       ├── auth
+│       │   ├── login.blade.php
+│       │   ├── passwords
+│       │   │   ├── email.blade.php
+│       │   │   └── reset.blade.php
+│       │   ├── register.blade.php
+│       │   └── verify.blade.php
+│       ├── categories
+│       │   ├── create.blade.php
+│       │   ├── edit.blade.php
+│       │   └── index.blade.php
+│       ├── home.blade.php
+│       ├── items
+│       │   ├── create.blade.php
+│       │   ├── edit.blade.php
+│       │   └── index.blade.php
+│       ├── layouts
+│       │   ├── app.blade.php
+│       │   ├── footer.blade.php
+│       │   ├── navbars
+│       │   │   ├── auth.blade.php
+│       │   │   └── navs
+│       │   │       ├── auth.blade.php
+│       │   │       └── guest.blade.php
+│       │   └── page_template
+│       │       ├── auth.blade.php
+│       │       └── guest.blade.php
+│       ├── pages
+│       │   ├── buttons.blade.php
+│       │   ├── calendar.blade.php
+│       │   ├── charts.blade.php
+│       │   ├── forms
+│       │   │   ├── extended.blade.php
+│       │   │   ├── regular.blade.php
+│       │   │   ├── validation.blade.php
+│       │   │   └── wizard.blade.php
+│       │   ├── grid.blade.php
+│       │   ├── icons.blade.php
+│       │   ├── lock.blade.php
+│       │   ├── maps
+│       │   │   ├── fullscreen.blade.php
+│       │   │   ├── google.blade.php
+│       │   │   └── vector.blade.php
+│       │   ├── notifications.blade.php
+│       │   ├── panels.blade.php
+│       │   ├── pricing.blade.php
+│       │   ├── support.blade.php
+│       │   ├── sweet-alert.blade.php
+│       │   ├── tables
+│       │   │   ├── datatables.blade.php
+│       │   │   ├── extendedt.blade.php
+│       │   │   └── regulart.blade.php
+│       │   ├── timeline.blade.php
+│       │   ├── typography.blade.php
+│       │   └── widgets.blade.php
+│       ├── profile
+│       │   └── edit.blade.php
+│       ├── roles
+│       │   ├── create.blade.php
+│       │   ├── edit.blade.php
+│       │   └── index.blade.php
+│       ├── tags
+│       │   ├── create.blade.php
+│       │   ├── edit.blade.php
+│       │   └── index.blade.php
+│       └── users
+│           ├── create.blade.php
+│           ├── edit.blade.php
+│           └── index.blade.php
+├── routes
+│   ├── api.php
+│   ├── channels.php
+│   ├── console.php
+│   └── web.php
+├── server.php
+├── storage
+│   ├── app
+│   │   ├── .gitignore
+│   │   └── public
+│   │       ├── .gitignore
+│   │       ├── pictures
+│   │       └── profile
+│   ├── framework
+│   │   ├── cache
+│   │   │   ├── data
+│   │   │   │   ├── 13
+│   │   │   │   │   └── 13
+│   │   │   │   ├── a8
+│   │   │   │   │   └── 73
+│   │   │   │   └── .gitignore
+│   │   │   └── .gitignore
+│   │   ├── .gitignore
+│   │   ├── sessions
+│   │   │   ├── .gitignore
+│   │   │   └── mGMizh475mbzFRocrqsrX6OClN4gokoiAWKX5azx
+│   │   ├── testing
+│   │   │   └── .gitignore
+│   │   └── views
+│   │       └── .gitignore
+│   └── logs
+│       ├── .gitignore
+├── .styleci.yml
+├── tests
+│   ├── CreatesApplication.php
+│   ├── Feature
+│   │   └── ExampleTest.php
+│   ├── TestCase.php
+│   └── Unit
+│       └── ExampleTest.php
+├── .vscode
+│   └── settings.json
+├── webpack.mix.js
+└── yarn.lock
+
+1749 directories, 10070 files

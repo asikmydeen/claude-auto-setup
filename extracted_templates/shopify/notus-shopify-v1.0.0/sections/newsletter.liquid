@@ -1,0 +1,386 @@
+{% if section.settings.style == 'light' %}
+<div class="newsletter m-3 border-radius-md" data-section-id="{{ section.id }}" data-section-type="newsletter-section">
+{% else %}
+<div class="newsletter m-3 border-radius-md bg-gradient-dark position-relative" data-section-id="{{ section.id }}" data-section-type="newsletter-section">
+  <img src="{{ "waves-white.svg" | asset_url }}" alt="pattern-lines" class="position-absolute start-0 top-0 w-100 opacity-6">
+{% endif %}
+  <div class="wrapper position-relative z-index-2">
+    {% unless section.settings.heading == blank %}
+      <div class="section-header text-center">
+        {% unless section.settings.badge == blank %}
+       	 <span class="text-link font-weight-bold text-uppercase {% if section.settings.style == 'dark' %} text-white {% endif %}">{{ section.settings.badge | escape }}</span>
+        {% endunless %}
+        <h3 class="font-weight-bold section-header__title {% if section.settings.style == 'dark' %} text-white {% endif %}">{{ section.settings.heading | escape }}</h3>
+      </div>
+    {% endunless %}
+    {% unless section.settings.subheading == blank %}
+      <div class="section-subheading rte text-center {% if section.settings.style == 'dark' %} text-white {% endif %}">
+        <p class="lead {% if section.settings.style == 'dark' %} text-white {% endif %}">{{ section.settings.subheading }}</p>
+      </div>
+    {% endunless %}
+    {% form 'customer' %}
+      {{ form.errors | default_errors }}
+      {% if form.posted_successfully? %}
+        <div class="newsletter--form">
+          <div class="note form-success">{{ 'general.newsletter_form.newsletter_confirmation' | t }}</div>
+        </div>
+      {% else %}
+        <label for="Email" class="newsletter__label hidden-label">{{ 'general.newsletter_form.newsletter_email' | t }}</label>
+        <input type="hidden" name="contact[tags]" value="newsletter">
+        <div class="newsletter--form">
+          <input type="email" value="{% if customer %}{{ customer.email }}{% endif %}" placeholder="{{ 'general.newsletter_form.newsletter_placeholder' | t }}" name="contact[email]" id="Email" class="input-group-field newsletter__input d-block w-100" autocorrect="off" autocapitalize="off">
+          <button id="Subscribe" type="submit"
+                  class="btn newsletter__submit w-100 mt-2"
+                  aria-label="{{ 'general.newsletter_form.submit' | t }}">
+            <span class="newsletter__submit-text--large">{{ 'general.newsletter_form.submit' | t }}</span>
+            <span class="newsletter__submit-text--small">
+              <span class="icon icon-arrow-right" aria-hidden="true"></span>
+            </span>
+          </button>
+        </div>
+      {% endif %}
+    {% endform %}
+  </div>
+</div>
+
+
+
+{% schema %}
+{
+  "name": {
+    "cs": "Novinky",
+    "da": "Nyhedsbrev",
+    "de": "Newsletter",
+    "en": "Newsletter",
+    "es": "Boletín",
+    "fi": "Uutiskirje",
+    "fr": "Newsletter",
+    "it": "Newsletter",
+    "ja": "ニュースレター",
+    "ko": "뉴스레터",
+    "nb": "Nyhetsbrev",
+    "nl": "Nieuwsbrief",
+    "pl": "Newsletter",
+    "pt-BR": "Newsletter",
+    "pt-PT": "Newsletter",
+    "sv": "Nyhetsbrev",
+    "th": "จดหมายข่าว",
+    "tr": "Bülten",
+    "vi": "Bản tin",
+    "zh-CN": "新闻通讯",
+    "zh-TW": "電子報"
+  },
+  "class": "index-section index-newsletter-section shopify-section--full-width",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": {
+        "cs": "Nadpis",
+        "da": "Overskrift",
+        "de": "Überschrift",
+        "en": "Heading",
+        "es": "Título",
+        "fi": "Otsake",
+        "fr": "Titre",
+        "it": "Heading",
+        "ja": "見出し",
+        "ko": "제목",
+        "nb": "Overskrift",
+        "nl": "Kop",
+        "pl": "Nagłówek",
+        "pt-BR": "Título",
+        "pt-PT": "Título",
+        "sv": "Rubrik",
+        "th": "ส่วนหัว",
+        "tr": "Başlık",
+        "vi": "Tiêu đề",
+        "zh-CN": "标题",
+        "zh-TW": "標題"
+      },
+      "default": {
+        "cs": "Přihlaste se k odběru novinek",
+        "da": "Tilmeld dig vores nyhedsbrev",
+        "de": "Unseren Newsletter abonnieren",
+        "en": "Subscribe to our newsletter",
+        "es": "Suscríbete a nuestro boletín de noticias",
+        "fi": "Tilaa uutiskirjeemme",
+        "fr": "Inscription à notre newsletter",
+        "it": "Iscriviti alla nostra newsletter",
+        "ja": "ストアからのお知らせを受け取る",
+        "ko": "뉴스 레터 구독",
+        "nb": "Abonner på nyhetsbrevet vårt",
+        "nl": "Abonneren op onze nieuwsbrief",
+        "pl": "Zapisz się do naszego newslettera",
+        "pt-BR": "Receber nosso newsletter",
+        "pt-PT": "Subscreva a nossa newsletter",
+        "sv": "Prenumerera på vårt nyhetsbrev",
+        "th": "สมัครรับจดหมายข่าวของเรา",
+        "tr": "Bültenimize abone olun",
+        "vi": "Đăng ký nhận bản tin",
+        "zh-CN": "订阅我们的新闻通讯",
+        "zh-TW": "訂閱我們的電子報"
+      }
+    },
+	{
+      "type": "text",
+      "id": "badge",
+      "label": {
+        "cs": "Odznak",
+        "da": "Badge",
+        "de": "Abzeichen",
+        "en": "Badge",
+        "es": "Insignia",
+        "fi": "Badge",
+        "fr": "Badge",
+        "it": "Distintivo",
+        "ja": "バッジ",
+        "ko": "배지",
+        "nb": "Badge",
+        "nl": "Badge",
+        "pl": "Badge",
+        "pt-BR": "Badge",
+        "pt-PT": "Badge",
+        "sv": "Badge",
+        "th": "Badge",
+        "tr": "Badge",
+        "vi": "Badge",
+        "zh-CN": "徽章",
+        "zh-TW": "徽章"
+      },
+      "default": {
+        "cs": "Nikdy vám nic neunikne",
+        "da": "Gå aldrig glip af noget",
+        "de": "Verpasse nichts mehr",
+        "en": "Never miss a thing",
+        "es": "Nunca te pierdas nada",
+        "fi": "Älä koskaan missaa mitään",
+        "fr": "Ne manquez jamais une chose",
+        "it": "Non perderti mai niente",
+        "ja": "見逃すことはありません",
+        "ko": "절대 놓치지 마세요",
+        "nb": "Gå aldri glipp av noe",
+        "nl": "Mis nooit meer iets",
+        "pl": "Nigdy niczego nie przegap",
+        "pt-BR": "Nunca perca nada",
+        "pt-PT": "Nunca perca nada",
+        "sv": "Missa aldrig någonting",
+        "th": "ไม่พลาดสิ่งใด",
+        "tr": "Asla bir şeyi kaçırma",
+        "vi": "Không bao giờ bỏ lỡ điều gì",
+        "zh-CN": "永远不要错过任何事情",
+        "zh-TW": "永远不要错过任何事情"
+      }
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": {
+        "cs": "Podnadpis",
+        "da": "Underoverskrift",
+        "de": "Untertitel",
+        "en": "Subheading",
+        "es": "Subtítulo",
+        "fi": "Alaotsikko",
+        "fr": "Sous-titre",
+        "it": "Sottotitolo",
+        "ja": "小見出し",
+        "ko": "소제목",
+        "nb": "Underoverskrift",
+        "nl": "Subkop",
+        "pl": "Nagłówek podrzędny",
+        "pt-BR": "Subtítulo",
+        "pt-PT": "Subtítulo",
+        "sv": "Underrubrik",
+        "th": "หัวเรื่องย่อย",
+        "tr": "Alt başlık",
+        "vi": "Tiêu đề phụ",
+        "zh-CN": "副标题",
+        "zh-TW": "子標題"
+      },
+      "default": {
+        "cs": "Získejte informace o propagačních akcích, nových produktech a slevách – přímo do své schránky.",
+        "da": "Reklamer, nye produkter og salg. Direkte i din indbakke.",
+        "de": "Werbeaktionen, neue Produkte und Sonderangebote. Direkt in deinem Posteingang.",
+        "en": "Sign up for tailored new arrivals, exciting launches and exclusive early sale access",
+        "es": "Promociones, nuevos productos y ofertas. Directamente a tu bandeja de entrada.",
+        "fi": "Kampanjat, uudet tuotteet ja myynti. Suoraan saapuneet-kansioosi",
+        "fr": "Promotions, nouveaux produits et soldes. Directement dans votre boîte de réception.",
+        "it": "Promozioni, nuovi prodotti e offerte. Direttamente nella tua casella di posta.",
+        "ja": "新商品やセール情報などのお得な情報をお届けします。",
+        "ko": "프로모션, 신제품, 판매. 받은 편지함으로 바로 이동.",
+        "nb": "Kampanjer, nye produkter og salg. Direkte i innboksen din.",
+        "nl": "Promoties, nieuwe producten en uitverkoop rechtstreeks in je inbox.",
+        "pl": "Promocje, nowe produkty i wyprzedaże. Bezpośrednio do Twojej skrzynki odbiorczej.",
+        "pt-BR": "Promoções, novos produtos e vendas. Diretamente para sua caixa de entrada.",
+        "pt-PT": "Promoções, novos produtos e ofertas. Diretamente na sua caixa de entrada.",
+        "sv": "Kampanjer, nya produkter och försäljning. Direkt till din inkorg.",
+        "th": "โปรโมชัน สินค้าใหม่ และการลดราคา ตรงสู่กล่องจดหมายเข้าของคุณ",
+        "tr": "Promosyonlar, yeni ürünler ve indirimler. Doğrudan gelen kutunuzda.",
+        "vi": "Khuyến mãi, sản phẩm mới và chương trình giảm giá. Trực tiếp vào hộp thư đến của bạn.",
+        "zh-CN": "促销、新产品和销售。直接发送到您的收件箱。",
+        "zh-TW": "讓您直接在收件匣內收取促銷活動、最新產品和特賣活動訊息。"
+      }
+    },
+    {
+      "type": "paragraph",
+      "content": {
+        "cs": "Pro všechny zákazníky, kteří se zaregistrují, se v Shopify vytvoří účet. [Zobrazit zákazníky](/admin/customers?query=&accepts_marketing=1)",
+        "da": "Alle kunder, der tilmelder sig, får oprettet en konto i Shopify. [Se kunder](/admin/customers?query=&accepts_marketing=1)",
+        "de": "Für alle Kunden, die sich registrieren, wird in Shopify ein Konto erstellt. [Kunden ansehen](/admin/customers?query=&accepts_marketing=1)",
+        "en": "Any customers who sign up will have an account created for them in Shopify. [View customers](/admin/customers?query=&accepts_marketing=1)",
+        "es": "Todos los clientes que se registren tendrán una cuenta creada para ellos en Shopify. [Ver clientes](/admin/customers?query=&accepts_marketing=1)",
+        "fi": "Tilaaville asiakkaille luodaan tili Shopifyssa. [Näytä asiakkaat](/admin/customers?query=&accepts_marketing=1)",
+        "fr": "Un compte sera créé dans Shopify pour les abonnés qui s'inscrivent. [Afficher les abonnés](/admin/customers?query=&accepts_marketing=1)",
+        "it": "Qualsiasi cliente che si iscrive avrà un account creato appositamente per lui su Shopify. [Visualizza clienti](/admin/customers?query=&accepts_marketing=1)",
+        "ja": "サインアップしたお客様は、Shopifyでアカウントが作成されます。[お客様を表示する](/admin/customers?query=&accepts_marketing=1)",
+        "ko": "가입한 고객은 Shopify에서 생성된 계정을 보유하게 됩니다. [고객 보기](/admin/customers?query=&accepts_marketing=1)",
+        "nb": "Alle kunder som melder seg på, vil få opprettet en konto i Shopify. [Se kunder](/admin/customers?query=&accepts_marketing=1)",
+        "nl": "Voor alle klanten die zich aanmelden, wordt een Shopify-account gemaakt. [Bekijk klanten](/admin/customers?query=&accepts_marketing=1)",
+        "pl": "Dla wszystkich klientów, którzy się zarejestrują, utworzone zostaną konta w Shopify. [Wyświetl klientów](/admin/customers?query=&accepts_marketing=1)",
+        "pt-BR": "Todos os clientes que se inscreverem terão uma conta criada para eles na Shopify. [Visualizar clientes](/admin/customers?query=&accepts_marketing=1)",
+        "pt-PT": "Será criada uma conta na Shopify para todos os clientes que se registarem. [Ver clientes](/admin/customers?query=&accepts_marketing=1)",
+        "sv": "Alla kunder som registrerar sig kommer att få ett konto skapat i Shopify. [Visa kunder](/admin/customers?query=&accepts_marketing=1)",
+        "th": "ระบบจะสร้างบัญชีผู้ใช้ใน Shopify ให้แก่ลูกค้ารายที่ลงทะเบียนแล้ว [ดูลูกค้า](/admin/customers?query=&accepts_marketing=1)",
+        "tr": "Kaydolan tüm müşteriler için Shopify'da bir hesap oluşturulur. [Müşterileri görüntüleyin](/admin/customers?query=&accepts_marketing=1)",
+        "vi": "Bất kỳ khách hàng nào đăng ký đều sẽ được tạo tài khoản trong Shopify. [Xem khách hàng](/admin/customers?query=&accepts_marketing=1)",
+        "zh-CN": "任何注册用户都将在 Shopify 中拥有一个为他们创建的账户。[查看客户](/admin/customers?query=&accepts_marketing=1)",
+        "zh-TW": "顧客註冊後就可以擁有 Shopify 帳號。[查看顧客](/admin/customers?query=&accepts_marketing=1)"
+      }
+    },
+	{
+      "type": "select",
+      "id": "style",
+      "label": {
+        "cs": "Slog",
+        "da": "Stil",
+        "de": "Stil",
+        "en": "Style",
+        "es": "Estilo",
+        "fi": "Tyyli",
+        "fr": "Style",
+        "it": "Stile",
+        "ja": "スタイル",
+        "ko": "스타일",
+        "nb": "Stil",
+        "nl": "Stijl",
+        "pl": "Styl",
+        "pt-BR": "Estilo",
+        "pt-PT": "Estilo",
+        "sv": "Stil",
+        "th": "สไตล์",
+        "tr": "Stil",
+        "vi": "Phong cách",
+        "zh-CN": "风格",
+        "zh-TW": "风格"
+      },
+      "default": "light",
+      "options": [
+        {
+          "label": {
+            "cs": "Světlo",
+            "da": "Lys",
+            "de": "Hell",
+            "en": "Light",
+            "es": "Luz",
+            "fi": "Valo",
+            "fr": "Léger",
+            "it": "Leggero",
+            "ja": "光",
+            "ko": "빛",
+            "nb": "Ljus",
+            "nl": "Lys",
+            "pl": "Lekki",
+            "pt-BR": "Luz",
+            "pt-PT": "Luz",
+            "sv": "Liten",
+            "th": "แสงสว่าง",
+            "tr": "Işık",
+            "vi": "Soi rọi",
+            "zh-CN": "光",
+            "zh-TW": "光"
+          },
+          "value": "light"
+        },
+        {
+          "label": {
+            "cs": "Temný",
+            "da": "Mørk",
+            "de": "Dunkel",
+            "en": "Dark",
+            "es": "Oscuro",
+            "fi": "Tumma",
+            "fr": "Foncé",
+            "it": "Buio",
+            "ja": "暗い",
+            "ko": "어두운",
+            "nb": "Donker",
+            "nl": "Donker",
+            "pl": "Ciemny",
+            "pt-BR": "Sombrio",
+            "pt-PT": "Sombrio",
+            "sv": "Mörk",
+            "th": "มืด",
+            "tr": "Karanlık",
+            "vi": "Tối tăm",
+            "zh-CN": "黑暗的",
+            "zh-TW": "黑暗的"
+          },
+          "value": "dark"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "cs": "Přihlášení k odběru novinek",
+        "da": "Tilmelding til nyhedsbrev",
+        "de": "Newsletter-Anmeldung",
+        "en": "Newsletter signup",
+        "es": "Suscripción al boletín",
+        "fi": "Uutiskirjeen tilaus",
+        "fr": "Inscription à la newsletter",
+        "it": "Iscrizione alla Newsletter",
+        "ja": "ニュースレターの登録",
+        "ko": "뉴스레터 신청",
+        "nb": "Registrering for nyhetsbrev",
+        "nl": "Nieuwsbriefaanmelding",
+        "pl": "Rejestracja do newslettera",
+        "pt-BR": "Assinatura da newsletter",
+        "pt-PT": "Registo na newsletter",
+        "sv": "Nyhetsbrevsregistrering",
+        "th": "การสมัครรับจดหมายข่าว",
+        "tr": "Bülten kaydı",
+        "vi": "Đăng ký nhận bản tin",
+        "zh-CN": "新闻通讯注册",
+        "zh-TW": "訂閱電子報"
+      },
+      "category": {
+        "cs": "Propagace",
+        "da": "Kampagne",
+        "de": "Promotional",
+        "en": "Promotional",
+        "es": "Promocional",
+        "fi": "Mainonnallinen",
+        "fr": "Promotionnel",
+        "it": "Promozionale",
+        "ja": "プロモーション用",
+        "ko": "프로모션",
+        "nb": "Kampanjer",
+        "nl": "Promotioneel",
+        "pl": "Promocyjne",
+        "pt-BR": "Promocional",
+        "pt-PT": "Promocional",
+        "sv": "Kampanjer",
+        "th": "ส่งเสริมการขาย",
+        "tr": "Promosyon",
+        "vi": "Khuyến mãi",
+        "zh-CN": "促销",
+        "zh-TW": "宣傳活動"
+      }
+    }
+  ],
+  "blocks": []
+}
+{% endschema %}

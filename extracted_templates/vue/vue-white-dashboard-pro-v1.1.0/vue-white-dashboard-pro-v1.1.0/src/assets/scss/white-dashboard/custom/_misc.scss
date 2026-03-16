@@ -1,0 +1,261 @@
+
+/* Animations */
+.nav-pills .nav-link,
+.navbar,
+.nav-tabs .nav-link,
+.sidebar .nav a,
+.sidebar .nav a i,
+.sidebar .nav p,
+.navbar-collapse .navbar-nav .nav-link,
+.animation-transition-general,
+.tag,
+.tag [data-role="remove"],
+.animation-transition-general{
+    @include transitions($general-transition-time, $transition-ease);
+}
+
+//transition for dropdown caret
+.bootstrap-switch-label:before,
+.caret{
+    @include transitions($fast-transition-time, $transition-ease);
+}
+
+.dropdown-toggle[aria-expanded="true"]:after,
+a[data-toggle="collapse"][aria-expanded="true"] .caret,
+.card-collapse .card a[data-toggle="collapse"][aria-expanded="true"] i,
+.card-collapse .card a[data-toggle="collapse"].expanded i{
+    @include rotate-180();
+}
+
+.caret{
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  border-top: 4px dashed;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  margin-top: -5px;
+  position: absolute;
+  top: 30px;
+  margin-left: 5px;
+}
+
+.pull-left{
+  float: left;
+}
+.pull-right{
+  float: right;
+}
+
+
+// card user profile page
+
+.card {
+  form {
+    label + .form-control {
+      margin-bottom: 20px;
+    }
+  }
+}
+
+.card {
+  .map-title {
+    color: $white;
+  }
+
+  &.card-chart {
+    .gmnoprint,
+    .gm-style-cc {
+      display: none !important;
+    }
+  }
+}
+
+// documentation
+
+.bd-docs {
+
+
+  .content:not(.custom) > h1,
+  .content:not(.custom) > h2,
+  .content:not(.custom) > h3,
+  .content:not(.custom) > h4,
+  .content:not(.custom) > h5,
+  .content:not(.custom) > h6{
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  h1,h2,h3,h4,h5,h6,p,ul li,ol li{
+    color:#2c2c2c;
+  }
+
+
+  .bd-content>table>thead>tr>th {
+    color: $black;
+
+  }
+
+  .blockquote, .blockquote p, .card p{
+    color: rgba($black-states,0.8);
+  }
+  .bd-example {
+    background: $white;
+
+  }
+
+  .navbar {
+    border-top: none;
+    height: auto;
+
+    .navbar-nav .nav-link {
+      color: rgba(255,255,255,.8) !important;
+      i{
+        margin-top: -4px;
+      }
+    }
+  }
+
+  .bd-example {
+
+    .btn{
+      margin: 4px 0;
+    }
+    .btn .badge {
+      display: inline-block;
+    }
+
+    .popover .popover-header {
+    color: hsla(0,0%,71%,.6);
+  }
+
+
+    .popover-body {
+      p {
+        color: $gray-900;
+      }
+    }
+
+    &.tooltip-demo p{
+      color: rgba($white,.8);
+    }
+  }
+
+  .card.card-body,
+  .card .card-body {
+    color: $black-states;
+  }
+
+  .card-img-overlay .card-text{
+    color: $white;
+  }
+
+  label,
+  .form-check {
+    color: hsla(0,0%,100%,.8);
+  }
+
+  .form-check + .btn {
+    margin-top: 20px;
+  }
+
+  .bd-example,
+  table {
+    thead th {
+      color: $black-states;
+    }
+
+    .datepicker{
+      thead th, table thead th,.tim-icons{
+        color: $primary;
+      }
+
+    }
+
+    .picker-switch .tim-icons{
+      color: $primary;
+    }
+  }
+
+  .footer {
+    .container-fluid > nav {
+      display: inline-block;
+    }
+  }
+  &.ct-documentation{
+    .card{
+      h1, h2, h3, h4, h5, h6{
+        border-left: none;
+      }
+
+      h1{
+        padding-left:0;
+      }
+    }
+  }
+
+  .nav-item > a:not(.external):hover,
+  .nav-item > a:not(.external).router-link-active{
+    border-bottom: 0;
+  }
+
+}
+
+.modal.show .modal-dialog {
+  -webkit-transform: translate(0,30%);
+  transform: translate(0,30%);
+}
+
+.swal2-title{
+  border-bottom: none;
+}
+
+code {
+  color: $pink;
+}
+
+@media screen and (max-width: 991px){
+    .profile-photo .profile-photo-small{
+        margin-left: -2px;
+    }
+
+    .button-dropdown{
+        display: none;
+    }
+
+    #searchModal .modal-dialog{
+      margin: 20px;
+    }
+
+    #minimizeSidebar{
+        display: none;
+    }
+
+}
+
+
+@media screen and (max-width: 768px){
+
+    .landing-page .section-story-overview .image-container:nth-child(2){
+        margin-left: 0;
+        margin-bottom: 30px;
+    }
+
+}
+
+@media screen and (max-width: 576px){
+    .page-header{
+        .container h6.category-absolute{
+            width: 90%;
+        }
+    }
+
+    .form-horizontal .col-form-label, .form-horizontal .label-on-right{
+      text-align: inherit;
+      padding-top: 0;
+      code{
+        padding: 0 10px;
+      }
+    }
+
+}

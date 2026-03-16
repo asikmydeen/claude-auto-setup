@@ -1,0 +1,139 @@
+.panel {
+    border: 0;
+    border-bottom: 1px solid $medium-gray;
+    box-shadow: none;
+}
+
+.panel-default>.panel-heading {
+    background-color: $white-color;
+    border-color: $white-color;
+}
+
+.panel-group .panel {
+    border-radius: 0;
+}
+
+.panel-title {
+    font-size: $font-size-h5;
+
+    a {
+        display: block;
+        padding: .75rem;
+    }
+
+    i {
+        float: right;
+        padding-top: 5px;
+    }
+}
+
+.panel-title a:hover,
+.panel-title a:focus {
+    text-decoration: none;
+}
+
+.gsdk-collapse {
+    display: block;
+    height: 0px;
+    visibility: visible;
+    overflow: hidden;
+}
+
+.accordion {
+
+    .panel-title a:hover,
+    .panel-title a:focus {
+        color: $danger-color;
+    }
+
+    .accordion-item {
+        border-bottom: 0;
+        margin-bottom: 0 !important;
+        border-radius: 0 !important;
+        overflow: hidden;
+        box-shadow: 0 6px 10px -4px rgb(0 0 0 / 15%);
+        background-color: #fff;
+        color: #333;
+        position: relative;
+        z-index: 1;
+        border: 0;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        flex-direction: column;
+        min-width: 0;
+        word-wrap: break-word;
+        background-clip: border-box;
+
+        .accordion-header {
+            margin-bottom: -1px;
+            background-color: $white-color !important;
+            padding: 0 !important;
+            border-bottom: 1px solid rgba(0, 0, 0, .125);
+        }
+
+        .accordion-button {
+            text-align: inherit;
+            text-transform: none;
+            width: 100%;
+            color: #66615b;
+            background-color: transparent;
+            border-color: transparent !important;
+            padding: 7px 18px;
+            box-sizing: border-box;
+            border-width: 2px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.75;
+            opacity: 1;
+            transition: all 150ms linear;
+            text-decoration: none;
+            display: inline-block;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+
+            &:hover {
+                background-color: transparent !important;
+                color: #403d39 !important;
+                outline: 0 !important;
+            }
+
+            &:focus {
+                background-color: transparent !important;
+                color: #403d39 !important;
+                outline: 0 !important;
+            }
+            .panel-title{
+                font-size: 1.35em;
+                margin-bottom: 0!important;
+                line-height: 1.4em;
+                a{
+                    color: #444;
+                    &:hover{
+                        color: #f5593d;
+                    }
+                }
+            }
+        }
+    }
+}
+.accordion-body {
+    padding: 20px;
+}
+// .panel-default > .panel-heading + .panel-collapse.gsdk-collapse > .panel-body {
+//     box-shadow: inset 0 7px 10px -7px rgba(0,0,0,0.14);
+// }
+.card-collapse {
+    padding: 0 !important;
+}
+
+.panel-title a[aria-expanded="true"] {
+    i {
+        -webkit-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        transform: rotate(180deg);
+        @include transition($slow-transition-time, $transition-linear)
+    }
+}

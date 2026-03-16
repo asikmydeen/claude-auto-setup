@@ -1,0 +1,231 @@
+<div class="wrapper">
+    {% if section.settings.heading != blank %}
+      <div class="section-header text-center">
+        <img src="{{ "instagram-logo.svg" | asset_url }}" alt="Instagram logo" class="mb-2">
+        <h3 class="font-weight-bold mb-0 section-header__title">{{ section.settings.heading | escape }}</h3>
+      </div>
+    {% endif %}
+  
+    <div class="grid collection-grid">
+        {% comment %}
+          Show up to 12 images.
+        {% endcomment %}
+      
+        {% assign isEmpty = true %}
+        {% assign image_index = 0 %}
+        {% assign image_count = 0 %}
+        {% assign image_limit = section.blocks.size %}
+      
+        {% comment %}
+          Add one to the imagelimit to offset chance of Frontpage being included
+        {% endcomment %}
+        {% assign image_limit = image_limit | plus: 1 %}
+
+        {% comment %}
+          Calculate number of images to show, making sure Frontpage isn't one
+        {% endcomment %}
+        {% for image in section.blocks limit: image_limit %}
+            {% assign image_count = image_count | plus: 1 %}
+        {% endfor %}
+
+        {% if image_count > 0 %}
+          {% assign isEmpty = false %}
+        {% endif %}
+
+        {% assign divisible_by_three = image_count | modulo: 3 %}
+        {% assign divisible_by_two = image_count | modulo: 2 %}
+      
+        {% comment %}
+          Loop through the images to display
+        {% endcomment %}
+        {% for block in section.blocks limit: image_limit %}
+      
+      	  {% assign image_index = image_index | plus: 1 %}
+      	 	
+      	
+      	 {% if image_count == 12 or image_count == 6 %}
+          <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3"> 
+         {% elsif image_count == 11 %}
+             <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index >= 7 %}push--large--one-twelfth{% endif %}"> 
+         {% elsif image_count == 10 %}
+            <div class="grid__item one-half medium--one-fifth large--one-fifth text-center mb-5"> 
+         {% elsif image_count == 9 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index >= 7 %}push--large--three-twelfths{% endif %}"> 
+         {% elsif image_count == 8 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index >= 7 %}push--large--four-twelfths{% endif %}">
+         {% elsif image_count == 7 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index >= 7 %}push--large--five-twelfths{% endif %}"> 
+         {% elsif image_count == 5 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index <= 5 %}push--large--one-twelfth{% endif %}"> 
+         {% elsif image_count == 4 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index <= 4 %}push--large--two-twelfths{% endif %}"> 
+         {% elsif image_count == 3 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index <= 3 %}push--large--three-twelfths{% endif %}"> 
+         {% elsif image_count == 2 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 {% if image_index <= 2 %}push--large--four-twelfths{% endif %}"> 
+         {% elsif image_count == 1 %}
+            <div class="grid__item one-half medium--one-sixth large--one-sixth text-center mb-3 push--large--five-twelfths"> 
+         {% endif %}
+           
+        
+           {% if block.settings.image != blank %}
+            <noscript>
+              {{ block.settings.image | img_url: '600x600' | img_tag: block.settings.image.alt, 'feature-row__image-no-js' }}
+            </noscript>
+             {% assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' %}
+            <div class="feature-row__image-wrapper instagram-post shadow border-radius-md width-150 height-150 mx-auto" style="background-image:url('{{ block.settings.image | img_url: '300x300' }}')">
+              {% if block.settings.url != blank %}
+              <a href=" {{ block.settings.url }} " target="_blank">
+              	<div class="mask h-100 w-100 border-radius-md d-flex">
+                  <i class="fa fa-instagram m-auto text-xl"></i>
+                </div>
+              </a>
+              {% else %}
+              <a>
+              	<div class="mask h-100 w-100 border-radius-md d-flex">
+                  <i class="fa fa-instagram m-auto text-xl"></i>
+                </div>
+              </a>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="feature-row__image-wrapper instagram-post shadow border-radius-md width-150 height-150 mx-auto">
+              <a class="position-absolute w-100 h-100">
+              	<div class="mask h-100 w-100 border-radius-md d-flex">
+                  <i class="fa fa-instagram m-auto text-xl"></i>
+                </div>
+              </a>
+              <svg class="placeholder-svg shadow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 525.5 525.5">
+                <path d="M324.5 212.7H203c-1.6 0-2.8 1.3-2.8 2.8V308c0 1.6 1.3 2.8 2.8 2.8h121.6c1.6 0 2.8-1.3 2.8-2.8v-92.5c0-1.6-1.3-2.8-2.9-2.8zm1.1 95.3c0 .6-.5 1.1-1.1 1.1H203c-.6 0-1.1-.5-1.1-1.1v-92.5c0-.6.5-1.1 1.1-1.1h121.6c.6 0 1.1.5 1.1 1.1V308z"></path>
+                <path d="M210.4 299.5H240v.1s.1 0 .2-.1h75.2v-76.2h-105v76.2zm1.8-7.2l20-20c1.6-1.6 3.8-2.5 6.1-2.5s4.5.9 6.1 2.5l1.5 1.5 16.8 16.8c-12.9 3.3-20.7 6.3-22.8 7.2h-27.7v-5.5zm101.5-10.1c-20.1 1.7-36.7 4.8-49.1 7.9l-16.9-16.9 26.3-26.3c1.6-1.6 3.8-2.5 6.1-2.5s4.5.9 6.1 2.5l27.5 27.5v7.8zm-68.9 15.5c9.7-3.5 33.9-10.9 68.9-13.8v13.8h-68.9zm68.9-72.7v46.8l-26.2-26.2c-1.9-1.9-4.5-3-7.3-3s-5.4 1.1-7.3 3l-26.3 26.3-.9-.9c-1.9-1.9-4.5-3-7.3-3s-5.4 1.1-7.3 3l-18.8 18.8V225h101.4z"></path>
+                <path d="M232.8 254c4.6 0 8.3-3.7 8.3-8.3s-3.7-8.3-8.3-8.3-8.3 3.7-8.3 8.3 3.7 8.3 8.3 8.3zm0-14.9c3.6 0 6.6 2.9 6.6 6.6s-2.9 6.6-6.6 6.6-6.6-2.9-6.6-6.6 3-6.6 6.6-6.6z"></path>
+              </svg>
+            </div>
+          {% endif %}
+          </div>
+        {% endfor %}
+   
+    </div>
+</div>
+
+{% schema %}
+  {
+    "name":"Instagram Posts",
+	"max_blocks": 12,
+    "settings": [
+      {
+        "id": "heading",
+        "type": "text",
+        "label": "Heading",
+		"default": {
+          "cs": "Sledujte nás na Instagramu",
+          "da": "Følg os på Instagram",
+          "de": "Folge uns auf Instagram",
+          "en": "Follow Us on Instagram",
+          "es": "Síguenos en Instagram",
+          "fi": "Seuraa meitä Instagramissa",
+          "fr": "Suis nous sur instagram",
+          "it": "Seguici su Instagram",
+          "ja": "Instagramでフォローしてください",
+          "ko": "Instagram에서 팔로우",
+          "nb": "Følg oss på Instagram",
+          "nl": "Volg ons op Instagram",
+          "pl": "Obserwuj nas na Instagramie",
+          "pt-BR": "Siga-nos no Instagram",
+          "pt-PT": "Siga-nos no Instagram",
+          "sv": "Följ oss på Instagram",
+          "th": "ติดตามเราบน Instagram",
+          "tr": "Bizi instagramda takip et",
+          "vi": "Theo dõi chúng tôi trên Instagram",
+          "zh-CN": "在 Instagram 上关注我们",
+          "zh-TW": "在 Instagram 上关注我们"
+        }
+      }
+    ],
+   "presets": [
+      {
+      	"name": "Instagram",
+      	"category": "Collection",
+        "blocks": [
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+		  {
+            "type": "quote"
+          },
+		  {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+		  {
+            "type": "quote"
+          },
+		  {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+          {
+            "type": "quote"
+          },
+		  {
+            "type": "quote"
+          }
+        ]
+      }
+     ],
+    "blocks": [
+        {
+          "type": "quote",
+          "name": {
+            "cs": "Obraz",
+            "da": "Billede",
+            "de": "Bild",
+            "en": "Image",
+            "es": "Imagen",
+            "fi": "Kuva",
+            "fr": "Image",
+            "it": "Immagine",
+            "ja": "画像",
+            "ko": "영상",
+            "nb": "Bild",
+            "nl": "Afbeelding",
+            "pl": "Obraz",
+            "pt-BR": "Imagem",
+            "pt-PT": "Imagem",
+            "sv": "Bilde",
+            "th": "ภาพ",
+            "tr": "Resim",
+            "vi": "Hình ảnh",
+            "zh-CN": "图片",
+            "zh-TW": "图片"
+          },
+          "settings": [
+			{
+			  "type": "image_picker",
+			  "id": "image",
+              "label": "Image"
+			},
+     		 {
+			  "type": "url",
+			  "id": "url",
+              "label": "Link"
+			}
+		  ]
+        }
+      ]
+
+  }
+{% endschema %}

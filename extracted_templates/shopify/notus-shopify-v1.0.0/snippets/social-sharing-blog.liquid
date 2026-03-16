@@ -1,0 +1,27 @@
+<!-- /snippets/social-sharing.liquid -->
+{% assign shareButtonStyle = settings.social_sharing_style %}
+
+<div class="social-sharing ms-auto {{ shareButtonStyle }}">
+
+  {% if settings.share_facebook %}
+    <a target="_blank" href="//www.facebook.com/sharer.php?u={{ shop.url | append: share_permalink }}" class="share-facebook btn btn-icon-only bg-white shadow rounded-circle" title="{{ 'general.social.alt_text.share_on_facebook' | t }}">
+      <span class="icon icon-facebook p-0 text-facebook" aria-hidden="true"></span>
+      <span class="visually-hidden">{{ 'general.social.alt_text.share_on_facebook' | t }}</span>
+    </a>
+  {% endif %}
+
+  {% if settings.share_twitter %}
+    <a target="_blank" href="//twitter.com/share?text={{ share_title | url_param_escape }}&amp;url={{ shop.url | append: share_permalink }}" class="share-twitter btn btn-icon-only bg-white shadow rounded-circle" title="{{ 'general.social.alt_text.share_on_twitter' | t }}">
+      <span class="icon icon-twitter p-0 text-twitter" aria-hidden="true"></span>
+      <span class="visually-hidden">{{ 'general.social.alt_text.share_on_twitter' | t }}</span>
+    </a>
+  {% endif %}
+
+  {% if settings.share_pinterest %}
+    <a target="_blank" href="//pinterest.com/pin/create/button/?url={{ shop.url | append: share_permalink }}&amp;media={{ share_image | img_url: '1024x1024' }}&amp;description={{ share_title | url_param_escape }}" class="share-pinterest btn btn-icon-only bg-white shadow rounded-circle" title="{{ 'general.social.alt_text.share_on_pinterest' | t }}">
+      <span class="icon icon-pinterest p-0 text-pinterest" aria-hidden="true"></span>
+      <span class="visually-hidden">{{ 'general.social.alt_text.share_on_pinterest' | t }}</span>
+    </a>
+  {% endif %}
+
+</div>

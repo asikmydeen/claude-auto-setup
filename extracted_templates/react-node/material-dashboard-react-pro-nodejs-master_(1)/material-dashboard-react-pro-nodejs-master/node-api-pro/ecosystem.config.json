@@ -1,0 +1,23 @@
+{
+  "apps": [
+    {
+      "name": "node-json-api-pro",
+      "script": "./src/index.js",
+      "node_args": "--es-module-specifier-resolution=node",
+      "watch": false,
+      "force": true,
+      "env": {
+        "port": 8080,
+        "NODE_ENV": "production",
+        "DB_USER": "updivision",
+        "DB_PASSWORD": "team123updivision.",
+        "DB_NAME": "node-pro",
+        "JWT_SECRET": "token",
+        "APP_URL_CLIENT": "https://material-dashboard-pro-react-nodejs.creative-tim.com",
+        "APP_URL_API": "https://node-json-api-pro.creative-tim.com",
+        "MAILTRAP_USER": "15d3d00ad4b3de",
+        "MAILTRAP_PASSWORD": "2d255e60d16b72"
+      }
+    }
+  ]
+}
