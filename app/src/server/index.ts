@@ -15,16 +15,16 @@ import { join, dirname } from "path";
 import { PROJECT_ROOT, CLAUDE_DIR, getLLMKeys } from "./lib/shared";
 
 // --- Route plugins ---
-import { claudeRoutes } from "./routes/claude";
+import { claudeRoutes, initClaude, claudeSessions, sseClients, persistSessions, wireStreamJson, heartbeat as claudeHeartbeat } from "./routes/claude";
 import { dashboardRoutes } from "./routes/dashboard";
 import { settingsRoutes } from "./routes/settings";
-import { projectsRoutes, getActiveProjectPath, setActiveProject, getUserProjects } from "./routes/projects";
-import { templatesRoutes } from "./routes/templates";
-import { devServerRoutes, getDefaultContainerRuntime, getDevServerCount } from "./routes/dev-server";
-import { integrationsRoutes } from "./routes/integrations";
+import { projectsRoutes, getActiveProjectPath, setActiveProject, getUserProjects, initProjectsRouter } from "./routes/projects";
+import { templatesRoutes, initTemplatesRouter } from "./routes/templates";
+import { devServerRoutes, devServers, getDefaultContainerRuntime, getDevServerCount } from "./routes/dev-server";
+import { integrationsRoutes, initIntegrationsContext } from "./routes/integrations";
 import { llmRoutes } from "./routes/llm";
-import { suggestionsRoutes } from "./routes/suggestions";
-import { opsRoutes } from "./routes/ops";
+import { suggestionsRoutes, initSuggestions } from "./routes/suggestions";
+import { opsRoutes, initOps } from "./routes/ops";
 import { cleanupAll } from "./lib/cleanup";
 
 const PORT = 3201;
@@ -49,6 +49,18 @@ function findDistDir(): string | null {
 }
 
 const distPath = findDistDir();
+
+// --- Wire up module dependencies ---
+initClaude({ getActiveProject: () => getActiveProjectPath() });
+initProjectsRouter({ claudeSessions, sseClients, wireStreamJson, persistSessions, devServers });
+initTemplatesRouter({ claudeSessions, sseClients, wireStreamJson, persistSessions });
+initIntegrationsContext({
+  getActiveProject: () => getActiveProjectPath(),
+  setActiveProject,
+  getUserProjects: () => getUserProjects(),
+});
+initSuggestions(claudeSessions, () => getActiveProjectPath());
+initOps(() => getActiveProjectPath());
 
 // --- App setup ---
 const app = new Elysia()
@@ -159,5 +171,8 @@ process.on("SIGINT", () => { cleanupAll(); process.exit(0); });
 process.on("unhandledRejection", (reason) => {
   console.error("Unhandled promise rejection:", reason);
 });
+
+// --- SSE heartbeat: detect dead clients every 30s ---
+setInterval(claudeHeartbeat, 30_000);
 
 export { app };
