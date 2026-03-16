@@ -3394,10 +3394,10 @@ const LLM_PROVIDERS: LLMProviderConfig[] = [
   {
     id: "bedrock", name: "AWS Bedrock", apiKeyField: "bedrockRegion",
     models: [
-      { id: "anthropic.claude-sonnet-4-6-v1:0", name: "Claude Sonnet 4.6 (Bedrock)", context: 200000 },
-      { id: "anthropic.claude-haiku-4-5-v1:0", name: "Claude Haiku 4.5 (Bedrock)", context: 200000 },
-      { id: "meta.llama3-3-70b-instruct-v1:0", name: "Llama 3.3 70B", context: 128000 },
-      { id: "mistral.mistral-large-2411-v1:0", name: "Mistral Large (Bedrock)", context: 128000 },
+      { id: "us.anthropic.claude-sonnet-4-6", name: "Claude Sonnet 4.6 (Bedrock)", context: 200000 },
+      { id: "global.anthropic.claude-haiku-4-5-20251001-v1:0", name: "Claude Haiku 4.5 (Bedrock)", context: 200000 },
+      { id: "us.anthropic.claude-sonnet-4-20250514-v1:0", name: "Claude Sonnet 4 (Bedrock)", context: 200000 },
+      { id: "global.anthropic.claude-opus-4-5-20251101-v1:0", name: "Claude Opus 4.5 (Bedrock)", context: 200000 },
     ],
     createProvider: (region) => createAmazonBedrock({ region: region || "us-east-1" }),
   },
@@ -3573,7 +3573,8 @@ app.post("/api/llm/chat", async (req, res) => {
     res.write(`data: ${JSON.stringify({ type: "done", usage: await result.usage })}\n\n`);
     res.end();
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "LLM request failed";
+    console.error("LLM chat error:", err);
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : "LLM request failed";
     if (!res.headersSent) {
       res.status(500).json({ error: msg });
     } else {
@@ -3596,16 +3597,20 @@ app.post("/api/llm/test", async (req, res) => {
     const provider = providerConfig.createProvider(apiKey) as any;
     const model = provider(providerConfig.models[0].id);
 
-    const result = await streamText({
+    const result = streamText({
       model,
       messages: [{ role: "user" as const, content: "Say hi in one word." }],
       maxOutputTokens: 10,
     });
 
-    const text = await result.text;
-    res.json({ ok: true, response: text.trim() });
+    let text = "";
+    for await (const chunk of result.textStream) {
+      text += chunk;
+    }
+    res.json({ ok: true, response: text.trim() || "Connected (empty response)" });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Connection test failed";
+    console.error("LLM test error:", err);
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : "Connection test failed";
     res.status(400).json({ ok: false, error: msg });
   }
 });
