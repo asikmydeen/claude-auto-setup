@@ -495,8 +495,8 @@ export const claudeRoutes = new Elysia()
     return { ok: true };
   })
 
-  // Send follow-up message to an existing session using --continue
-  // Falls back to a new session with conversation context if --continue fails
+  // Send follow-up message to an existing session using --resume (by session ID)
+  // Fallback chain: --resume <id> → --continue → new session (no flag)
   .post("/api/claude/sessions/:id/message", ({ params, body, set }) => {
     const session = claudeSessions.get(params.id);
     if (!session) {
@@ -527,13 +527,20 @@ export const claudeRoutes = new Elysia()
       };
     }
 
-    function launchFollowUp(useContinue: boolean): void {
+    // Resume strategy: --resume <session-id> preserves full context.
+    // Falls back to --continue (cwd-based) then to a new session.
+    type ResumeMode = "resume" | "continue" | "new";
+
+    function launchFollowUp(mode: ResumeMode): void {
       if (!session) return; // TS guard — already checked above
       const args = ["-p", prompt!.trim(), "--output-format", "stream-json", "--verbose", "--dangerously-skip-permissions"];
 
-      if (useContinue) {
+      if (mode === "resume" && session.claudeSessionId) {
+        args.push("--resume", session.claudeSessionId);
+      } else if (mode === "continue") {
         args.push("--continue");
       }
+      // mode === "new" — no resume flag, starts fresh
 
       // Attach images if provided
       if (Array.isArray(imagePaths)) {
@@ -569,20 +576,21 @@ export const claudeRoutes = new Elysia()
 
       wireStreamJson(child, session, session.id);
 
-      // Detect early crash (within 3s) — likely --continue failed
+      // Detect early crash (within 3s) — likely resume/continue failed
       let earlyCrash = true;
       const earlyTimer = setTimeout(() => { earlyCrash = false; }, 3000);
 
       child.on("close", (code) => {
         clearTimeout(earlyTimer);
 
-        // If --continue crashed immediately, retry as a new session (without --continue)
-        if (useContinue && earlyCrash && code !== 0) {
-          console.log(`[follow-up] --continue failed (exit ${code}), retrying as new session`);
+        // If resume/continue crashed immediately, try next fallback
+        if (earlyCrash && code !== 0 && mode !== "new") {
+          const nextMode: ResumeMode = mode === "resume" ? "continue" : "new";
+          console.log(`[follow-up] --${mode} failed (exit ${code}), falling back to --${nextMode}`);
           // Remove the failed user message we just added
           session.messages.pop();
           session.status = "done"; // Reset to allow retry
-          launchFollowUp(false);
+          launchFollowUp(nextMode);
           return;
         }
 
@@ -633,7 +641,10 @@ export const claudeRoutes = new Elysia()
     }
 
     try {
-      launchFollowUp(true); // Try with --continue first
+      // Try --resume first (preserves full conversation context by session ID)
+      // Falls back: --resume → --continue → new session
+      const startMode: ResumeMode = session.claudeSessionId ? "resume" : "continue";
+      launchFollowUp(startMode);
       const { process: _, ...safe } = session;
       return safe;
     } catch (err) {
