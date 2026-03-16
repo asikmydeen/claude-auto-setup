@@ -81,18 +81,18 @@ export function BrowserPanel({ open, onClose, cwd, initialUrl, building }: Brows
     setDetectedPorts(alive);
     setScanning(false);
 
-    // Auto-navigate to first found port if nothing loaded yet AND not building
-    if (alive.length > 0 && !currentUrl && !building) {
+    // Auto-navigate to first found port ONLY if no initialUrl and nothing loaded yet
+    if (alive.length > 0 && !currentUrl && !building && !initialUrl) {
       navigateTo(`http://localhost:${alive[0]}`);
     }
-  }, [currentUrl, building]);
+  }, [currentUrl, building, initialUrl]);
 
   // Scan on mount and cwd change (but not while building — wait for dev server)
   useEffect(() => {
     if (!building) scanPorts();
   }, [cwd, building]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle initialUrl
+  // Handle initialUrl — always takes priority over port scanning
   useEffect(() => {
     if (initialUrl) {
       if (isLocalUrl(initialUrl)) {

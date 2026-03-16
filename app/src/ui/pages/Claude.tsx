@@ -2461,8 +2461,11 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
     []
   );
 
-  /** Start dev server for a project and open browser panel */
+  /** Start dev server for a project and open browser + terminal panels */
   const autoStartAndPreview = useCallback(async (projectPath: string) => {
+    // Always open terminal for visibility into build/dev server output
+    setTerminalPanelOpen(true);
+
     try {
       // Check if already running
       const status = await fetchDevServerStatus(projectPath);
@@ -2475,7 +2478,12 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       setBrowserPanelOpen(true);
       const result = await startDevServer(projectPath);
       if (result.ok) {
-        // Poll until running
+        // If already running (deps were installed), set URL immediately
+        if (result.status === "running" && result.port) {
+          setBrowserInitialUrl(`http://localhost:${result.port}`);
+          return;
+        }
+        // Poll until running (installing deps + starting)
         const poll = setInterval(async () => {
           try {
             const s = await fetchDevServerStatus(projectPath);
