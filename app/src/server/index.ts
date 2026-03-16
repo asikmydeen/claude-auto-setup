@@ -3148,9 +3148,35 @@ app.post("/api/dev-server/start", (req, res) => {
       const sanitized = projectCwd.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       const containerName = `sidekick-dev-${sanitized.slice(-40)}`;
 
-      // Force-stop and remove any existing container with same name (survives app restart)
-      try { execFileSync(containerRuntime, ["stop", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
-      try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
+      // Check if container already exists and is running — reuse it
+      try {
+        const inspect = execFileSync(containerRuntime, ["inspect", "--format", "{{.State.Status}}", containerName], { encoding: "utf-8", timeout: 5000 }).trim();
+        if (inspect === "running") {
+          // Container is already running — detect its port and reuse
+          const portInfo = execFileSync(containerRuntime, ["port", containerName], { encoding: "utf-8", timeout: 3000 }).trim();
+          const portMatch = portInfo.match(/-> 0\.0\.0\.0:(\d+)/);
+          const existingPort = portMatch ? parseInt(portMatch[1], 10) : port;
+
+          // Re-attach to it by spawning a logs follower as the "process"
+          const child = spawn(containerRuntime, ["logs", "-f", containerName], {
+            cwd: projectCwd,
+            stdio: ["ignore", "pipe", "pipe"],
+          });
+
+          const entry: DevServerEntry = {
+            process: child, port: existingPort, cwd: projectCwd, status: "running",
+            output: [`Reattached to existing container: ${containerName}\n`], runtime: containerRuntime, containerId: containerName,
+          };
+          devServers.set(projectCwd, entry);
+          wireDevServerOutput(child, entry);
+
+          return res.json({ ok: true, port: existingPort, status: "running", runtime: containerRuntime });
+        }
+        // Container exists but not running — remove it
+        try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
+      } catch {
+        // Container doesn't exist — that's fine, we'll create it
+      }
 
       // Install deps inside container first (if node_modules doesn't exist)
       const installStep = !existsSync(join(projectCwd, "node_modules"))
