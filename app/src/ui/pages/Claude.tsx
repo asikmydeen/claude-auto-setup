@@ -2663,11 +2663,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
               onToggle={() => {
                 toggleProjectCollapse(projectPath);
                 setActiveProjectPath(projectPath);
-                // Auto-start dev server and show preview when selecting a project
-                if (collapsedProjects.has(projectPath)) {
-                  // Expanding this project — start preview
-                  autoStartAndPreview(projectPath);
-                }
+                // Always start dev server and show preview when clicking a project
+                autoStartAndPreview(projectPath);
               }}
               onNewChat={(path) => { setActiveProjectPath(path); handleNewChatInProject(path); }}
               onSelectSession={(id) => {
