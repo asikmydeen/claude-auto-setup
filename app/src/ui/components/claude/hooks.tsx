@@ -39,6 +39,7 @@ export function useSSE(sessionId: string | null) {
     setExitCode(null);
     setTools([]);
     setAgents([]);
+    setStreamError(null);
     setGeneration((g) => g + 1);
   }, []);
 
@@ -49,6 +50,7 @@ export function useSSE(sessionId: string | null) {
     setExitCode(null);
     setTools([]);
     setAgents([]);
+    setStreamError(null);
 
     if (!sessionId) return;
 
@@ -59,6 +61,9 @@ export function useSSE(sessionId: string | null) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = JSON.parse(event.data) as Record<string, any>;
+
+        // Clear any previous stream error on successful data receipt
+        if (streamError) setStreamError(null);
 
         if (data.type === "replay" || data.type === "chunk") {
           setContent((prev) => prev + (data.content ?? ""));
@@ -95,9 +100,9 @@ export function useSSE(sessionId: string | null) {
     };
 
     es.onerror = () => {
-      // Connection lost -- mark done with error message
-      setStreamError("Connection lost \u2014 response may be incomplete");
-      setDone(true);
+      // Connection lost — show error but don't mark done (session may still be running server-side).
+      // The user can click Retry to reconnect, or the session query will eventually refresh status.
+      setStreamError("Connection lost \u2014 click Retry to reconnect");
       es.close();
     };
 

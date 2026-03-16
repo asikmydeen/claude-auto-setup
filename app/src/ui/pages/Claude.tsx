@@ -1008,7 +1008,10 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
                 <div className="flex items-center gap-2 rounded-lg border border-yellow-600/30 bg-yellow-50 dark:bg-yellow-950/20 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-200">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{sse.streamError}</span>
-                  <Button variant="ghost" size="sm" className="ml-auto h-6 text-[10px]" onClick={() => sse.reconnect()}>
+                  <Button variant="ghost" size="sm" className="ml-auto h-6 text-[10px]" onClick={() => {
+                    queryClient.invalidateQueries({ queryKey: ["claude-sessions"] });
+                    sse.reconnect();
+                  }}>
                     Retry
                   </Button>
                 </div>
