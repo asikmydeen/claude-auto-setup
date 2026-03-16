@@ -99,6 +99,8 @@ install_deps() {
 # ---------------------------------------------------------------------------
 
 build_app() {
+  # Redirect logs to stderr so only the path goes to stdout when captured
+  {
   log "Building React UI..."
   cd "$APP_DIR"
   npx vite build
@@ -126,7 +128,12 @@ build_app() {
     exit 1
   fi
 
-  echo "$app_path"
+  # Store the path for output after redirection ends
+  BUILD_APP_RESULT="$app_path"
+  } >&2
+
+  # Output just the path to stdout (for capture by caller)
+  echo "$BUILD_APP_RESULT"
 }
 
 # ---------------------------------------------------------------------------
