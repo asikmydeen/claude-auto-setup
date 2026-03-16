@@ -13,6 +13,7 @@ import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { PROJECT_ROOT, CLAUDE_DIR, getLLMKeys } from "./lib/shared";
 import { dbStats, DB_PATH } from "./lib/database";
+import { logError, logFatal } from "./lib/logger";
 
 // --- Route plugins ---
 import { claudeRoutes, initClaude, claudeSessions, sseClients, persistSessions, wireStreamJson, heartbeat as claudeHeartbeat } from "./routes/claude";
@@ -167,8 +168,9 @@ const app = new Elysia()
     return { error: "Not found" };
   })
   // Global error handler
-  .onError(({ error, set }) => {
-    console.error("Unhandled error:", error);
+  .onError(({ error, set, request }) => {
+    const path = new URL(request.url).pathname;
+    logError(`${request.method} ${path}`, error);
     set.status = 500;
     return { error: "Internal server error" };
   })
@@ -180,7 +182,12 @@ console.log(`API server running on http://127.0.0.1:${PORT}`);
 process.on("SIGTERM", () => { cleanupAll(); process.exit(0); });
 process.on("SIGINT", () => { cleanupAll(); process.exit(0); });
 process.on("unhandledRejection", (reason) => {
-  console.error("Unhandled promise rejection:", reason);
+  logError("unhandledRejection", reason);
+});
+process.on("uncaughtException", (err) => {
+  logFatal("uncaughtException", err);
+  cleanupAll();
+  process.exit(1);
 });
 
 // --- SSE heartbeat: detect dead clients every 30s ---

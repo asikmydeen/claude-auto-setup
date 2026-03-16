@@ -18,6 +18,7 @@ import {
   findClaudeCLI,
 } from "../lib/shared";
 import { registerCleanup } from "../lib/cleanup";
+import { logError, logWarn } from "../lib/logger";
 import {
   dbInsertSession,
   dbUpdateSession,
@@ -172,7 +173,8 @@ function broadcastSSE(sessionId: string, event: Record<string, unknown>) {
   for (const controller of clients) {
     try {
       controller.enqueue(bytes);
-    } catch {
+    } catch (err) {
+      logWarn("claude:sse:enqueue", err instanceof Error ? err.message : String(err));
       clients.delete(controller);
     }
   }
@@ -759,7 +761,7 @@ export const claudeRoutes = new Elysia()
 export function cleanup() {
   for (const sess of claudeSessions.values()) {
     if (sess.process) {
-      try { sess.process.kill("SIGTERM"); } catch {}
+      try { sess.process.kill("SIGTERM"); } catch (err) { logError("claude:cleanup:kill", err); }
     }
   }
   persistSessions();

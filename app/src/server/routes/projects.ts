@@ -20,7 +20,7 @@ import {
   ClaudeSession,
   buildProjectEnv,
 } from "../lib/shared";
-import { registerCleanup } from "../lib/cleanup";
+import { logError } from "../lib/logger";
 
 // ---------------------------------------------------------------------------
 // Shared state — injected from the main server via `initProjectsRouter()`
@@ -252,7 +252,7 @@ export const projectsRoutes = new Elysia()
     // Stop any dev server running for this project
     const devServer = devServers.get(projectPath);
     if (devServer) {
-      try { devServer.process.kill("SIGTERM"); } catch {}
+      try { devServer.process.kill("SIGTERM"); } catch (err) { logError("projects:delete:kill", err); }
       devServers.delete(projectPath);
     }
 

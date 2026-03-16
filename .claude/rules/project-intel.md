@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-16 (UX polish)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -90,6 +90,10 @@ app/
 - Context-aware follow-up suggestions: analyzes response content (errors→"Fix errors", UI→"Polish design", API→"Add error handling")
 - Follow-up resilience: `--continue` auto-retries as new session if it crashes, Reconnect button for manual recovery
 - Message deduplication: pendingMessages filtered against session.messages to prevent doubles
+- Toast notifications: useToast() hook from Toast.tsx (success/error/info/loading), wired into AIProviders, ProjectCreator, Integrations
+- Accessibility: 30+ aria-labels on icon buttons, role="dialog" on modals, focus trap + ESC key in ProjectCreator
+- Input validation: project name format (/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/), API key prefix hints, soft format warnings
+- Session sidebar skeleton loader when sessionsQuery.isLoading
 
 **Template System:**
 - 22 verified templates (all pass npm install + build)
@@ -269,6 +273,9 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 22. **claude-mem worker port 37777** — hardcoded in 6 locations; change requires coordinated update
 23. **claude-mem hooks merge** — deep merge by command dedup; Stop hook was missing on first installs
 24. **claude-mem stats nested** — worker returns `{ database: { observations, sessions, size } }`, not flat
+25. **Toast system** — `useToast()` from `Toast.tsx`; provider wraps App in `ToastProvider`; auto-dismiss after 3s (loading toasts persist)
+26. **Focus trap selector** — must exclude `:disabled` elements or focus gets stuck on disabled buttons
+27. **DevServerLogs reconnect** — don't clear logs on reconnect; SSE replay event handles buffer replay
 
 ---
 

@@ -7,6 +7,7 @@ import { join, resolve } from "path";
 import { execFileSync, spawn } from "child_process";
 import { registerCleanup } from "../lib/cleanup";
 import { HOME, buildProjectEnv } from "../lib/shared";
+import { logError, logWarn } from "../lib/logger";
 
 // ============================================================
 // CONTAINER RUNTIME DETECTION
@@ -31,7 +32,7 @@ function detectContainerRuntimes(): RuntimeInfo {
       const version = execFileSync(rt, ["--version"], { encoding: "utf-8", timeout: 5000 }).trim();
       const match = version.match(/(\d+\.\d+[\.\d]*)/);
       runtimes.push({ name: rt, version: match?.[1] || "unknown" });
-    } catch {}
+    } catch { logWarn("dev-server:runtime", `${rt} not available`); }
   }
 
   // Prefer podman (rootless/daemonless) > docker > others
@@ -194,7 +195,7 @@ async function startNativeAsync(projectCwd: string, cmd: string, args: string[],
       devServers.delete(projectCwd);
       try {
         launchDevProcess(projectCwd, cmd, args, port);
-      } catch {}
+      } catch (err) { logError("dev-server:npm-install", err); }
     });
     // Respond immediately — frontend polls /status
     return { ok: true, port, status: "installing", runtime: "native" };
@@ -306,7 +307,7 @@ export const devServerRoutes = new Elysia()
             return { ok: true, port: existingPort, status: "running", runtime: containerRuntime };
           }
           // Container exists but not running — remove it
-          try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 5000 }); } catch {}
+          try { execFileSync(containerRuntime, ["rm", "-f", containerName], { encoding: "utf-8", timeout: 5000 }); } catch (err) { logWarn("dev-server:container-pre-remove", `${containerName}: ${err instanceof Error ? err.message : String(err)}`); }
         } catch {
           // Container doesn't exist — that's fine, we'll create it
         }
@@ -479,11 +480,11 @@ export const devServerRoutes = new Elysia()
     // Release the port
     releasePort(entry.port);
     // Kill the process — containers with --rm auto-remove on exit
-    try { entry.process.kill("SIGTERM"); } catch {}
+    try { entry.process.kill("SIGTERM"); } catch (err) { logError("dev-server:stop:kill", err); }
     // Safety: force-remove container if still hanging after 3s
     if (entry.containerId && entry.runtime !== "native") {
       setTimeout(() => {
-        try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId!], { encoding: "utf-8", timeout: 5000 }); } catch {}
+        try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId!], { encoding: "utf-8", timeout: 5000 }); } catch (err) { logError("dev-server:stop:container-rm", err); }
       }, 3000);
     }
     devServers.delete(projectCwd);
@@ -504,9 +505,9 @@ export function getDevServerCount(): number {
 export function cleanup() {
   for (const [cwd, entry] of devServers) {
     releasePort(entry.port);
-    try { entry.process.kill("SIGTERM"); } catch {}
+    try { entry.process.kill("SIGTERM"); } catch (err) { logError("dev-server:cleanup:kill", err); }
     if (entry.containerId && entry.runtime !== "native") {
-      try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId!], { encoding: "utf-8", timeout: 5000 }); } catch {}
+      try { execFileSync(entry.runtime, ["rm", "-f", entry.containerId!], { encoding: "utf-8", timeout: 5000 }); } catch (err) { logError("dev-server:cleanup:container", err); }
     }
     devServers.delete(cwd);
   }

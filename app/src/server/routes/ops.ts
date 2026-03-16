@@ -7,6 +7,7 @@ import { join } from "path";
 import { execFileSync, spawn } from "child_process";
 import { randomUUID } from "crypto";
 import { registerCleanup } from "../lib/cleanup";
+import { logError, logWarn } from "../lib/logger";
 import {
   PROJECT_ROOT,
   HOME,
@@ -60,7 +61,7 @@ async function fetchClaudeMemWorker(path: string, timeout = 3000): Promise<Respo
 // Register cleanup for graceful shutdown
 registerCleanup(() => {
   for (const [id, entry] of opsProcesses) {
-    try { entry.process.kill("SIGTERM"); } catch {}
+    try { entry.process.kill("SIGTERM"); } catch (err) { logError("ops:cleanup:kill", err); }
     opsProcesses.delete(id);
   }
 });
@@ -308,7 +309,7 @@ export const opsRoutes = new Elysia()
       set.status = 404;
       return { error: "Process not found" };
     }
-    try { entry.process.kill("SIGTERM"); } catch {}
+    try { entry.process.kill("SIGTERM"); } catch (err) { logError("ops:stop", err); }
     return { ok: true };
   })
 
@@ -339,16 +340,16 @@ export const opsRoutes = new Elysia()
 
       // Stream stdout/stderr to the WebSocket
       const onStdout = (data: Buffer) => {
-        try { ws.send(JSON.stringify({ type: "stdout", content: data.toString() })); } catch {}
+        try { ws.send(JSON.stringify({ type: "stdout", content: data.toString() })); } catch (err) { logWarn("ops:ws:stdout", err instanceof Error ? err.message : String(err)); }
       };
       const onStderr = (data: Buffer) => {
-        try { ws.send(JSON.stringify({ type: "stderr", content: data.toString() })); } catch {}
+        try { ws.send(JSON.stringify({ type: "stderr", content: data.toString() })); } catch (err) { logWarn("ops:ws:stderr", err instanceof Error ? err.message : String(err)); }
       };
       const onClose = (code: number | null) => {
         try {
           ws.send(JSON.stringify({ type: "done", exitCode: code }));
           ws.close();
-        } catch {}
+        } catch (err) { logWarn("ops:ws:done", err instanceof Error ? err.message : String(err)); }
       };
 
       entry.process.stdout?.on("data", onStdout);
@@ -364,7 +365,7 @@ export const opsRoutes = new Elysia()
       const entry = opsProcesses.get(id);
       if (entry && entry.process.stdin) {
         const msg = typeof data === "string" ? data : String(data);
-        try { entry.process.stdin.write(msg); } catch {}
+        try { entry.process.stdin.write(msg); } catch (err) { logWarn("ops:ws:stdin", err instanceof Error ? err.message : String(err)); }
       }
     },
     close(ws) {
@@ -405,16 +406,16 @@ export const opsRoutes = new Elysia()
       });
 
       const onStdout = (data: Buffer) => {
-        try { ws.send(JSON.stringify({ type: "stdout", content: data.toString() })); } catch {}
+        try { ws.send(JSON.stringify({ type: "stdout", content: data.toString() })); } catch (err) { logWarn("ops:terminal:stdout", err instanceof Error ? err.message : String(err)); }
       };
       const onStderr = (data: Buffer) => {
-        try { ws.send(JSON.stringify({ type: "stderr", content: data.toString() })); } catch {}
+        try { ws.send(JSON.stringify({ type: "stderr", content: data.toString() })); } catch (err) { logWarn("ops:terminal:stderr", err instanceof Error ? err.message : String(err)); }
       };
       const onClose = (code: number | null) => {
         try {
           ws.send(JSON.stringify({ type: "exit", exitCode: code }));
           ws.close();
-        } catch {}
+        } catch (err) { logWarn("ops:terminal:done", err instanceof Error ? err.message : String(err)); }
       };
 
       shell.stdout?.on("data", onStdout);
@@ -429,13 +430,13 @@ export const opsRoutes = new Elysia()
       const shell = (ws.data as unknown as Record<string, unknown>)._shell as ReturnType<typeof spawn> | undefined;
       if (shell && shell.stdin) {
         const msg = typeof data === "string" ? data : String(data);
-        try { shell.stdin.write(msg); } catch {}
+        try { shell.stdin.write(msg); } catch (err) { logWarn("ops:terminal:stdin", err instanceof Error ? err.message : String(err)); }
       }
     },
     close(ws) {
       const shell = (ws.data as unknown as Record<string, unknown>)._shell as ReturnType<typeof spawn> | undefined;
       if (shell) {
-        try { shell.kill("SIGTERM"); } catch {}
+        try { shell.kill("SIGTERM"); } catch (err) { logError("ops:terminal:kill", err); }
       }
       // Remove listeners
       const listeners = (ws.data as unknown as Record<string, unknown>)._shellListeners as {
@@ -756,7 +757,7 @@ export const opsRoutes = new Elysia()
 export function cleanup() {
   // Kill all running ops processes
   for (const [id, entry] of opsProcesses) {
-    try { entry.process.kill("SIGTERM"); } catch {}
+    try { entry.process.kill("SIGTERM"); } catch (err) { logError("ops:cleanup:kill", err); }
     opsProcesses.delete(id);
   }
 }

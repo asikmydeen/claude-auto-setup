@@ -2,6 +2,8 @@
  * Centralized cleanup for graceful shutdown.
  * Each route module registers its cleanup function here.
  */
+import { logCleanupError } from "./logger";
+
 const cleanupFns: Array<() => void> = [];
 
 export function registerCleanup(fn: () => void) {
@@ -11,6 +13,6 @@ export function registerCleanup(fn: () => void) {
 export function cleanupAll() {
   console.log("Cleaning up child processes...");
   for (const fn of cleanupFns) {
-    try { fn(); } catch {}
+    try { fn(); } catch (err) { logCleanupError("shutdown", err); }
   }
 }
