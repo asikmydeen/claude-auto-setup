@@ -43,6 +43,14 @@
       "context_window": "200k",
       "cost": "medium",
       "speed": "medium"
+    },
+    "copilot": {
+      "cli": "copilot",
+      "non_interactive": "copilot -p \"{prompt}\" --allow-tool='shell' --allow-tool='write'",
+      "strengths": ["github-workflows", "pr-management", "issue-triage", "git-operations", "ci-cd", "code-modification"],
+      "context_window": "200k",
+      "cost": "subscription",
+      "speed": "medium"
     }
   },
 
@@ -85,9 +93,14 @@
     "cr-review": ["kiro", "claude"],
     "pipeline-debug": ["kiro", "claude"],
 
-    "simple-edit": ["codex", "claude", "gemini"],
-    "refactoring": ["claude", "codex", "amp"],
-    "migration": ["claude", "amp", "codex"]
+    "simple-edit": ["codex", "copilot", "claude", "gemini"],
+    "refactoring": ["claude", "codex", "copilot", "amp"],
+    "migration": ["claude", "amp", "codex"],
+
+    "github-pr": ["copilot", "claude", "amp"],
+    "github-issues": ["copilot", "claude"],
+    "git-operations": ["copilot", "codex", "claude"],
+    "ci-cd": ["copilot", "claude", "kiro"]
   },
 
   "cost_optimization": {

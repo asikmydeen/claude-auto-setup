@@ -43,7 +43,7 @@ error() { echo "${RED}[dispatch]${RESET} $*" >&2; }
 
 # Valid task types and providers (for input validation)
 VALID_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|simple-edit|refactoring|migration|amazon-internal|general"
-VALID_PROVIDERS="claude|codex|gemini|amp|kiro"
+VALID_PROVIDERS="claude|codex|gemini|amp|kiro|copilot"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
     --output)        OUTPUT_FILE="$2"; shift 2 ;;
     --list-providers)
       echo "Available providers:"
-      for name in claude codex gemini amp kiro; do
+      for name in claude codex gemini amp kiro copilot; do
         cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
         if command -v "$cli" &>/dev/null; then
           echo "  ${GREEN}*${RESET} $name ($cli — installed)"
@@ -148,7 +148,8 @@ fi
 resolve_provider() {
   # If forced, use that
   if [ -n "$FORCE_PROVIDER" ]; then
-    local cli="$FORCE_PROVIDER"; [ "$FORCE_PROVIDER" = "kiro" ] && cli="kiro-cli"
+    local cli="$FORCE_PROVIDER"
+    [ "$FORCE_PROVIDER" = "kiro" ] && cli="kiro-cli"
     if command -v "$cli" &>/dev/null; then
       echo "$FORCE_PROVIDER"
       return
@@ -164,7 +165,7 @@ resolve_provider() {
 
     # Detect available providers
     local available_providers=""
-    for name in claude codex gemini amp kiro; do
+    for name in claude codex gemini amp kiro copilot; do
       local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
       if command -v "$cli" &>/dev/null; then
         [ -n "$available_providers" ] && available_providers="${available_providers},"
@@ -212,7 +213,7 @@ else:
   fi
 
   # Default fallback chain
-  for name in claude codex gemini amp kiro; do
+  for name in claude codex gemini amp kiro copilot; do
     local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
     if command -v "$cli" &>/dev/null; then
       echo "$name"
@@ -318,6 +319,10 @@ dispatch_to() {
       done
       return 1
       ;;
+    copilot)
+      info "Invoking: copilot -p (non-interactive)"
+      copilot -p "$full_prompt" --allow-tool='shell' --allow-tool='write' 2>/dev/null
+      ;;
     *)
       error "Unknown provider: $provider"
       return 1
@@ -329,7 +334,7 @@ dispatch_to() {
 get_fallback_chain() {
   local primary="$1"
   local chain=""
-  for name in claude kiro codex gemini amp; do
+  for name in claude kiro codex gemini amp copilot; do
     [ "$name" = "$primary" ] && continue
     local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
     if command -v "$cli" &>/dev/null; then

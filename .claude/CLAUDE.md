@@ -54,8 +54,9 @@ Dispatch chain (priority order):
 4. **orchestration MCP `queue_add`** — cross-provider dispatch via dispatch.sh
 5. **dispatch.sh direct** — CLI cross-provider routing (claude, kiro-cli)
 
-Available providers: claude, kiro-cli
+Available providers: claude, kiro-cli, copilot
 - AWS/Amazon tasks auto-route to kiro-cli
+- GitHub PR/issue/CI tasks auto-route to copilot
 - All other tasks route to claude
 - dispatch.sh unsets CLAUDECODE for nested session support
 

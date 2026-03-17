@@ -36,6 +36,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   gemini: "Gemini CLI",
   amp: "Amp Code",
   kiro: "Kiro CLI",
+  copilot: "Copilot CLI",
 };
 
 const PROVIDER_SETUP: Record<string, { install: string; auth: string; docs: string }> = {
@@ -63,6 +64,11 @@ const PROVIDER_SETUP: Record<string, { install: string; auth: string; docs: stri
     install: "npm install -g @anthropic-ai/kiro-cli",
     auth: "kiro auth (uses AWS credentials)",
     docs: "Or configure AWS Bedrock in AI Models tab",
+  },
+  copilot: {
+    install: "brew install copilot-cli",
+    auth: "copilot → /login (or set COPILOT_GITHUB_TOKEN)",
+    docs: "Requires GitHub Copilot subscription. Native GitHub PR/issue/CI integration.",
   },
 };
 
@@ -255,7 +261,7 @@ export function Providers() {
   ];
 
   // Ensure the 5 standard providers are always shown
-  for (const name of ["claude", "codex", "gemini", "amp", "kiro"]) {
+  for (const name of ["claude", "codex", "gemini", "amp", "kiro", "copilot"]) {
     if (!allProviderNames.includes(name)) {
       allProviderNames.push(name);
     }

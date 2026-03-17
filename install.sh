@@ -18,6 +18,7 @@ set -euo pipefail
 #   - Codex CLI (OpenAI)
 #   - Cursor (Anysphere)
 #   - Amp Code (Sourcegraph)
+#   - Copilot CLI (GitHub)
 #
 # Usage:
 #   ./install.sh                    # Fresh install (auto-detect agents)
@@ -70,7 +71,7 @@ for arg in "$@"; do
       echo ""
       echo "Options:"
       echo "  --dry-run          Preview changes without making them"
-      echo "  --agents=NAMES     Comma-separated: claude,gemini,kiro,codex,cursor,ampcode,all"
+      echo "  --agents=NAMES     Comma-separated: claude,gemini,kiro,codex,cursor,ampcode,copilot,all"
       echo "  --help             Show this help"
       echo ""
       echo "Examples:"
@@ -86,8 +87,8 @@ for arg in "$@"; do
 done
 
 # Agent detection using simple variables (Bash 3.2 compatible — used via eval)
-AGENT_claude=false; AGENT_gemini=false; AGENT_kiro=false; AGENT_codex=false; AGENT_cursor=false; AGENT_ampcode=false
-ALL_AGENTS="claude gemini kiro codex cursor ampcode"
+AGENT_claude=false; AGENT_gemini=false; AGENT_kiro=false; AGENT_codex=false; AGENT_cursor=false; AGENT_ampcode=false; AGENT_copilot=false
+ALL_AGENTS="claude gemini kiro codex cursor ampcode copilot"
 
 agent_is_enabled() {
   local name="$1"
@@ -162,6 +163,13 @@ detect_agents() {
     info "Amp Code: not found"
   fi
 
+  if command -v copilot &>/dev/null || (command -v gh &>/dev/null && gh copilot --help &>/dev/null 2>&1); then
+    agent_enable copilot
+    ok "Copilot CLI: found"
+  else
+    info "Copilot CLI: not found"
+  fi
+
   # Count detected
   local count=0
   for key in $ALL_AGENTS; do
@@ -177,6 +185,7 @@ detect_agents() {
     echo "  Kiro CLI:    See https://kiro.dev/cli/"
     echo "  Codex CLI:   npm install -g @openai/codex"
     echo "  Amp Code:    See https://ampcode.com/"
+    echo "  Copilot CLI: brew install copilot-cli (or: npm install -g @github/copilot)"
     echo ""
     echo "  Or use --agents=all to install config for all agents anyway."
     exit 1
@@ -369,6 +378,7 @@ update_agents() {
         codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
         cursor)  adapter="$adapter/cursor/adapter.sh" ;;
         ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
+        copilot) adapter="$adapter/copilot/adapter.sh" ;;
       esac
 
       if [ -f "$adapter" ]; then
@@ -432,6 +442,7 @@ install_agents() {
         codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
         cursor)  adapter="$adapter/cursor/adapter.sh" ;;
         ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
+        copilot) adapter="$adapter/copilot/adapter.sh" ;;
       esac
 
       if [ -f "$adapter" ]; then
@@ -461,6 +472,7 @@ uninstall_agents() {
       codex)   adapter="$adapter/codex-cli/adapter.sh" ;;
       cursor)  adapter="$adapter/cursor/adapter.sh" ;;
       ampcode) adapter="$adapter/ampcode/adapter.sh" ;;
+      copilot) adapter="$adapter/copilot/adapter.sh" ;;
     esac
     if [ -f "$adapter" ]; then
       chmod +x "$adapter"

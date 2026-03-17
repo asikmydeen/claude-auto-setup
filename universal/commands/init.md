@@ -63,11 +63,12 @@ Read and analyze these signals (use parallel tool calls):
    - Don't overwrite existing config — augment it
 
 6. **Available Provider Detection**
-   - Run: `which claude codex gemini amp 2>/dev/null` to detect installed AI agents
+   - Run: `which claude codex gemini amp copilot 2>/dev/null` to detect installed AI agents
    - For each installed provider, note its strengths:
      - `codex`: fast code gen, test writing, boilerplate
      - `gemini`: documentation, large context analysis, search-grounded answers
      - `amp`: code review, oracle-level guidance
+     - `copilot`: GitHub workflows, PR/issue management, git operations, CI/CD
    - Check if dispatch script exists: `ls ~/claude-code-setup/dispatch.sh 2>/dev/null`
    - This determines the cross-provider dispatch capabilities for this project
 

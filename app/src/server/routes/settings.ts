@@ -146,6 +146,7 @@ export const settingsRoutes = new Elysia()
         gemini: "gemini",
         amp: "amp",
         kiro: "kiro-cli",
+        copilot: "copilot",
       };
 
       for (const [name, cli] of Object.entries(cliNames)) {

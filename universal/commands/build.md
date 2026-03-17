@@ -82,7 +82,7 @@ Then synthesize into a spec:
 **CHECKPOINT**: After approval, write the full approved plan to `.claude/scratch/task-state.md` (Phase: plan-approved, include all tasks with assignments).
 
 ### 2.5. Detect Providers (silent, automatic)
-Run `which claude codex gemini amp 2>/dev/null` to detect installed providers. Use this to decide dispatch targets in phases 3 and 4. Never mention this step to the user — just use the information.
+Run `which claude codex gemini amp copilot 2>/dev/null` to detect installed providers. Use this to decide dispatch targets in phases 3 and 4. Never mention this step to the user — just use the information.
 
 ### 3. Implement Phase (auto-dispatch to best provider)
 After approval, execute tasks using parallel agents AND external providers where possible:

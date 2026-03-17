@@ -246,6 +246,7 @@ Each uninstalled provider shows install + auth commands:
 - Gemini: `npm install -g @anthropic-ai/gemini-cli` → `gemini auth`
 - Amp: `npm install -g @anthropic-ai/amp` → `amp login`
 - Kiro: `npm install -g @anthropic-ai/kiro-cli` → `kiro auth`
+- Copilot: `brew install copilot-cli` → `copilot` then `/login` (requires GitHub Copilot subscription)
 
 Alternative: just add API keys in AI Models tab — credentials bridge into CLI agents automatically.
 
@@ -290,7 +291,7 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **6** agent adapters + 9 native agents (including memory-observer, pattern-analyzer)
+- **7** agent adapters (claude, gemini, kiro, codex, cursor, ampcode, copilot) + 9 native agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
 - **10** universal rule files, 56 command definitions (including mem-search)
