@@ -124,36 +124,83 @@ const epic = createEpic(epicDescription, epicDescription);
 updateEpicStatus(epic.id, "planning");
 log(`Epic ID: ${epic.id.slice(0, 8)}`);
 
-// ===== PLANNING PHASE =====
-// Planning agents work in PROJECT_ROOT (not worktrees) — they create .overseer/ artifacts
+// ===== PHASE 0: REQUIREMENTS GATHERING (GSD-inspired) =====
+// Requirements Analyst + Domain Researcher run BEFORE any planning.
+// This ensures the overseer has complete details before building anything.
 
-// --- Step 1: Product Manager → stories.json ---
-log("\n=== PLANNING PHASE ===");
-log("Spawning Product Manager...");
+log("\n=== REQUIREMENTS PHASE ===");
+log("Gathering complete requirements before planning...");
 
 const planningStory = createStory(epic.id, "Epic Planning", "Plan the epic", "Stories and tasks created", "P0" as Priority, 1);
+
+// --- Step 0a: Requirements Analyst → PROJECT.md + REQUIREMENTS.md ---
+const raPrompt = `You are a Requirements Analyst. Your job is to deeply understand this epic and produce structured requirements documents BEFORE any planning begins.
+
+Epic: "${epicDescription}"
+
+IMPORTANT: You MUST create the directory and write the files.
+
+1. Run: mkdir -p .overseer
+2. Explore the project directory to understand if this is a new or existing project
+3. Identify gray areas — what's ambiguous, what assumptions are you making?
+4. Write .overseer/PROJECT.md with: vision, goals, users/roles, core flows, tech stack, assumptions, open questions
+5. Write .overseer/REQUIREMENTS.md with: must-have (v1), should-have, could-have (v2), out-of-scope, non-functional requirements
+
+Use MoSCoW prioritization. Number requirements (REQ-001, REQ-002...).
+If it's a brownfield project, note existing patterns that must be followed.
+Be thorough — downstream agents (PM, Tech Lead, Engineers) depend on your output.`;
+
+const raTask = createTask(planningStory.id, epic.id, "Gather requirements", raPrompt, "docs" as TaskType, "requirements-analyst");
+await runPlanningAgent(raTask.id, "requirements-analyst", raPrompt);
+log("Requirements Analyst completed.");
+
+// --- Step 0b: Domain Researcher → RESEARCH.md (parallel-safe, but run after RA so it can read PROJECT.md) ---
+const drPrompt = `You are a Domain Researcher. Investigate the technical domain for this project.
+
+1. Read .overseer/PROJECT.md and .overseer/REQUIREMENTS.md (created by requirements analyst)
+2. If existing project: read package.json, tsconfig.json, explore src/ structure
+3. Research: tech stack validation, key libraries, implementation patterns, integration notes, risks
+4. Write .overseer/RESEARCH.md with: tech stack assessment, key libraries table, implementation patterns, risks & gotchas, recommendations for planning
+5. Write .overseer/knowledge/research-findings.json with key decisions as JSON array
+
+Focus on decisions that would be expensive to change later. Time-box: investigate what matters.`;
+
+const drTask = createTask(planningStory.id, epic.id, "Research domain", drPrompt, "docs" as TaskType, "domain-researcher");
+await runPlanningAgent(drTask.id, "domain-researcher", drPrompt);
+log("Domain Researcher completed.");
+
+// ===== PHASE 1: PLANNING =====
+log("\n=== PLANNING PHASE ===");
+
+// --- Step 1: Product Manager → stories.json (now reads PROJECT.md + REQUIREMENTS.md + RESEARCH.md) ---
+log("Spawning Product Manager...");
 
 const pmPrompt = `You are a Product Manager. Break this epic into user stories.
 
 Epic: "${epicDescription}"
 
-IMPORTANT: You MUST create the directory and write the file.
+IMPORTANT: Read these files FIRST (created by requirements analyst and researcher):
+- .overseer/PROJECT.md — project vision, goals, users, core flows
+- .overseer/REQUIREMENTS.md — prioritized requirements (MoSCoW)
+- .overseer/RESEARCH.md — tech stack research, patterns, risks
 
-1. Run: mkdir -p .overseer
-2. Write 3-6 user stories as JSON to .overseer/stories.json
+Then:
+1. Create user stories that cover ALL "Must Have" requirements from REQUIREMENTS.md
+2. Each story maps to one or more requirements (reference REQ-xxx)
+3. Write 3-8 user stories as JSON to .overseer/stories.json
 
 Format (STRICT — valid JSON array):
 [
   {
     "title": "Story title",
-    "description": "What to build and why",
+    "description": "What to build and why. References: REQ-001, REQ-003",
     "acceptance_criteria": "- AC 1\\n- AC 2",
     "priority": "P0",
     "story_points": 2
   }
 ]
 
-Consider: scaffolding, core features, UI, data layer, error handling, testing.
+Stories must trace back to requirements. Every Must-Have requirement should be covered by at least one story.
 Keep it simple and focused. Write the file, then stop.`;
 
 const pmTask = createTask(planningStory.id, epic.id, "Break epic into stories", pmPrompt, "docs" as TaskType, "product-manager");

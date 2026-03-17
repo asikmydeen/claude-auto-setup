@@ -51,6 +51,7 @@ export interface Task {
 
 // --- Agent Session ---
 export type AgentRole =
+  | "requirements-analyst" | "domain-researcher"
   | "product-manager" | "project-manager" | "tech-lead"
   | "senior-engineer" | "engineer" | "frontend-engineer" | "backend-engineer"
   | "qa-engineer" | "security-engineer"

@@ -6,8 +6,14 @@
 graph TD
     User["User: Epic Description"] --> Overseer["Overseer (Orchestrator)"]
 
+    subgraph "Phase 0: REQUIREMENTS (GSD-inspired)"
+        Overseer --> RA["Requirements Analyst"]
+        RA -->|"PROJECT.md + REQUIREMENTS.md"| DR["Domain Researcher"]
+        DR -->|"RESEARCH.md"| Ready["Requirements Complete"]
+    end
+
     subgraph "Phase 1: PLANNING"
-        Overseer --> PM["Product Manager"]
+        Ready --> PM["Product Manager"]
         PM -->|"stories.json"| PjM["Project Manager"]
         PjM -->|"tasks.json + DAG"| TL["Tech Lead"]
         TL -->|"architecture.md + contracts"| Queue["Task Queue (SQLite)"]
