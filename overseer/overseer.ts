@@ -15,6 +15,7 @@ import { createWorktree, mergeWorktree, removeWorktree, ensureWorktreeGitignore,
 import { spawnAgent, selectProvider } from "./spawner";
 import { getNextBatch, isEpicComplete, getBlockedTasks, formatProgress } from "./scheduler";
 import { buildKnowledgeContext } from "./knowledge";
+import { generateBoard } from "./board";
 import type { OverseerConfig, AgentRole, Priority, TaskType } from "./types";
 
 // --- Config ---
@@ -272,6 +273,11 @@ updateTaskStatus(pjmTask.id, "done");
 
 // ===== EXECUTION PHASE =====
 updateEpicStatus(epic.id, "active");
+
+// Generate board after planning
+generateBoard(epic.id, PROJECT_ROOT);
+log("Sprint board generated: .overseer/board.md, .overseer/epic.md");
+
 log("\n=== EXECUTION PHASE ===");
 log(formatProgress(epic.id));
 
@@ -356,9 +362,10 @@ async function executionLoop() {
       updateTaskStatus(t.id, "failed");
     }
 
-    // 5. Progress
+    // 5. Progress + update board
     const progress = formatProgress(epic.id);
     console.log(`\n${progress}`);
+    generateBoard(epic.id, PROJECT_ROOT);
 
     // 6. Detect stall (no tasks running, none ready, not complete)
     if (batch.length === 0 && pendingMerges.length === 0) {
@@ -390,6 +397,10 @@ log(`Epic: ${epic.title}`);
 log(`Tasks: ${stats.done} done, ${stats.failed} failed, ${stats.total} total`);
 log(`ID: ${epic.id}`);
 log(formatProgress(epic.id));
+
+// Final board update
+generateBoard(epic.id, PROJECT_ROOT);
+log("Final board written to .overseer/");
 
 cleanupAllWorktrees(PROJECT_ROOT);
 log("Worktrees cleaned up.");

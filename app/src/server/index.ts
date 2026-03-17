@@ -26,6 +26,7 @@ import { integrationsRoutes, initIntegrationsContext } from "./routes/integratio
 import { llmRoutes } from "./routes/llm";
 import { suggestionsRoutes, initSuggestions } from "./routes/suggestions";
 import { opsRoutes, initOps } from "./routes/ops";
+import { sdlcRoutes } from "./routes/sdlc";
 import { cleanupAll } from "./lib/cleanup";
 
 const PORT = 3201;
@@ -93,6 +94,7 @@ const app = new Elysia()
   .use(llmRoutes)
   .use(suggestionsRoutes)
   .use(opsRoutes)
+  .use(sdlcRoutes)
   // Open external URL (macOS)
   .post("/api/browser/open-external", ({ body, set }) => {
     const { url } = body as { url?: string };
