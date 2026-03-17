@@ -18,7 +18,6 @@ import {
   Globe,
   TerminalSquare,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   runInstall,
@@ -34,7 +33,7 @@ import {
 import { cn, relativeTime } from "@/lib/utils";
 import { api } from "@/api/client";
 import { FolderBrowser } from "@/components/FolderBrowser";
-import { STATUS_CONFIG, countMessages, truncateAtWord } from "./types";
+import { STATUS_CONFIG, truncateAtWord } from "./types";
 
 // ---------------------------------------------------------------------------
 // Quick Action (sidebar install actions)
@@ -243,6 +242,24 @@ export function ProjectSelector({ onProjectChange }: ProjectSelectorProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Format duration between two ISO8601 timestamps (or from start to now). */
+function formatDuration(startedAt: string, endedAt?: string): string {
+  const start = new Date(startedAt).getTime();
+  const end = endedAt ? new Date(endedAt).getTime() : Date.now();
+  const diffMs = Math.max(0, end - start);
+  const totalSec = Math.floor(diffMs / 1000);
+  if (totalSec < 60) return totalSec < 1 ? "< 1m" : `${totalSec}s`;
+  const mins = Math.floor(totalSec / 60);
+  const hrs = Math.floor(mins / 60);
+  if (hrs === 0) return `${mins}m`;
+  const remainMins = mins % 60;
+  return remainMins > 0 ? `${hrs}h ${remainMins}m` : `${hrs}h`;
+}
+
+// ---------------------------------------------------------------------------
 // Session List Item
 // ---------------------------------------------------------------------------
 
@@ -255,8 +272,16 @@ export interface SessionItemProps {
 
 export function SessionItem({ session, isActive, onClick, onDelete }: SessionItemProps) {
   const status = STATUS_CONFIG[session.status];
-  const msgCount = countMessages(session);
   const totalMessages = session.messages.length || 1;
+  const fileCount = session.filesChanged?.length ?? 0;
+  const duration = session.status === "running"
+    ? "ongoing"
+    : formatDuration(session.startedAt, session.endedAt);
+
+  // Build metadata items: duration, file count, message count (only non-empty)
+  const metaItems: string[] = [duration];
+  if (fileCount > 0) metaItems.push(`${fileCount} ${fileCount === 1 ? "file" : "files"}`);
+  if (totalMessages > 1) metaItems.push(`${totalMessages} msgs`);
 
   return (
     <button
@@ -274,7 +299,7 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
         <p className="truncate text-xs font-medium text-foreground">
           {truncateAtWord(session.prompt, 40)}
         </p>
-        <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className={cn(
             // Recency coloring: green (<2h), yellow (2h-1w), gray (>1w)
             (() => {
@@ -284,11 +309,14 @@ export function SessionItem({ session, isActive, onClick, onDelete }: SessionIte
               return "text-muted-foreground/60";
             })()
           )}>{relativeTime(session.startedAt)}</span>
-          {totalMessages > 1 && (
-            <Badge variant="outline" className="px-1 py-0 text-[9px] leading-none">
-              {totalMessages} msgs
-            </Badge>
-          )}
+        </div>
+        <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+          {metaItems.map((item, i) => (
+            <span key={item} className="flex items-center gap-1">
+              {i > 0 && <span className="text-muted-foreground/40">&middot;</span>}
+              {item}
+            </span>
+          ))}
         </div>
       </div>
       <button

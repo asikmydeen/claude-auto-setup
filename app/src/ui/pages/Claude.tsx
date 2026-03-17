@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SessionSearch } from "@/components/claude/SessionSearch";
 import {
   fetchClaudeSessions,
   createClaudeSession,
@@ -104,6 +105,8 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
   // Active view: "chat" (default), "integrations"
   const [activeView, setActiveView] = useState<"chat" | "integrations">("chat");
   const [sessionSearch, setSessionSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [softDeletedIds, setSoftDeletedIds] = useState<Set<string>>(new Set());
   const [undoAction, setUndoAction] = useState<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -210,6 +213,22 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
       setOpenProjects([projectsQuery.data.active]);
     }
   }, [projectsQuery.data?.active]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Filter helper for sessions — combines search, status, and time filters
+  const matchesFilters = useCallback((s: ClaudeSession) => {
+    if (softDeletedIds.has(s.id)) return false;
+    if (sessionSearch && !s.prompt.toLowerCase().includes(sessionSearch.toLowerCase())) return false;
+    if (statusFilter !== "all" && s.status !== statusFilter) return false;
+    if (timeFilter !== "all") {
+      const started = new Date(s.startedAt).getTime();
+      const now = Date.now();
+      const day = 86_400_000;
+      if (timeFilter === "today" && now - started > day) return false;
+      if (timeFilter === "week" && now - started > 7 * day) return false;
+      if (timeFilter === "month" && now - started > 30 * day) return false;
+    }
+    return true;
+  }, [softDeletedIds, sessionSearch, statusFilter, timeFilter]);
 
   // Group sessions by their cwd, falling back to first open project
   const sessionsByProject = useMemo(() => {
@@ -693,21 +712,18 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
           </Button>
         </div>
 
-        {/* Session search + shortcuts */}
-        <div className="border-b border-border px-2 py-1.5">
-          <input
-            type="text"
-            value={sessionSearch}
-            onChange={(e) => setSessionSearch(e.target.value)}
-            placeholder={`Search sessions... (${MOD}K)`}
-            data-session-search
-            className="w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        {/* Session search + filters */}
+        <div className="border-b border-border">
+          <SessionSearch
+            search={sessionSearch}
+            onSearchChange={setSessionSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            timeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
+            filteredCount={openProjects.reduce((sum, p) => sum + (sessionsByProject[p] || []).filter(s => matchesFilters(s)).length, 0)}
+            totalCount={sessions.length}
           />
-          <div className="flex items-center justify-between mt-1 px-1 text-[9px] text-muted-foreground/60">
-            <span>{MOD}N new</span>
-            <span>{MOD}K search</span>
-            <span>Esc close</span>
-          </div>
         </div>
 
         {/* Project groups */}
@@ -725,9 +741,7 @@ export function Claude({ onOpenSettings }: ClaudeProps) {
             <ProjectGroup
               key={projectPath}
               projectPath={projectPath}
-              sessions={(sessionsByProject[projectPath] || []).filter(s =>
-                !softDeletedIds.has(s.id) && (!sessionSearch || s.prompt.toLowerCase().includes(sessionSearch.toLowerCase()))
-              )}
+              sessions={(sessionsByProject[projectPath] || []).filter(matchesFilters)}
               activeSessionId={activeId}
               isCollapsed={collapsedProjects.has(projectPath)}
               onToggle={() => {
