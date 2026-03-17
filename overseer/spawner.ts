@@ -4,7 +4,7 @@
 import { spawn, type ChildProcess } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { createAgentSession, updateAgentSession, updateTaskStatus, logEvent } from "./db";
+import { createAgentSession, updateAgentSession, updateTaskStatus, assignTask, logEvent } from "./db";
 import type { AgentRole, AgentSession, Task } from "./types";
 
 interface SpawnResult {
@@ -93,8 +93,9 @@ export function spawnAgent(opts: SpawnOptions): SpawnResult {
   const provider = opts.provider || "claude";
   const fullPrompt = buildAgentPrompt(opts);
 
-  // Create DB record
+  // Create DB record + assign task to worktree/branch
   const session = createAgentSession(opts.task.id, opts.role, opts.worktreePath, opts.branchName);
+  assignTask(opts.task.id, session.id, opts.worktreePath, opts.branchName);
   updateTaskStatus(opts.task.id, "in_progress");
   logEvent(opts.epicId, "task_started", `${opts.role}: ${opts.task.title}`, opts.role);
 
