@@ -160,20 +160,23 @@ Based on project type, output the recommended orchestration profile:
 Check if `.claude/rules/project-intel.md` exists:
 
 - **If it does NOT exist**: Automatically run the full deep-research workflow (DO NOT ask — just do it):
-  1. Print: "No cached intel found. Running deep codebase research (6 parallel agents)..."
-  2. Execute the ENTIRE deep-research workflow inline — launch all 6 parallel exploration agents as defined in `/user:deep-research`:
+  1. Print: "No cached intel found. Running deep codebase research (7 parallel agents)..."
+  2. Execute the ENTIRE deep-research workflow inline — launch all 7 parallel exploration agents as defined in `/user:deep-research`:
      - Agent 1: Architecture & Structure Map
      - Agent 2: API Surface & Data Models
      - Agent 3: Dependencies & External Integrations
      - Agent 4: Test Infrastructure & Quality
      - Agent 5: Code Patterns & Conventions
      - Agent 6: Business Logic & Domain Map
-  3. Synthesize results into `.claude/rules/project-intel.md` (under 300 lines, dense reference format)
-  4. Print: "Cached intel generated. This loads automatically every future session."
+     - Agent 7: Pattern Analyzer → produces `.claude/rules/codebase-patterns.md`
+  3. Synthesize Agents 1-6 results into `.claude/rules/project-intel.md` (under 300 lines, dense reference format)
+  4. Save Agent 7 output as `.claude/rules/codebase-patterns.md` (under 250 lines, example-heavy conformance spec)
+  5. Print: "Cached intel + pattern spec generated. These load automatically every future session."
 
 - **If it DOES exist**: Read the first line for the date.
-  - **Older than 30 days**: Auto-refresh it. Print: "Intel is stale ([date]). Auto-refreshing..."  Then re-run the full deep-research.
+  - **Older than 30 days**: Auto-refresh it. Print: "Intel is stale ([date]). Auto-refreshing..."  Then re-run the full deep-research (including pattern analyzer).
   - **Fresh (under 30 days)**: Keep it. Print: "Cached intel loaded ([date]). Codebase knowledge is current."
+  - **Also check** if `.claude/rules/codebase-patterns.md` exists. If intel exists but patterns don't, run the pattern-analyzer agent separately: "Intel loaded but no pattern spec. Extracting codebase patterns..."
 
 ### 4b: Workspace-Level Intel (only if workspace detected in Phase 0)
 
@@ -251,11 +254,12 @@ Plugins: [list]
 Providers: [installed providers] → Tests: [codex/claude] | Docs: [gemini/claude] | Review: [amp/claude]
 Build: `[command]` | Test: `[command]` | Dev: `[command]`
 Intel: [generated / refreshed / loaded (date)]
+Patterns: [generated / refreshed / loaded (date)]
 Memory: [claude-mem active (N observations) / not installed / worker offline]
 Workspace Intel: [generated / refreshed / loaded (date) / N/A (standalone)]
 Sibling Intel: [N of M siblings have intel]
 ```
 
-Then say: "Project fully initialized with cached intelligence. I know this codebase [and its workspace context]. Cross-provider dispatch is [active (N providers) / single-provider mode]. Memory system is [active / offline / not installed]. Ask me to build anything."
+Then say: "Project fully initialized with cached intelligence and pattern spec. I know this codebase [and its workspace context]. New code will follow documented patterns — deviations require your approval. Cross-provider dispatch is [active (N providers) / single-provider mode]. Memory system is [active / offline / not installed]. Ask me to build anything."
 
 $ARGUMENTS

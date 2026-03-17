@@ -26,6 +26,18 @@ When invoked:
 2. Focus on modified files
 3. Begin review immediately
 
+Pattern conformance (FIRST — before other checks):
+1. Read `.claude/rules/codebase-patterns.md` if it exists
+2. For each changed file, verify it follows the documented patterns:
+   - File placement and naming matches § File Organization
+   - Exports match § Module Structure
+   - Error handling matches § Error Handling
+   - Imports match § Import Conventions
+   - Tests match § Testing Patterns
+3. Flag non-conformance as **Warning** with specific section reference:
+   `Warning: Pattern non-conformance — expected [X] (see codebase-patterns.md § Section), found [Y]`
+4. If the pattern spec doesn't exist, note it: "No codebase-patterns.md found — run /init to generate"
+
 Review checklist:
 - Logic correctness and edge cases
 - Error handling completeness
@@ -39,7 +51,7 @@ Review checklist:
 - Secrets exposure
 - OWASP Top 10 compliance
 - Performance (N+1 queries, unnecessary re-renders, memory leaks)
-- Consistency with existing patterns
+- Consistency with documented patterns (codebase-patterns.md)
 
 Provide feedback organized by priority:
 - **Critical** (must fix): security issues, data loss risks, crashes

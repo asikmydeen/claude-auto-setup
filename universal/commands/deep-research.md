@@ -17,7 +17,7 @@ If no target specified, analyze the current working directory.
 
 ## Phase 1: Parallel Deep Scan (Launch ALL agents simultaneously)
 
-Launch 6 parallel exploration agents. Each agent focuses on one dimension. Instruct each to be THOROUGH but OUTPUT CONCISE — bullet points, not essays.
+Launch 7 parallel exploration agents. Each agent focuses on one dimension. Instruct each to be THOROUGH but OUTPUT CONCISE — bullet points, not essays.
 
 ### Agent 1: Architecture & Structure Map
 Explore subagent task:
@@ -81,9 +81,21 @@ Explore subagent task:
 - Identify scheduled tasks, background jobs, event handlers
 - Output: domain glossary + workflow map + business rule locations
 
+### Agent 7: Pattern Analyzer (produces codebase-patterns.md)
+Use the `pattern-analyzer` agent (or run its process inline):
+- Sample 3-5 representative files per layer (server, UI, data, test, config, utility)
+- For each layer, extract the CONCRETE pattern with a real code example — not prose
+- Cover all 12 categories: file organization, module structure, function signatures, component patterns, route/handler patterns, type definitions, import conventions, error handling, testing patterns, logging, configuration, naming conventions
+- Identify anti-patterns: check linter configs, tsconfig strictness, eslint-disable patterns
+- Use the template at `universal/patterns-template.md` as the output structure
+- Output: `.claude/rules/codebase-patterns.md` — dense, example-heavy, under 250 lines
+- This file is SEPARATE from project-intel.md — it's the actionable conformance spec, not the architecture map
+
+**IMPORTANT**: Agent 7 runs in parallel with Agents 1-6 but produces a SEPARATE output file. Do not merge its output into project-intel.md.
+
 ## Phase 2: Synthesize into Project Intelligence File
 
-Combine all 6 agent outputs into a single, optimized file. Follow these rules:
+Combine Agents 1-6 outputs into a single, optimized file. Agent 7's output (codebase-patterns.md) is saved separately — see Phase 3. Follow these rules:
 
 **Format rules for maximum cache efficiency:**
 - Use markdown headers for structure (Claude can scan headers fast)
@@ -170,23 +182,31 @@ Workspace intel: [path to workspace-intel.md if it exists]
    [ISO-8601 timestamp] | deep-research | Full codebase scan (initial generation) | Sections updated: ALL | Files scanned: [count]
    ```
 
-4. If `.claude/CLAUDE.md` exists, check if it already references project-intel. If not, suggest adding:
+4. Save Agent 7's output as `.claude/rules/codebase-patterns.md`
+   - This is the actionable pattern conformance spec — loaded every session alongside project-intel
+   - Must stay under 250 lines — dense, example-heavy
+   - Uses the structure from `universal/patterns-template.md`
+
+5. If `.claude/CLAUDE.md` exists, check if it already references project-intel and codebase-patterns. If not, suggest adding:
    ```
    See @.claude/rules/project-intel.md for complete codebase map.
+   See @.claude/rules/codebase-patterns.md for coding patterns and conventions.
    ```
 
-5. Print summary:
+6. Print summary:
 ```
 ## Deep Research Complete
 
 Generated: .claude/rules/project-intel.md ([X] lines)
+Generated: .claude/rules/codebase-patterns.md ([Y] lines)
 Changelog: .claude/rules/.intel-changelog (initialized)
 Scanned: [N] directories, [M] files sampled
-Agents used: 6 parallel explorers
+Agents used: 7 parallel explorers (6 intel + 1 pattern analyzer)
 Time: [duration]
 
-This file now loads automatically every session.
-Claude will use it as cached context for all future tasks.
+These files now load automatically every session.
+Claude will use project-intel as cached context and codebase-patterns as the conformance spec.
+New code must follow documented patterns. Deviations require explicit approval.
 Incremental updates happen automatically after every /build, /debug, and /review.
 
 To force full refresh: /deep-research

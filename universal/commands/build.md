@@ -25,13 +25,19 @@ Before starting, check for an existing checkpoint: `cat .claude/scratch/task-sta
 
 ## Execution Protocol
 
-### 0. Load Hierarchical Intel (FIRST — auto-generate if missing)
+### 0. Load Hierarchical Intel + Pattern Spec (FIRST — auto-generate if missing)
 
 **Package-level intel:**
 Check if `.claude/rules/project-intel.md` exists:
 - **YES and fresh (< 30 days)**: Read it. Use as primary context — skip redundant exploration.
 - **YES but stale (> 30 days)**: Print "Intel is stale. Auto-refreshing in background..." Launch a background agent to re-run deep-research while you proceed with available intel.
-- **NO**: Print "No cached intel. Generating now (6 parallel agents)..." Auto-run deep-research FIRST. Do NOT ask.
+- **NO**: Print "No cached intel. Generating now (7 parallel agents)..." Auto-run deep-research FIRST. Do NOT ask.
+
+**Pattern conformance spec:**
+Check if `.claude/rules/codebase-patterns.md` exists:
+- **YES**: Read it. This is your implementation guide — every new file, function, component, and test must match these patterns.
+- **NO**: Run the pattern-analyzer agent to generate it. Print "No pattern spec. Extracting codebase patterns..." Do NOT skip this.
+- Include relevant pattern sections when prompting subagents and external providers during implementation.
 
 **Workspace-level intel (auto-discover):**
 Walk up from the current directory to find a parent workspace:
@@ -103,6 +109,9 @@ After approval, execute tasks using parallel agents AND external providers where
 After implementation, launch review agents in parallel:
 - **If Amp is installed**: Delegate primary code review to Amp (invoke: `echo "Review: $(git diff --staged)" | amp`)
 - **Always**: Run security check with Claude subagent (security-auditor patterns) — never delegate security to external-only
+- **Always**: Pattern conformance check — code-reviewer validates all changes against `.claude/rules/codebase-patterns.md`. Flag non-conformance as Warnings.
+  - If a deviation is intentional: follow the Deviation Protocol from `pattern-conformance.md` (propose → get user confirmation → implement → update pattern spec → log in Deviation Log)
+  - If a deviation is accidental: fix to match existing patterns before proceeding
 - Code simplification pass (code-simplifier patterns) → Claude subagent
 - Fix any issues found before proceeding
 
@@ -164,6 +173,12 @@ This phase keeps the project intelligence file in sync with your changes. It run
    - The **Shared Contracts** section (if exported types/APIs changed)
 
    If none of the above conditions apply, skip workspace intel update — most changes are internal to the package.
+
+8. **Update codebase-patterns.md if needed**: If any of these are true, patch `.claude/rules/codebase-patterns.md`:
+   - A new module pattern was introduced (new route module, new component type, new test approach)
+   - A deviation was approved during this task (add to Deviation Log)
+   - New directories were created that establish new file organization patterns
+   - If none of the above apply, skip — most changes follow existing patterns and don't need a spec update.
 
 **IMPORTANT**: This phase is lightweight — it reads a diff and patches a few sections. It should take seconds, not minutes. Do NOT re-scan the entire codebase.
 
