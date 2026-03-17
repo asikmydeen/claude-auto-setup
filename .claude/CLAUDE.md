@@ -67,6 +67,16 @@ Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`
 
 Skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 
+## Pattern Conformance
+All new code must follow patterns documented in `.claude/rules/codebase-patterns.md`.
+- Generated automatically during `/init` or `/deep-research` (7th parallel agent: `pattern-analyzer`)
+- Covers 3 layers: shell scripts, TypeScript app (Elysia + React), agent/command/rule definitions
+- Enforcement rule: `universal/rules/pattern-conformance.md` — loaded every session
+- Deviation protocol: propose change → explain why → get user confirmation → update spec → log
+- Code-reviewer validates conformance as FIRST review step (references `§ Section`)
+- Template for new projects: `universal/patterns-template.md`
+- Build command: loads patterns in Phase 0, checks in Phase 4, patches in Phase 6
+
 ## Persistent Memory (claude-mem)
 claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - Worker service on port 37777 (auto-started on session start)

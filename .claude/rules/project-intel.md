@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-16 (UX polish)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (pattern conformance system)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -29,6 +29,7 @@
 - **Container reuse** - Detect and reattach to existing Podman containers
 - **MCP (Model Context Protocol)** - Plugin integration (serena, context7, claude-mem-search)
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
+- **Pattern conformance system** - Auto-extracted codebase patterns, enforcement rule, deviation protocol
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
@@ -289,10 +290,11 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **6** agent adapters + 8 native agents (including memory-observer)
+- **6** agent adapters + 9 native agents (including memory-observer, pattern-analyzer)
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
-- **9** universal rule files, 56 command definitions (including mem-search)
+- **10** universal rule files, 56 command definitions (including mem-search)
+- **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
