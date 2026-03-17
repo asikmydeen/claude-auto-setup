@@ -94,6 +94,9 @@ app/
 - Accessibility: 30+ aria-labels on icon buttons, role="dialog" on modals, focus trap + ESC key in ProjectCreator
 - Input validation: project name format (/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/), API key prefix hints, soft format warnings
 - Session sidebar skeleton loader when sessionsQuery.isLoading
+- Session search & filters: SessionSearch.tsx component with search input (⌘K), status pills (All/Running/Done/Error), time pills (All time/Today/Week/Month), filtered count
+- SessionItem enhanced: shows duration, file count, message count on metadata line
+- matchesFilters() in Claude.tsx combines search + status + time range (client-side, no backend needed)
 
 **Template System:**
 - 22 verified templates (all pass npm install + build)

@@ -49,3 +49,5 @@
 ---
 
 [2026-03-16T23:09:16Z] | build | UX polish: accessibility, loading states, toast system, input validation | Sections updated: Key Features, Known Gotchas | Files changed: 13
+[2026-03-16T23:20:20Z] | build | Error handling: structured logger, 25 catch fixes, uncaughtException handler | Sections updated: Known Gotchas | Files changed: 9
+[2026-03-17T00:39:11Z] | build | Session search: SessionSearch.tsx, filters in Claude.tsx, enhanced SessionItem | Sections updated: Key Features | Files changed: 3
