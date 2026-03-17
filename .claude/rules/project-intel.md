@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (pattern conformance system)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (Copilot CLI provider)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -10,7 +10,7 @@
 
 **Languages:**
 - **Bash 3.2+** (primary) - Shell scripts for installation and orchestration
-- **TypeScript** (desktop app) - React 19 + Express server for desktop UI
+- **TypeScript** (desktop app) - React 19 + Elysia server for desktop UI
 - **JSON/Markdown** - Configuration, agent definitions, and command specs
 
 **Core Technologies:**
@@ -41,8 +41,8 @@
 ```
 app/
 ├── src/
-│   ├── server/index.ts          # Express API (4500+ lines, 65+ endpoints)
-│   ├── bun/index.ts             # Electrobun bootstrap, starts Express + WKWebView
+│   ├── server/index.ts          # Elysia API (90+ endpoints, 12 route modules)
+│   ├── bun/index.ts             # Electrobun bootstrap, starts Elysia + WKWebView
 │   └── ui/
 │       ├── pages/
 │       │   ├── Claude.tsx       # Main chat UI (3200+ lines)
@@ -250,6 +250,26 @@ Each uninstalled provider shows install + auth commands:
 
 Alternative: just add API keys in AI Models tab — credentials bridge into CLI agents automatically.
 
+## CLI Dispatch Routing (`dispatch.sh` + `providers.json`)
+
+7 CLI providers with task-based routing. First available provider in chain is used.
+
+| Task Type | Provider Chain |
+|-----------|---------------|
+| Planning, architecture, debugging | claude > amp |
+| Test writing | codex > claude > gemini |
+| Documentation | gemini > claude > amp |
+| Code review | amp > claude |
+| AWS/Amazon infrastructure | kiro > claude |
+| GitHub PR/issue management | copilot > claude |
+| Git operations | copilot > codex > claude |
+| CI/CD / GitHub Actions | copilot > claude > kiro |
+| Simple edits | codex > copilot > claude > gemini |
+| Boilerplate | codex > gemini > claude |
+| Frontend implementation | codex > claude > gemini |
+
+Provider strengths: Claude (reasoning, planning, security), Codex (fast code gen, tests), Gemini (docs, large context), Amp (review, oracle), Kiro (AWS, internal tools), Copilot (GitHub-native workflows, PR/issues, CI/CD, git ops).
+
 ---
 
 ## Known Gotchas
@@ -281,6 +301,9 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 25. **Toast system** — `useToast()` from `Toast.tsx`; provider wraps App in `ToastProvider`; auto-dismiss after 3s (loading toasts persist)
 26. **Focus trap selector** — must exclude `:disabled` elements or focus gets stuck on disabled buttons
 27. **DevServerLogs reconnect** — don't clear logs on reconnect; SSE replay event handles buffer replay
+28. **Copilot CLI binary vs wrapper** — standalone `copilot` binary OR `gh copilot` wrapper (auto-downloads on first use); detect both in install.sh
+29. **Copilot auth** — requires GitHub Copilot subscription; token precedence: `COPILOT_GITHUB_TOKEN` > `GH_TOKEN` > `GITHUB_TOKEN`
+30. **Provider addition checklist** — 11 files across 3 layers: dispatch.sh, install.sh (4 locations), adapter, providers.json, Providers.tsx, settings.ts, init.md, build.md, orchestration.md, CLAUDE.md, project-intel.md
 
 ---
 
@@ -291,7 +314,7 @@ Alternative: just add API keys in AI Models tab — credentials bridge into CLI 
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **7** agent adapters (claude, gemini, kiro, codex, cursor, ampcode, copilot) + 9 native agents
+- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
 - **10** universal rule files, 56 command definitions (including mem-search)
