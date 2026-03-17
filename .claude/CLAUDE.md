@@ -78,6 +78,19 @@ All new code must follow patterns documented in `.claude/rules/codebase-patterns
 - Template for new projects: `universal/patterns-template.md`
 - Build command: loads patterns in Phase 0, checks in Phase 4, patches in Phase 6
 
+## SDLC Overseer (`overseer/`)
+Full virtual engineering team. User describes an epic → 13 agents plan, implement, test, merge, release.
+- Run: `bun overseer/overseer.ts --epic "Build a todo app"` | `--status <id>` | `--list` | `--cleanup`
+- Agents: product-manager, project-manager, tech-lead, senior-engineer, engineer, frontend-engineer, backend-engineer, qa-engineer, security-engineer, merge-manager, devops-engineer, release-engineer, guardian
+- Pipeline: PM → PjM → Tech Lead → Execution (max 5 concurrent in git worktrees) → Merge → QA → Security → Release
+- Database: `~/.claude/data/overseer.db` (7 tables: epics, stories, tasks, agent_sessions, knowledge, merge_queue, sprint_log)
+- Worktrees: `.worktrees/task-{id}` (gitignored, one per active task, auto-cleanup)
+- Knowledge store: centralized decisions shared across all agents (prevents conflicting choices)
+- Guardian: continuous monitoring — build health, scope creep, dangerous ops, non-technical user safety
+- Command: `/sdlc` (invokes overseer pipeline)
+- Planning agents work in project root (not worktrees); execution agents get isolated worktrees
+- Nested sessions: `CLAUDECODE='' CLAUDE_CODE_ENTRYPOINT=''` must both be unset
+
 ## Persistent Memory (claude-mem)
 claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - Worker service on port 37777 (auto-started on session start)

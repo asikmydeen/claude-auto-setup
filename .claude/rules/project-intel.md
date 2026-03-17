@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (Copilot CLI provider)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (SDLC Overseer system)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -30,6 +30,7 @@
 - **MCP (Model Context Protocol)** - Plugin integration (serena, context7, claude-mem-search)
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
 - **Pattern conformance system** - Auto-extracted codebase patterns, enforcement rule, deviation protocol
+- **SDLC Overseer** - Full virtual engineering team: 13 role-based agents, DAG scheduler, git worktree isolation, SQLite task management, centralized knowledge store
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
@@ -272,6 +273,36 @@ Provider strengths: Claude (reasoning, planning, security), Codex (fast code gen
 
 ---
 
+## SDLC Overseer (`overseer/`)
+
+Full virtual engineering team system. User describes an epic → pipeline of 13 role-based agents plan, implement, test, merge, and release the feature.
+
+**Run**: `bun overseer/overseer.ts --epic "description"` | `--status <id>` | `--list` | `--cleanup`
+
+**Architecture**: 4-layer pipeline (Planning → Execution → Integration → Release) with continuous Guardian oversight.
+
+| Layer | Agents | What They Do |
+|-------|--------|--------------|
+| Planning | product-manager, project-manager, tech-lead | Epic → stories → tasks (DAG) → architecture |
+| Execution | senior-engineer, engineer, frontend-engineer, backend-engineer | Implement in isolated git worktrees (max 5 concurrent) |
+| Quality | qa-engineer, security-engineer | Tests + OWASP audit on merged code |
+| Integration | merge-manager, devops-engineer, release-engineer | Merge branches, CI/CD, versioning |
+| Oversight | guardian | Continuous: build health, scope creep, dangerous ops, non-tech user safety |
+
+**Core modules** (`overseer/*.ts`):
+- `db.ts` — SQLite schema: epics, stories, tasks, agent_sessions, knowledge, merge_queue, sprint_log
+- `scheduler.ts` — DAG-based scheduling, max concurrency, blocked task detection
+- `worktree.ts` — git worktree create/merge/cleanup (`.worktrees/task-{id}`)
+- `spawner.ts` — spawn Claude/Codex/Copilot/Gemini with `CLAUDECODE=''` in worktrees
+- `knowledge.ts` — centralized shared brain (architecture decisions, API contracts, patterns)
+- `overseer.ts` — main orchestrator: planning → parse stories/tasks → execution loop → merge → done
+
+**Database**: `~/.claude/data/overseer.db` (separate from sidekick.db)
+
+**Tested**: 12/12 tasks completed for "hello world HTML page" epic (PM → PjM → 10 execution tasks → merge → done).
+
+---
+
 ## Known Gotchas
 
 1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
@@ -304,6 +335,11 @@ Provider strengths: Claude (reasoning, planning, security), Codex (fast code gen
 28. **Copilot CLI binary vs wrapper** — standalone `copilot` binary OR `gh copilot` wrapper (auto-downloads on first use); detect both in install.sh
 29. **Copilot auth** — requires GitHub Copilot subscription; token precedence: `COPILOT_GITHUB_TOKEN` > `GH_TOKEN` > `GITHUB_TOKEN`
 30. **Provider addition checklist** — 11 files across 3 layers: dispatch.sh, install.sh (4 locations), adapter, providers.json, Providers.tsx, settings.ts, init.md, build.md, orchestration.md, CLAUDE.md, project-intel.md
+31. **Overseer planning agents must run in PROJECT_ROOT** — not worktrees; `.overseer/` artifacts need to be in project root for parsing
+32. **Overseer spawner must call assignTask()** — without it, `branch_name` stays null and merge enqueue fails
+33. **Overseer nested Claude sessions** — must unset both `CLAUDECODE=''` AND `CLAUDE_CODE_ENTRYPOINT=''` or child sessions block
+34. **Overseer stories/tasks parsing** — PM/PjM may fail to write valid JSON; fallback story/task generation prevents pipeline stall
+35. **Overseer merge order** — follows DAG dependencies; tasks with failed deps get marked blocked→failed automatically
 
 ---
 
@@ -314,11 +350,12 @@ Provider strengths: Claude (reasoning, planning, security), Codex (fast code gen
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents
+- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 13 SDLC agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
-- **10** universal rule files, 56 command definitions (including mem-search)
+- **10** universal rule files, 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
+- **7** overseer modules (`overseer/*.ts`) + architecture docs
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
