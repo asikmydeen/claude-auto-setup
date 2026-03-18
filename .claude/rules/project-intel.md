@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (GSD 2 integration)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (GSD 2 ↔ cmux bridge)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -321,6 +321,27 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 
 ---
 
+## GSD 2 (`gsd-pi`)
+
+Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better for external greenfield projects with cost tracking and crash recovery.
+
+**Install**: `mise exec node@24 -- npm install -g gsd-pi` (requires Node >= 20)
+**Run**: `gsd` → `/gsd auto` (autonomous) | `gsd -p "task"` (single-shot) | `gsd headless` (CI)
+**Config**: `~/.gsd/preferences.md` (Bedrock model `us.anthropic.claude-sonnet-4-6`, budget ceiling, verification commands)
+
+**GSD 2 ↔ cmux bridge** (`overseer/gsd-bridge.ts`): watches `.gsd/` directory → mirrors to cmux sidebar.
+- Phase → status pill (hammer=executing, magnifyingglass=researching, checkmark=done)
+- Tasks → progress bar + sidebar logs
+- Milestone complete → desktop notification
+- HTML reports → auto-open in cmux browser split
+- Usage: `bun overseer/gsd-bridge.ts /project` (watch mode)
+
+**Routing**: internal projects → Overseer (`--internal`, Kiro). External + complex → GSD 2 (`gsd auto`). Medium → `/build`.
+
+**Tested**: Counter web page via `gsd -p` — 8.4KB index.html with animations, verified in cmux browser (title, buttons, click interaction, screenshot).
+
+---
+
 ## Known Gotchas
 
 1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
@@ -373,7 +394,7 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
 - **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
-- **13** overseer modules (`overseer/*.ts`) + architecture docs
+- **14** overseer modules (`overseer/*.ts` including gsd-bridge) + architecture docs
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 - **2** WebSocket endpoints (ops, terminal)
