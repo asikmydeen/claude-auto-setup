@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (Kiro deep integration + GSD requirements + live dashboard)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (cmux browser integration + UI verification)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -300,18 +300,24 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - `knowledge.ts` — centralized shared brain (architecture decisions, API contracts, patterns)
 - `kiro.ts` — Kiro consultation module: consultKiro(), detectInternalProject(), buildInternalContext()
 - `board.ts` — Obsidian-compatible markdown board generator (board.md, epic.md, stories/, timeline.md)
-- `dashboard.ts` — Live terminal TUI: progress bar, Kanban board, agent cards, event timeline
-- `overseer.ts` — main orchestrator: requirements → planning → execution → merge → done
+- `dashboard.ts` — Live terminal TUI (readonly DB, safe concurrent access): progress bar, Kanban board, agent cards, event timeline
+- `cmux.ts` — cmux app integration: sidebar status/progress, split dashboard, browser automation, notifications. All no-ops on non-macOS/SSH.
+- `browser-verify.ts` — Automated UI verification: detect web project → start dev server → cmux browser split → run checks → screenshot → report
+- `overseer.ts` — main orchestrator: requirements → planning → execution → merge → browser verify → done
 
 **Database**: `~/.claude/data/overseer.db` (separate from sidekick.db)
+
+**cmux integration** (`/Applications/cmux.app`): Sidebar shows status pill + progress bar (0%→100%) + agent logs. Dashboard opens in right split pane. Browser automation for UI verification (new-pane --type browser → get/is/click/screenshot). All functions are no-ops on Linux/SSH — platform-safe, tested across 5 scenarios.
+
+**Browser verification**: After all tasks merged, auto-detects web projects (index.html or package.json), starts dev server, opens cmux browser, runs element checks (visible, text, title, count), takes screenshot, writes `.overseer/ui-verification.md`. Skipped gracefully without cmux.
 
 **Internal mode**: Auto-detects packageInfo/.brazil.json/workplace paths. Kiro becomes sidecar consultant — Claude queries `kiro-cli -p` for internal code search, docs, tickets, CDK patterns, pipelines. Routing shifts to prefer kiro-cli for backend/api/infra/devops tasks.
 
 **Kiro everywhere**: `internal-routing.md` rule loads in EVERY Claude session (not just overseer). Any Claude session in an internal project automatically consults Kiro.
 
-**Live views**: Terminal dashboard (`dashboard.ts --latest`), Obsidian board (`.overseer/board.md`), SSE endpoint (`/api/sdlc/epics/:id/stream`)
+**Live views**: Terminal dashboard (`dashboard.ts --latest`), Obsidian board (`.overseer/board.md`), SSE endpoint (`/api/sdlc/epics/:id/stream`), cmux sidebar (status pill + progress bar)
 
-**Tested**: 12/12 tasks completed for "hello world HTML page" epic (PM → PjM → 10 execution tasks → merge → done).
+**Tested**: 12/12 tasks (external), 18/18 tasks (internal+Kiro), browser verification 5/5 checks passed.
 
 ---
 
@@ -367,7 +373,7 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
 - **12** universal rule files, 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
-- **10** overseer modules (`overseer/*.ts`) + architecture docs
+- **12** overseer modules (`overseer/*.ts`) + architecture docs
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 - **2** WebSocket endpoints (ops, terminal)

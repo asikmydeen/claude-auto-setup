@@ -79,10 +79,12 @@ All new code must follow patterns documented in `.claude/rules/codebase-patterns
 - Build command: loads patterns in Phase 0, checks in Phase 4, patches in Phase 6
 
 ## SDLC Overseer (`overseer/`)
-Full virtual engineering team. User describes an epic → 13 agents plan, implement, test, merge, release.
+Full virtual engineering team. User describes an epic → 15 agents gather requirements, plan, implement, test, verify UI, merge, release.
 - Run: `bun overseer/overseer.ts --epic "Build a todo app"` | `--status <id>` | `--list` | `--cleanup`
-- Agents: product-manager, project-manager, tech-lead, senior-engineer, engineer, frontend-engineer, backend-engineer, qa-engineer, security-engineer, merge-manager, devops-engineer, release-engineer, guardian
-- Pipeline: PM → PjM → Tech Lead → Execution (max 5 concurrent in git worktrees) → Merge → QA → Security → Release
+- Internal: `bun overseer/overseer.ts --internal --epic "Build service"` (Kiro-assisted)
+- Dashboard: `bun overseer/dashboard.ts --latest` (auto-opens in cmux split on macOS)
+- Agents: requirements-analyst, domain-researcher, product-manager, project-manager, tech-lead, senior-engineer, engineer, frontend-engineer, backend-engineer, qa-engineer, security-engineer, merge-manager, devops-engineer, release-engineer, guardian
+- Pipeline: Requirements (GSD) → Planning → Execution (max 5 concurrent) → Merge → Browser Verify → Release
 - Database: `~/.claude/data/overseer.db` (7 tables: epics, stories, tasks, agent_sessions, knowledge, merge_queue, sprint_log)
 - Worktrees: `.worktrees/task-{id}` (gitignored, one per active task, auto-cleanup)
 - Knowledge store: centralized decisions shared across all agents (prevents conflicting choices)
