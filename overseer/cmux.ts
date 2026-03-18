@@ -1,182 +1,248 @@
-// SDLC Overseer — cmux Integration (macOS-safe, cross-platform graceful)
+// SDLC Overseer — cmux Integration
 //
-// cmux is macOS-only (uses AppleScript for Terminal.app tab management).
-// On non-macOS platforms, all functions are no-ops that return silently.
-// The overseer pipeline never depends on cmux — it only enhances the UX.
+// Uses the cmux app API (Unix socket + CLI) for workspace management,
+// split panes, sidebar progress, and notifications.
+//
+// cmux is macOS-only. All functions are safe no-ops on other platforms.
+// The pipeline never depends on cmux — it only enhances the UX.
 
-import { execFileSync, spawn } from "child_process";
+import { spawnSync } from "child_process";
 import { existsSync } from "fs";
-import { join } from "path";
 
 const IS_MACOS = process.platform === "darwin";
-const CMUX_PATH = join(process.env.HOME || "~", ".local", "bin", "cmux");
+const CMUX_APP_CLI = "/Applications/cmux.app/Contents/Resources/bin/cmux";
+const CMUX_SOCKET = process.env.CMUX_SOCKET_PATH || "/tmp/cmux.sock";
 
 /**
- * Check if cmux is available. Returns false on non-macOS or if not installed.
+ * Check if the cmux app is installed and running.
  */
 export function isCmuxAvailable(): boolean {
   if (!IS_MACOS) return false;
-  return existsSync(CMUX_PATH);
+  if (!existsSync(CMUX_APP_CLI)) return false;
+  // Check socket exists
+  if (!existsSync(CMUX_SOCKET)) return false;
+  // Ping to verify running
+  try {
+    const result = spawnSync(CMUX_APP_CLI, ["ping"], { encoding: "utf-8", timeout: 3000 });
+    return result.stdout?.includes("PONG") || false;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Check if running inside SSH (cmux won't work over SSH even on macOS).
+ * Check if running inside SSH (cmux won't work over SSH).
  */
 function isSSH(): boolean {
   return !!(process.env.SSH_CLIENT || process.env.SSH_TTY || process.env.SSH_CONNECTION);
 }
 
 /**
- * Check if cmux can actually be used (macOS + installed + not SSH).
+ * Check if cmux can actually be used.
  */
 export function canUseCmux(): boolean {
   return isCmuxAvailable() && !isSSH();
 }
 
 /**
- * Open a new Terminal.app tab and run a command in it.
- * Uses AppleScript for tab management (macOS only).
- * Returns true on success, false on failure (never throws).
+ * Run a cmux CLI command. Returns stdout or null on failure.
  */
-function openTerminalTab(_title: string, command: string): boolean {
-  if (!canUseCmux()) return false;
-
+function cmux(args: string[], timeout = 5000): string | null {
+  if (!canUseCmux()) return null;
   try {
-    // Ensure bun/node are in PATH via mise or homebrew shims
-    const pathPrefix = 'eval "$(~/.local/bin/mise activate bash 2>/dev/null)" 2>/dev/null; export PATH="$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH";';
-    const fullCmd = `${pathPrefix} ${command}`;
-
-    // Use AppleScript to open a new tab and run the command
-    const script = `
-      tell application "Terminal"
-        activate
-        do script "${fullCmd.replace(/"/g, '\\"')}"
-      end tell
-    `;
-    execFileSync("osascript", ["-e", script], { timeout: 5000, stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Open the SDLC dashboard in a new terminal tab.
- * No-op on non-macOS or if cmux not available.
- */
-export function openDashboardTab(overseerDir: string, epicId?: string): boolean {
-  const flag = epicId ? `--epic ${epicId}` : "--latest";
-  return openTerminalTab(
-    "SDLC Dashboard",
-    `bun ${join(overseerDir, "dashboard.ts")} ${flag}`,
-  );
-}
-
-/**
- * Create a cmux worktree for a branch. Uses cmux CLI directly.
- * Falls back to git worktree if cmux not available.
- * Returns the worktree path.
- */
-export function cmuxNew(branch: string, projectRoot: string): string | null {
-  if (!canUseCmux()) return null; // Caller uses its own worktree creation
-
-  try {
-    const output = execFileSync(CMUX_PATH, ["new", branch], {
-      cwd: projectRoot,
-      encoding: "utf-8",
-      timeout: 15000,
-    });
-    // Parse "Worktree ready: /path" from output
-    const match = output.match(/Worktree (?:ready|already exists): (.+)/);
-    return match ? match[1].trim() : null;
+    const result = spawnSync(CMUX_APP_CLI, args, { encoding: "utf-8", timeout });
+    return result.status === 0 ? result.stdout?.trim() || "" : null;
   } catch {
     return null;
   }
 }
 
-/**
- * List cmux worktrees.
- */
-export function cmuxList(projectRoot: string): string[] {
-  if (!isCmuxAvailable()) return [];
+// ============================================================
+// WORKSPACE MANAGEMENT
+// ============================================================
 
-  try {
-    const output = execFileSync(CMUX_PATH, ["ls"], {
-      cwd: projectRoot,
-      encoding: "utf-8",
-      timeout: 5000,
-    });
-    if (output.includes("No cmux worktrees")) return [];
-    return output.trim().split("\n").filter(Boolean);
-  } catch {
-    return [];
-  }
+/**
+ * Create a new cmux workspace and run the dashboard in it.
+ * Returns the workspace ID or null.
+ */
+export function openDashboardWorkspace(overseerDir: string, epicId: string): string | null {
+  if (!canUseCmux()) return null;
+
+  // Create a new workspace
+  const wsResult = cmux(["new-workspace"]);
+  if (wsResult === null) return null;
+
+  // Send the dashboard command to the new workspace
+  const dashCmd = `bun ${overseerDir}/dashboard.ts --epic ${epicId}\n`;
+  cmux(["send", dashCmd]);
+
+  return wsResult;
 }
 
 /**
- * Merge a cmux worktree branch. Uses cmux merge for clean merge.
- * Returns true on success.
+ * Open the dashboard in a split pane (right side of current workspace).
+ * This is the preferred approach — dashboard beside the pipeline output.
  */
-export function cmuxMerge(branch: string, projectRoot: string): boolean {
-  if (!isCmuxAvailable()) return false;
+export function openDashboardSplit(overseerDir: string, epicId: string): string | null {
+  if (!canUseCmux()) return null;
 
-  try {
-    execFileSync(CMUX_PATH, ["merge", branch], {
-      cwd: projectRoot,
-      encoding: "utf-8",
-      timeout: 30000,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  // Create a right split
+  const splitResult = cmux(["new-split", "right"]);
+  if (splitResult === null) return null;
+
+  // Send the dashboard command to the new split
+  const dashCmd = `bun ${overseerDir}/dashboard.ts --epic ${epicId}\n`;
+  cmux(["send", dashCmd]);
+
+  return splitResult;
+}
+
+// ============================================================
+// SIDEBAR STATUS & PROGRESS
+// ============================================================
+
+/**
+ * Set the SDLC status pill in the sidebar.
+ */
+export function setStatus(label: string, icon = "hammer", color = "#4a90d9"): boolean {
+  return cmux(["set-status", "sdlc", label, "--icon", icon, "--color", color]) !== null;
 }
 
 /**
- * Remove a cmux worktree.
+ * Set the SDLC progress bar in the sidebar (0.0 to 1.0).
  */
-export function cmuxRemove(branch: string, projectRoot: string, force = false): boolean {
-  if (!isCmuxAvailable()) return false;
-
-  try {
-    const args = ["rm", branch];
-    if (force) args.push("-f");
-    execFileSync(CMUX_PATH, args, {
-      cwd: projectRoot,
-      encoding: "utf-8",
-      timeout: 10000,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+export function setProgress(value: number, label?: string): boolean {
+  const args = ["set-progress", String(Math.min(1.0, Math.max(0.0, value)))];
+  if (label) args.push("--label", label);
+  return cmux(args) !== null;
 }
 
 /**
- * Open a browser URL. Platform-safe.
+ * Clear the SDLC progress bar.
  */
-export function openBrowser(url: string): boolean {
-  try {
-    if (IS_MACOS) {
-      execFileSync("open", [url], { timeout: 5000, stdio: "ignore" });
-    } else if (process.platform === "linux") {
-      spawn("xdg-open", [url], { detached: true, stdio: "ignore" }).unref();
-    } else {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+export function clearProgress(): boolean {
+  return cmux(["clear-progress"]) !== null;
 }
+
+/**
+ * Log to the cmux sidebar.
+ */
+export function sidebarLog(message: string, level: "info" | "progress" | "success" | "warning" | "error" = "info"): boolean {
+  return cmux(["log", "--level", level, "--source", "sdlc", "--", message]) !== null;
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+/**
+ * Send a desktop notification via cmux.
+ */
+export function notify(title: string, body: string): boolean {
+  return cmux(["notify", "--title", title, "--body", body]) !== null;
+}
+
+// ============================================================
+// BROWSER AUTOMATION
+// ============================================================
+
+/**
+ * Open a URL in a cmux browser surface (split pane).
+ */
+export function openBrowserSplit(url: string): string | null {
+  return cmux(["browser", "open-split", url]);
+}
+
+/**
+ * Wait for a page to load in a browser surface.
+ */
+export function browserWait(surfaceId: string, opts: { loadState?: string; text?: string; timeoutMs?: number } = {}): boolean {
+  const args = ["browser", surfaceId, "wait"];
+  if (opts.loadState) args.push("--load-state", opts.loadState);
+  if (opts.text) args.push("--text", opts.text);
+  if (opts.timeoutMs) args.push("--timeout-ms", String(opts.timeoutMs));
+  return cmux(args, opts.timeoutMs || 15000) !== null;
+}
+
+/**
+ * Take a screenshot of a browser surface.
+ */
+export function browserScreenshot(surfaceId: string, outPath: string): boolean {
+  return cmux(["browser", surfaceId, "screenshot", "--out", outPath]) !== null;
+}
+
+// ============================================================
+// PLATFORM INFO
+// ============================================================
 
 /**
  * Get platform info for logging.
  */
-export function getPlatformInfo(): { platform: string; cmux: boolean; ssh: boolean } {
+export function getPlatformInfo(): { platform: string; cmuxApp: boolean; cmuxRunning: boolean; ssh: boolean } {
   return {
     platform: process.platform,
-    cmux: isCmuxAvailable(),
+    cmuxApp: IS_MACOS && existsSync(CMUX_APP_CLI),
+    cmuxRunning: isCmuxAvailable(),
     ssh: isSSH(),
   };
+}
+
+// ============================================================
+// OVERSEER LIFECYCLE HOOKS
+// ============================================================
+
+/**
+ * Called when the overseer starts an epic.
+ * Opens dashboard split + sets sidebar status.
+ */
+export function onEpicStart(overseerDir: string, epicId: string, epicTitle: string): void {
+  if (!canUseCmux()) return;
+
+  // Set sidebar status
+  setStatus("Planning...", "magnifyingglass", "#f5a623");
+  setProgress(0, "SDLC: Starting");
+  sidebarLog(`Epic: ${epicTitle}`, "info");
+
+  // Open dashboard in right split
+  openDashboardSplit(overseerDir, epicId);
+
+  // Desktop notification
+  notify("SDLC Started", epicTitle);
+}
+
+/**
+ * Called when pipeline progress changes.
+ */
+export function onProgress(done: number, total: number, phase: string): void {
+  if (!canUseCmux()) return;
+  const pct = total > 0 ? done / total : 0;
+  setProgress(pct, `SDLC: ${phase} (${done}/${total})`);
+}
+
+/**
+ * Called when the epic completes.
+ */
+export function onEpicComplete(epicTitle: string, stats: { done: number; failed: number; total: number }): void {
+  if (!canUseCmux()) return;
+  const success = stats.failed === 0;
+  setStatus(success ? "Done" : "Done (with failures)", success ? "checkmark" : "exclamationmark.triangle", success ? "#4cd964" : "#ff3b30");
+  setProgress(1.0, `SDLC: ${stats.done}/${stats.total} tasks`);
+  sidebarLog(`Completed: ${stats.done} done, ${stats.failed} failed`, success ? "success" : "warning");
+  notify(success ? "SDLC Complete" : "SDLC Complete (with issues)", `${epicTitle} — ${stats.done}/${stats.total} tasks`);
+}
+
+/**
+ * Called when an agent starts.
+ */
+export function onAgentStart(role: string, taskTitle: string): void {
+  if (!canUseCmux()) return;
+  sidebarLog(`${role}: ${taskTitle}`, "progress");
+}
+
+/**
+ * Called when a merge completes.
+ */
+export function onMergeComplete(branch: string): void {
+  if (!canUseCmux()) return;
+  sidebarLog(`Merged: ${branch}`, "success");
 }

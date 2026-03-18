@@ -18,7 +18,7 @@ import { buildKnowledgeContext } from "./knowledge";
 import { generateBoard } from "./board";
 import { detectInternalProject, isKiroAvailable } from "./kiro";
 import { setInternalMode } from "./spawner";
-import { canUseCmux, openDashboardTab, getPlatformInfo } from "./cmux";
+import { canUseCmux, onEpicStart, onProgress, onEpicComplete, onAgentStart, onMergeComplete, getPlatformInfo } from "./cmux";
 import type { OverseerConfig, AgentRole, Priority, TaskType } from "./types";
 
 // --- Config ---
@@ -160,11 +160,11 @@ const epic = createEpic(epicDescription, epicDescription);
 updateEpicStatus(epic.id, "planning");
 log(`Epic ID: ${epic.id.slice(0, 8)}`);
 
-// Auto-open dashboard in a new terminal tab (macOS + cmux only, no-op elsewhere)
+// cmux integration: open dashboard split + sidebar status (macOS only, no-op elsewhere)
 if (canUseCmux()) {
   const overseerDir = new URL(".", import.meta.url).pathname;
-  const opened = openDashboardTab(overseerDir, epic.id);
-  if (opened) log("Dashboard opened in new terminal tab");
+  onEpicStart(overseerDir, epic.id, epicDescription);
+  log("cmux: Dashboard split opened + sidebar status set");
 }
 
 // ===== PHASE 0: REQUIREMENTS GATHERING (GSD-inspired) =====
@@ -406,6 +406,7 @@ async function executionLoop() {
           logEvent(epic.id, "merge_completed", `Merged: ${merge.branch_name}`, "merge-manager");
           removeWorktree(PROJECT_ROOT, merge.worktree_path, merge.branch_name);
           log(`  Merged: ${merge.branch_name}`);
+          onMergeComplete(merge.branch_name);
         } else {
           updateMergeStatus(merge.id, "conflict", { conflictFiles: result.conflicts?.join(", ") });
           logEvent(epic.id, "conflict_detected", merge.branch_name, "merge-manager");
@@ -435,6 +436,7 @@ async function executionLoop() {
         ].join("\n");
 
         log(`Spawning ${task.assigned_role}: ${task.title} [${wt.branch}]`);
+        onAgentStart(task.assigned_role, task.title);
 
         const result = spawnAgent({
           task,
@@ -462,10 +464,12 @@ async function executionLoop() {
       updateTaskStatus(t.id, "failed");
     }
 
-    // 5. Progress + update board
+    // 5. Progress + update board + cmux sidebar
     const progress = formatProgress(epic.id);
     console.log(`\n${progress}`);
     generateBoard(epic.id, PROJECT_ROOT);
+    const pStats = getEpicStats(epic.id);
+    onProgress(pStats.done, pStats.total, "Executing");
 
     // 6. Detect stall (no tasks running, none ready, not complete)
     if (batch.length === 0 && pendingMerges.length === 0) {
@@ -498,9 +502,10 @@ log(`Tasks: ${stats.done} done, ${stats.failed} failed, ${stats.total} total`);
 log(`ID: ${epic.id}`);
 log(formatProgress(epic.id));
 
-// Final board update
+// Final board update + cmux completion
 generateBoard(epic.id, PROJECT_ROOT);
 log("Final board written to .overseer/");
+onEpicComplete(epic.title, stats);
 
 cleanupAllWorktrees(PROJECT_ROOT);
 log("Worktrees cleaned up.");
