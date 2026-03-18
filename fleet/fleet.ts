@@ -17,7 +17,7 @@ import { join, resolve } from "path";
 import { AccountPool, loadFleetConfig, initFleetConfig } from "./pool";
 import { ContainerManager } from "./container";
 import {
-  createRun, updateRunStatus, getRecentRuns,
+  createRun, updateRunStatus, getRecentRuns, getTasksByRun,
   createFleetTask, updateFleetTask,
   createContainerRecord, updateContainerRecord,
 } from "./db";
@@ -123,8 +123,20 @@ async function runPool(
   // Pre-flight: ensure project has intel
   await ensureProjectIntel(config, projectRoot, containers);
 
+  console.error(`\n${BOLD}Run: ${CYAN}${runId}${RESET}  ${DIM}(fleet --live to monitor from another terminal)${RESET}`);
   info(`Pool mode: ${tasksInput.length} tasks, ${workers} workers, ${pool.size} accounts`);
+  info(`Output: ${outputBase}`);
   onFleetStart("pool", tasksInput.length, workers);
+
+  // Graceful shutdown on Ctrl+C — stop all containers
+  const cleanup = () => {
+    console.error(`\n${YELLOW}[fleet]${RESET} Ctrl+C — stopping containers...`);
+    containers.stopAll();
+    updateRunStatus(runId, "failed", { total: tasks.length, completed: 0, failed: 0, requeued: 0 });
+    process.exit(130);
+  };
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
 
   // Create all tasks in DB
   const tasks: FleetTask[] = tasksInput.map((t, i) => {
@@ -634,6 +646,77 @@ function printStatus(): void {
   }
 }
 
+function printLive(config: FleetConfig): void {
+  const containers = new ContainerManager(config.settings);
+  const running = containers.listRunning();
+  const runs = getRecentRuns(5);
+
+  console.error(`${BOLD}Fleet Live Status${RESET}`);
+  console.error("");
+
+  // Running containers
+  if (running.length > 0) {
+    console.error(`  ${BOLD}Active Containers (${running.length}):${RESET}`);
+    for (const c of running) {
+      console.error(`    ${GREEN}●${RESET} ${c.name}  ${DIM}${c.status}${RESET}`);
+    }
+  } else {
+    console.error(`  ${DIM}No active fleet containers${RESET}`);
+  }
+  console.error("");
+
+  // Recent runs with task details
+  const activeRun = runs.find((r) => r.status === "running");
+  if (activeRun) {
+    const tasks = getTasksByRun(activeRun.id);
+    const done = tasks.filter((t) => t.status === "completed").length;
+    const failed = tasks.filter((t) => t.status === "failed").length;
+    const inProgress = tasks.filter((t) => t.status === "running" || t.status === "allocated").length;
+    const pending = tasks.filter((t) => t.status === "pending").length;
+    const total = tasks.length;
+
+    // Progress bar
+    const pct = total > 0 ? Math.round(((done + failed) / total) * 100) : 0;
+    const barLen = 30;
+    const filled = Math.round((pct / 100) * barLen);
+    const bar = `[${"=".repeat(filled)}${"-".repeat(barLen - filled)}]`;
+
+    console.error(`  ${BOLD}Active Run: ${CYAN}${activeRun.id}${RESET}`);
+    console.error(`    Mode: ${activeRun.mode} | Workers: ${activeRun.workers}`);
+    console.error(`    Progress: ${bar} ${pct}% (${done + failed}/${total})`);
+    console.error(`    ${GREEN}Done: ${done}${RESET} | ${CYAN}Running: ${inProgress}${RESET} | ${DIM}Pending: ${pending}${RESET} | ${RED}Failed: ${failed}${RESET}`);
+    console.error("");
+
+    // Per-task status
+    console.error(`  ${BOLD}Tasks:${RESET}`);
+    for (const t of tasks) {
+      const icon = t.status === "completed" ? `${GREEN}✓${RESET}` :
+                   t.status === "failed" ? `${RED}✗${RESET}` :
+                   t.status === "running" || t.status === "allocated" ? `${CYAN}●${RESET}` :
+                   `${DIM}○${RESET}`;
+      const acct = t.account_id ? ` (${t.account_id})` : "";
+      console.error(`    ${icon} ${t.id}${acct} — ${t.prompt.slice(0, 60)}...`);
+    }
+  } else {
+    console.error(`  ${DIM}No active runs${RESET}`);
+  }
+
+  console.error("");
+
+  // Recent completed runs
+  const recentDone = runs.filter((r) => r.status !== "running").slice(0, 3);
+  if (recentDone.length > 0) {
+    console.error(`  ${BOLD}Recent Runs:${RESET}`);
+    for (const r of recentDone) {
+      const color = r.status === "completed" ? GREEN : RED;
+      const summary = r.summary ? JSON.parse(r.summary) : null;
+      const sumStr = summary ? ` (${summary.completed}/${summary.total} done)` : "";
+      console.error(`    ${color}${r.status}${RESET} ${r.id} | ${r.mode}${sumStr}`);
+    }
+  }
+  console.error("");
+}
+
 /** Load task queue from JSON file. Accepts array of strings or array of {prompt, taskType}. */
 function loadTaskQueue(path: string): Array<{ prompt: string; taskType?: string }> {
   if (!existsSync(path)) throw new Error(`Task queue file not found: ${path}`);
@@ -684,6 +767,7 @@ ${BOLD}Options:${RESET}
 
 ${BOLD}Management:${RESET}
   --status                         Show fleet status + recent runs
+  --live                           Live view: active containers, progress, tasks
   --build-image                    Build the fleet container image
   --setup                          Interactive account setup wizard
   --from-csv <file>                Load accounts from CSV (one key per line or comma-separated)
@@ -753,6 +837,16 @@ ${BOLD}Management:${RESET}
       printStatus();
     } catch {
       info("No fleet history (database not initialized)");
+    }
+    return;
+  }
+
+  if (args.includes("--live")) {
+    try {
+      const liveConfig = loadFleetConfig();
+      printLive(liveConfig);
+    } catch {
+      info("No fleet config found. Run: fleet --from-csv keys.csv");
     }
     return;
   }
