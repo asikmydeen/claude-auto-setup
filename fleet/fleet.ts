@@ -17,7 +17,7 @@ import { join, resolve } from "path";
 import { AccountPool, loadFleetConfig, initFleetConfig } from "./pool";
 import { ContainerManager } from "./container";
 import {
-  createRun, updateRunStatus, getRecentRuns, getTasksByRun,
+  createRun, updateRunStatus, getRecentRuns, getRunsByProject, getTasksByRun,
   createFleetTask, updateFleetTask,
   createContainerRecord, updateContainerRecord,
 } from "./db";
@@ -118,7 +118,7 @@ async function runPool(
   const outputBase = join(projectRoot, ".fleet", runId);
 
   mkdirSync(outputBase, { recursive: true });
-  createRun(runId, "pool", `Pool: ${tasksInput.length} tasks`, workers);
+  createRun(runId, "pool", `Pool: ${tasksInput.length} tasks`, workers, projectRoot);
 
   // Pre-flight: ensure project has intel
   await ensureProjectIntel(config, projectRoot, containers);
@@ -454,7 +454,7 @@ async function runPipeline(
   // Pre-flight: ensure project has intel
   await ensureProjectIntel(config, projectRoot, containers);
 
-  createRun(runId, "pipeline", `Pipeline: ${stages.join(" → ")}`, stages.length);
+  createRun(runId, "pipeline", `Pipeline: ${stages.join(" → ")}`, stages.length, projectRoot);
   info(`Pipeline mode: ${stages.join(" → ")} (${stages.length} stages)`);
 
   const tasks: FleetTask[] = [];
@@ -628,14 +628,17 @@ function printSummary(result: FleetRunResult, pool: AccountPool): void {
   console.error("");
 }
 
-function printStatus(): void {
-  const runs = getRecentRuns(10);
+function printStatus(showAll = false): void {
+  const cwd = process.cwd();
+  const runs = showAll ? getRecentRuns(10) : getRunsByProject(cwd, 10);
+  const scope = showAll ? "(all projects)" : cwd;
+
   if (runs.length === 0) {
-    info("No fleet runs recorded");
+    info(showAll ? "No fleet runs recorded" : `No fleet runs for ${cwd}\n  Use fleet --status --all to see all projects`);
     return;
   }
 
-  console.error(`${BOLD}Recent Fleet Runs${RESET}`);
+  console.error(`${BOLD}Fleet Runs${RESET} ${DIM}${scope}${RESET}`);
   for (const run of runs) {
     const statusColor = run.status === "completed" ? GREEN : run.status === "running" ? CYAN : RED;
     const summary = run.summary ? JSON.parse(run.summary) : null;
@@ -646,10 +649,11 @@ function printStatus(): void {
   }
 }
 
-function printLive(config: FleetConfig): void {
+function printLive(config: FleetConfig, showAll = false): void {
   const containers = new ContainerManager(config.settings);
   const running = containers.listRunning();
-  const runs = getRecentRuns(5);
+  const cwd = process.cwd();
+  const runs = showAll ? getRecentRuns(5) : getRunsByProject(cwd, 5);
 
   console.error(`${BOLD}Fleet Live Status${RESET}`);
   console.error("");
@@ -834,7 +838,7 @@ ${BOLD}Management:${RESET}
 
   if (args.includes("--status")) {
     try {
-      printStatus();
+      printStatus(args.includes("--all"));
     } catch {
       info("No fleet history (database not initialized)");
     }
@@ -844,7 +848,7 @@ ${BOLD}Management:${RESET}
   if (args.includes("--live")) {
     try {
       const liveConfig = loadFleetConfig();
-      printLive(liveConfig);
+      printLive(liveConfig, args.includes("--all"));
     } catch {
       info("No fleet config found. Run: fleet --from-csv keys.csv");
     }

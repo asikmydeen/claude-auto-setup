@@ -30,11 +30,17 @@ function getDb(): Database {
     mode TEXT NOT NULL,
     prompt TEXT NOT NULL,
     workers INTEGER NOT NULL DEFAULT 1,
+    project_root TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'running',
     started_at TEXT NOT NULL,
     completed_at TEXT,
     summary TEXT
   )`);
+
+  // Migration: add project_root if table already exists without it
+  try {
+    db.run("ALTER TABLE fleet_runs ADD COLUMN project_root TEXT NOT NULL DEFAULT ''");
+  } catch { /* column already exists */ }
 
   db.run(`CREATE TABLE IF NOT EXISTS fleet_tasks (
     id TEXT PRIMARY KEY,
@@ -82,13 +88,14 @@ function buildStmts(d: Database) {
   return {
     // Runs
     insertRun: d.prepare(
-      "INSERT INTO fleet_runs (id, mode, prompt, workers, status, started_at) VALUES ($id, $mode, $prompt, $workers, $status, $started_at)"
+      "INSERT INTO fleet_runs (id, mode, prompt, workers, project_root, status, started_at) VALUES ($id, $mode, $prompt, $workers, $project_root, $status, $started_at)"
     ),
     updateRun: d.prepare(
       "UPDATE fleet_runs SET status = COALESCE($status, status), completed_at = COALESCE($completed_at, completed_at), summary = COALESCE($summary, summary) WHERE id = $id"
     ),
     getRun: d.prepare("SELECT * FROM fleet_runs WHERE id = $id"),
     getRecentRuns: d.prepare("SELECT * FROM fleet_runs ORDER BY started_at DESC LIMIT $limit"),
+    getRunsByProject: d.prepare("SELECT * FROM fleet_runs WHERE project_root = $project_root ORDER BY started_at DESC LIMIT $limit"),
 
     // Tasks
     insertTask: d.prepare(
@@ -118,7 +125,7 @@ function stmts() {
 
 // --- Run CRUD ---
 
-export function createRun(id: string, mode: string, prompt: string, workers: number): FleetRunRecord {
+export function createRun(id: string, mode: string, prompt: string, workers: number, projectRoot = ""): FleetRunRecord {
   const record: FleetRunRecord = {
     id,
     mode,
@@ -131,7 +138,8 @@ export function createRun(id: string, mode: string, prompt: string, workers: num
   };
   stmts().insertRun.run({
     $id: record.id, $mode: record.mode, $prompt: record.prompt,
-    $workers: record.workers, $status: record.status, $started_at: record.started_at,
+    $workers: record.workers, $project_root: projectRoot,
+    $status: record.status, $started_at: record.started_at,
   });
   return record;
 }
@@ -151,6 +159,10 @@ export function getRun(id: string): FleetRunRecord | null {
 
 export function getRecentRuns(limit = 10): FleetRunRecord[] {
   return stmts().getRecentRuns.all({ $limit: limit }) as FleetRunRecord[];
+}
+
+export function getRunsByProject(projectRoot: string, limit = 10): FleetRunRecord[] {
+  return stmts().getRunsByProject.all({ $project_root: projectRoot, $limit: limit }) as FleetRunRecord[];
 }
 
 // --- Task CRUD ---
