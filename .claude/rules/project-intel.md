@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (SDLC Overseer system)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (Kiro deep integration + GSD requirements + live dashboard)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -275,15 +275,18 @@ Provider strengths: Claude (reasoning, planning, security), Codex (fast code gen
 
 ## SDLC Overseer (`overseer/`)
 
-Full virtual engineering team system. User describes an epic → pipeline of 13 role-based agents plan, implement, test, merge, and release the feature.
+Full virtual engineering team system. User describes an epic → pipeline of 15 role-based agents gather requirements, plan, implement, test, merge, and release the feature.
 
 **Run**: `bun overseer/overseer.ts --epic "description"` | `--status <id>` | `--list` | `--cleanup`
+**Internal**: `bun overseer/overseer.ts --internal --epic "description"` (Kiro-assisted, Amazon patterns)
+**Dashboard**: `bun overseer/dashboard.ts --latest` (live terminal TUI)
 
-**Architecture**: 4-layer pipeline (Planning → Execution → Integration → Release) with continuous Guardian oversight.
+**Architecture**: 5-layer pipeline (Requirements → Planning → Execution → Integration → Release) with continuous Guardian oversight.
 
 | Layer | Agents | What They Do |
 |-------|--------|--------------|
-| Planning | product-manager, project-manager, tech-lead | Epic → stories → tasks (DAG) → architecture |
+| Requirements (GSD) | requirements-analyst, domain-researcher | Deep questioning → PROJECT.md, REQUIREMENTS.md, RESEARCH.md |
+| Planning | product-manager, project-manager, tech-lead | Stories (traced to REQ-xxx) → tasks (DAG) → architecture |
 | Execution | senior-engineer, engineer, frontend-engineer, backend-engineer | Implement in isolated git worktrees (max 5 concurrent) |
 | Quality | qa-engineer, security-engineer | Tests + OWASP audit on merged code |
 | Integration | merge-manager, devops-engineer, release-engineer | Merge branches, CI/CD, versioning |
@@ -293,11 +296,20 @@ Full virtual engineering team system. User describes an epic → pipeline of 13 
 - `db.ts` — SQLite schema: epics, stories, tasks, agent_sessions, knowledge, merge_queue, sprint_log
 - `scheduler.ts` — DAG-based scheduling, max concurrency, blocked task detection
 - `worktree.ts` — git worktree create/merge/cleanup (`.worktrees/task-{id}`)
-- `spawner.ts` — spawn Claude/Codex/Copilot/Gemini with `CLAUDECODE=''` in worktrees
+- `spawner.ts` — spawn Claude/Codex/Copilot/Gemini/Kiro with `CLAUDECODE=''` in worktrees; internal-mode aware
 - `knowledge.ts` — centralized shared brain (architecture decisions, API contracts, patterns)
-- `overseer.ts` — main orchestrator: planning → parse stories/tasks → execution loop → merge → done
+- `kiro.ts` — Kiro consultation module: consultKiro(), detectInternalProject(), buildInternalContext()
+- `board.ts` — Obsidian-compatible markdown board generator (board.md, epic.md, stories/, timeline.md)
+- `dashboard.ts` — Live terminal TUI: progress bar, Kanban board, agent cards, event timeline
+- `overseer.ts` — main orchestrator: requirements → planning → execution → merge → done
 
 **Database**: `~/.claude/data/overseer.db` (separate from sidekick.db)
+
+**Internal mode**: Auto-detects packageInfo/.brazil.json/workplace paths. Kiro becomes sidecar consultant — Claude queries `kiro-cli -p` for internal code search, docs, tickets, CDK patterns, pipelines. Routing shifts to prefer kiro-cli for backend/api/infra/devops tasks.
+
+**Kiro everywhere**: `internal-routing.md` rule loads in EVERY Claude session (not just overseer). Any Claude session in an internal project automatically consults Kiro.
+
+**Live views**: Terminal dashboard (`dashboard.ts --latest`), Obsidian board (`.overseer/board.md`), SSE endpoint (`/api/sdlc/epics/:id/stream`)
 
 **Tested**: 12/12 tasks completed for "hello world HTML page" epic (PM → PjM → 10 execution tasks → merge → done).
 
@@ -350,12 +362,14 @@ Full virtual engineering team system. User describes an epic → pipeline of 13 
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 13 SDLC agents
+- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 15 SDLC agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
-- **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup)
-- **10** universal rule files, 57 command definitions (including sdlc, mem-search)
+- **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
+- **12** universal rule files, 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
-- **7** overseer modules (`overseer/*.ts`) + architecture docs
+- **10** overseer modules (`overseer/*.ts`) + architecture docs
+- **2** WebSocket endpoints (ops, terminal)
+- **3** container runtimes supported (Podman, Docker, Finch)
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
