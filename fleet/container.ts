@@ -209,6 +209,10 @@ export class ContainerManager {
     }
 
     // Build docker run args
+    const homeDir = process.env.HOME || "/tmp";
+    const claudeDir = join(homeDir, ".claude");
+    const fleetUser = "/home/fleet"; // non-root user in Dockerfile
+
     const args: string[] = [
       "run", "--rm",
       "--name", containerName,
@@ -217,6 +221,21 @@ export class ContainerManager {
       "-v", `${opts.outputDir}:/output`,
       "-w", "/project",
     ];
+
+    // Mount global claude-auto-setup config (read-only) — gives containers
+    // the same rules, commands, agents, and instructions as local setup.
+    // Only safe dirs mounted — no credentials, databases, or MCP server paths.
+    const configMounts: Array<[string, string]> = [
+      [join(claudeDir, "CLAUDE.md"), join(fleetUser, ".claude", "CLAUDE.md")],
+      [join(claudeDir, "rules"), join(fleetUser, ".claude", "rules")],
+      [join(claudeDir, "commands"), join(fleetUser, ".claude", "commands")],
+      [join(claudeDir, "agents"), join(fleetUser, ".claude", "agents")],
+    ];
+    for (const [hostPath, containerPath] of configMounts) {
+      if (existsSync(hostPath)) {
+        args.push("-v", `${hostPath}:${containerPath}:ro`);
+      }
+    }
 
     // Inject credentials via temp env-file (not visible in `ps`, deleted after spawn)
     // Still visible in `docker inspect` — acceptable tradeoff for operational simplicity.
