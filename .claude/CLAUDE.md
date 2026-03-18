@@ -77,6 +77,21 @@ Standalone coding agent with fresh-session-per-task architecture. Solves context
 - Config: `~/.gsd/preferences.md` (global), `.gsd/preferences.md` (project)
 - See `universal/rules/gsd-integration.md` for when to use GSD 2 vs Overseer
 
+## Fleet — Multi-Account Container Orchestration (`fleet/`)
+Run tasks across multiple API accounts in isolated Docker/Podman containers.
+- Config: `~/.claude/fleet/accounts.json` (credential sets, chmod 600)
+- Image: `claude-fleet:latest` (node:22-slim + claude-code + bun + git, 563MB)
+- Run: `bun fleet/fleet.ts --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages research,implement,test`
+- Init: `bun fleet/fleet.ts --init` (creates config template)
+- Build: `bun fleet/fleet.ts --build-image` (builds Docker image)
+- Status: `bun fleet/fleet.ts --status` | `--accounts` | `--stop`
+- 4 modes: pool (worker queue), scatter (same task N workers), decompose (split into subtasks), pipeline (sequential stages)
+- Account pool: round-robin allocation, rate-limit cooldown (429 detection), waitForAvailable
+- Credentials: env-file injection (temp file, deleted after spawn), never baked into images
+- Database: `~/.claude/data/fleet.db` (fleet_runs, fleet_tasks, fleet_containers)
+- cmux bridge: sidebar progress, desktop notifications (all no-ops without cmux)
+- Docker + Podman support (auto-detect, configurable)
+
 ## Pattern Conformance
 All new code must follow patterns documented in `.claude/rules/codebase-patterns.md`.
 - Generated automatically during `/init` or `/deep-research` (7th parallel agent: `pattern-analyzer`)

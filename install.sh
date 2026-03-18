@@ -419,6 +419,29 @@ update_agents() {
     fi
   fi
 
+  # --- Update fleet image (rebuild if Dockerfile changed) ---
+  if [ -f "$SCRIPT_DIR/fleet/Dockerfile" ]; then
+    local fleet_rt=""
+    command -v docker &>/dev/null && fleet_rt="docker"
+    command -v podman &>/dev/null && fleet_rt="${fleet_rt:-podman}"
+    if [ -n "$fleet_rt" ]; then
+      local fleet_img
+      fleet_img=$($fleet_rt images -q claude-fleet:latest 2>/dev/null | head -1)
+      if [ -z "$fleet_img" ]; then
+        step "Building fleet container image"
+        if $DRY_RUN; then
+          info "[DRY RUN] Would build fleet container image"
+        else
+          $fleet_rt build -t claude-fleet:latest -f "$SCRIPT_DIR/fleet/Dockerfile" "$SCRIPT_DIR/fleet" 2>&1 | tail -3 \
+            && ok "Fleet image: rebuilt" \
+            || warn "Fleet image build failed"
+        fi
+      else
+        ok "Fleet image: up to date"
+      fi
+    fi
+  fi
+
   # --- Update orchestration server ---
   if [ -f "$SCRIPT_DIR/orchestration/server.js" ]; then
     local orch_dest="$HOME/.claude/orchestration"
@@ -513,6 +536,13 @@ summary() {
   echo "  ${BOLD}Shared components:${RESET}"
   echo "    Rules:    $(ls "$SCRIPT_DIR/universal/rules/"*.md 2>/dev/null | wc -l) files"
   echo "    Commands: $(ls "$SCRIPT_DIR/universal/commands/"*.md 2>/dev/null | wc -l) files"
+  # Fleet status
+  local fleet_rt=""
+  command -v docker &>/dev/null && fleet_rt="docker"
+  command -v podman &>/dev/null && fleet_rt="${fleet_rt:-podman}"
+  if [ -n "$fleet_rt" ] && $fleet_rt images -q claude-fleet:latest &>/dev/null 2>&1; then
+    echo "    Fleet:    claude-fleet:latest ($(echo "$fleet_rt"))"
+  fi
   echo ""
 
   if [ "$mode" = "update" ]; then
@@ -672,6 +702,65 @@ doctor() {
     fi
   else
     check_warn "claude-mem: not installed (install: claude plugin marketplace add thedotmack/claude-mem)"
+  fi
+
+  # --- Fleet (multi-account container orchestration) ---
+  step "Fleet (multi-account containers)"
+  local fleet_config="$HOME/.claude/fleet/accounts.json"
+  if [ -f "$fleet_config" ]; then
+    check_pass "Fleet config: $fleet_config"
+    # Check file permissions
+    local fleet_perms
+    fleet_perms=$(stat -f "%Lp" "$fleet_config" 2>/dev/null || stat -c "%a" "$fleet_config" 2>/dev/null || echo "unknown")
+    if [ "$fleet_perms" = "600" ]; then
+      check_pass "Fleet config permissions: 600 (secure)"
+    else
+      check_warn "Fleet config permissions: $fleet_perms (should be 600 — run: chmod 600 $fleet_config)"
+    fi
+  else
+    check_warn "Fleet config: not created (run: bun fleet/fleet.ts --init)"
+  fi
+  # Container runtime
+  if command -v docker &>/dev/null; then
+    check_pass "Docker: $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  elif command -v podman &>/dev/null; then
+    check_pass "Podman: $(podman --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  else
+    check_warn "No container runtime (Docker/Podman) — fleet requires one"
+  fi
+  # Fleet image
+  local fleet_rt=""
+  command -v docker &>/dev/null && fleet_rt="docker"
+  command -v podman &>/dev/null && fleet_rt="${fleet_rt:-podman}"
+  if [ -n "$fleet_rt" ]; then
+    local fleet_img
+    fleet_img=$($fleet_rt images -q claude-fleet:latest 2>/dev/null | head -1)
+    if [ -n "$fleet_img" ]; then
+      local fleet_size
+      fleet_size=$($fleet_rt images --format "{{.Size}}" claude-fleet:latest 2>/dev/null | head -1)
+      check_pass "Fleet image: claude-fleet:latest ($fleet_size)"
+    else
+      check_warn "Fleet image: not built (run: bun fleet/fleet.ts --build-image)"
+    fi
+  fi
+  # Fleet database
+  local fleet_db="$HOME/.claude/data/fleet.db"
+  if [ -f "$fleet_db" ]; then
+    local fleet_db_size
+    fleet_db_size=$(du -sh "$fleet_db" 2>/dev/null | cut -f1)
+    check_pass "Fleet database: $fleet_db_size"
+  else
+    check_warn "Fleet database: not yet created (initializes on first run)"
+  fi
+  # Stale containers
+  if [ -n "$fleet_rt" ]; then
+    local stale_count
+    stale_count=$($fleet_rt ps -q -f name=fleet- 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$stale_count" -gt 0 ] 2>/dev/null; then
+      check_warn "Stale fleet containers: $stale_count (run: bun fleet/fleet.ts --stop)"
+    else
+      check_pass "No stale fleet containers"
+    fi
   fi
 
   # --- Dependencies ---
@@ -845,6 +934,112 @@ with open(mcp_path, 'w') as f:
       ok "cmux setup template: ~/.claude/templates/cmux-setup.sh"
       info "To use in a project: mkdir -p .cmux && cp ~/.claude/templates/cmux-setup.sh .cmux/setup"
     fi
+  fi
+
+  # Install Fleet (multi-account container orchestration)
+  echo ""
+  step "Installing Fleet (multi-account container orchestration)"
+  if $DRY_RUN; then
+    info "[DRY RUN] Would install fleet"
+  else
+    # Detect container runtime
+    local fleet_runtime=""
+    if command -v docker &>/dev/null; then
+      fleet_runtime="docker"
+      ok "Container runtime: Docker $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+    elif command -v podman &>/dev/null; then
+      fleet_runtime="podman"
+      ok "Container runtime: Podman $(podman --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+    else
+      warn "No container runtime found (Docker or Podman required for fleet)"
+      warn "Install Docker: https://docs.docker.com/get-docker/"
+      warn "  or Podman: https://podman.io/getting-started/installation"
+      info "Fleet will be configured but container commands won't work until a runtime is installed"
+    fi
+
+    # Create fleet config — interactive setup if bun available, otherwise template
+    local fleet_config="$HOME/.claude/fleet/accounts.json"
+    if [ ! -f "$fleet_config" ]; then
+      if command -v bun &>/dev/null && [ -f "$SCRIPT_DIR/fleet/setup.ts" ]; then
+        echo ""
+        info "Fleet needs account credentials to run tasks across multiple accounts."
+        info "You can set them up now interactively, or later with: bun fleet/fleet.ts --setup"
+        echo ""
+        read -r -p "  Set up fleet accounts now? [Y/n]: " setup_choice
+        setup_choice="${setup_choice:-y}"
+        if [ "${setup_choice,,}" = "y" ] || [ "${setup_choice,,}" = "yes" ]; then
+          bun "$SCRIPT_DIR/fleet/fleet.ts" --setup 2>/dev/null \
+            && ok "Fleet accounts configured" \
+            || warn "Interactive setup failed — run: bun fleet/fleet.ts --setup"
+        else
+          bun "$SCRIPT_DIR/fleet/fleet.ts" --init 2>/dev/null \
+            && ok "Fleet config: $fleet_config (template — edit or run: bun fleet/fleet.ts --setup)" \
+            || warn "Fleet config creation failed"
+        fi
+      else
+        # No bun — create template config
+        mkdir -p "$HOME/.claude/fleet"
+        chmod 700 "$HOME/.claude/fleet"
+        cat > "$fleet_config" << FLEET_EOF
+{
+  "accounts": [
+    {
+      "id": "acct-1",
+      "label": "Account 1 — edit credentials",
+      "credentials": {
+        "ANTHROPIC_API_KEY": "sk-ant-REPLACE_ME"
+      }
+    },
+    {
+      "id": "acct-2",
+      "label": "Account 2 — edit credentials",
+      "credentials": {
+        "ANTHROPIC_API_KEY": "sk-ant-REPLACE_ME"
+      }
+    }
+  ],
+  "settings": {
+    "maxConcurrent": 4,
+    "cooldownMs": 60000,
+    "containerImage": "claude-fleet:latest",
+    "runtime": "${fleet_runtime:-docker}",
+    "taskTimeoutMs": 600000,
+    "containerMemory": "4g",
+    "containerCpus": "2",
+    "maxTotalSpawns": 500
+  }
+}
+FLEET_EOF
+        chmod 600 "$fleet_config"
+        ok "Fleet config: $fleet_config (edit to add your account credentials)"
+        info "Or install bun and run: bun fleet/fleet.ts --setup"
+      fi
+    else
+      ok "Fleet config: already exists"
+      info "To reconfigure: bun fleet/fleet.ts --setup"
+    fi
+
+    # Build fleet container image (if runtime available and image missing)
+    if [ -n "$fleet_runtime" ] && [ -f "$SCRIPT_DIR/fleet/Dockerfile" ]; then
+      local fleet_image_exists
+      fleet_image_exists=$($fleet_runtime images -q claude-fleet:latest 2>/dev/null | head -1)
+      if [ -z "$fleet_image_exists" ]; then
+        info "Building fleet container image (this takes 1-2 minutes on first run)..."
+        if $fleet_runtime build -t claude-fleet:latest -f "$SCRIPT_DIR/fleet/Dockerfile" "$SCRIPT_DIR/fleet" 2>&1 | tail -5; then
+          ok "Fleet image: claude-fleet:latest built"
+        else
+          warn "Fleet image build failed — run: bun fleet/fleet.ts --build-image"
+        fi
+      else
+        ok "Fleet image: claude-fleet:latest (already built)"
+      fi
+    fi
+
+    info "Fleet usage: bun fleet/fleet.ts --help"
+    info "  Pool mode:      bun fleet/fleet.ts --pool tasks.json"
+    info "  Scatter mode:   bun fleet/fleet.ts --scatter \"review this code\""
+    info "  Decompose mode: bun fleet/fleet.ts --decompose \"build a REST API\""
+    info "  Pipeline mode:  bun fleet/fleet.ts --pipeline \"task\" --stages research,implement,test"
   fi
 
   summary "install"

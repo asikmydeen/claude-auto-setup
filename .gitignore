@@ -2,6 +2,8 @@ node_modules/
 .claude/scratch/
 .claude/worktrees/
 .worktrees/
+.fleet/
+fleet/test-tasks.json
 *.db
 *.db-wal
 *.db-shm
