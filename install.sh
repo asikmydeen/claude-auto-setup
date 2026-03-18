@@ -943,7 +943,7 @@ with open(mcp_path, 'w') as f:
     info "[DRY RUN] Would install fleet"
   else
     # Detect container runtime
-    local fleet_runtime=""
+    fleet_runtime=""
     if command -v docker &>/dev/null; then
       fleet_runtime="docker"
       ok "Container runtime: Docker $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
@@ -958,7 +958,7 @@ with open(mcp_path, 'w') as f:
     fi
 
     # Create fleet config — interactive setup if bun available, otherwise template
-    local fleet_config="$HOME/.claude/fleet/accounts.json"
+    fleet_config="$HOME/.claude/fleet/accounts.json"
     if [ ! -f "$fleet_config" ]; then
       if command -v bun &>/dev/null && [ -f "$SCRIPT_DIR/fleet/setup.ts" ]; then
         echo ""
@@ -1021,7 +1021,6 @@ FLEET_EOF
 
     # Build fleet container image (if runtime available and image missing)
     if [ -n "$fleet_runtime" ] && [ -f "$SCRIPT_DIR/fleet/Dockerfile" ]; then
-      local fleet_image_exists
       fleet_image_exists=$($fleet_runtime images -q claude-fleet:latest 2>/dev/null | head -1)
       if [ -z "$fleet_image_exists" ]; then
         info "Building fleet container image (this takes 1-2 minutes on first run)..."
