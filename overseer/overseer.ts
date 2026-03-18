@@ -18,6 +18,7 @@ import { buildKnowledgeContext } from "./knowledge";
 import { generateBoard } from "./board";
 import { detectInternalProject, isKiroAvailable } from "./kiro";
 import { setInternalMode } from "./spawner";
+import { canUseCmux, openDashboardTab, getPlatformInfo } from "./cmux";
 import type { OverseerConfig, AgentRole, Priority, TaskType } from "./types";
 
 // --- Config ---
@@ -148,11 +149,22 @@ if (isInternal) {
 log(`Starting epic: "${epicDescription}"`);
 log(`Mode: ${isInternal ? "INTERNAL (Kiro-assisted)" : "EXTERNAL"}`);
 log(`Max concurrency: ${config.maxConcurrency}`);
+
+// Platform info
+const platform = getPlatformInfo();
+if (platform.ssh) log("Running over SSH — cmux terminal tabs disabled");
+
 ensureWorktreeGitignore(PROJECT_ROOT);
 
 const epic = createEpic(epicDescription, epicDescription);
 updateEpicStatus(epic.id, "planning");
 log(`Epic ID: ${epic.id.slice(0, 8)}`);
+
+// Auto-open dashboard in a new terminal tab (macOS + cmux only, no-op elsewhere)
+if (canUseCmux()) {
+  const opened = openDashboardTab(join(__dirname), epic.id);
+  if (opened) log("Dashboard opened in new terminal tab");
+}
 
 // ===== PHASE 0: REQUIREMENTS GATHERING (GSD-inspired) =====
 // Requirements Analyst + Domain Researcher run BEFORE any planning.

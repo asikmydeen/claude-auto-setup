@@ -1,8 +1,10 @@
 // SDLC Overseer — Git Worktree Manager
+// Uses cmux when available (macOS), falls back to direct git on all platforms.
 
 import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
+import { cmuxNew, cmuxRemove, isCmuxAvailable } from "./cmux";
 
 export interface WorktreeInfo {
   path: string;
@@ -30,6 +32,14 @@ export function createWorktree(projectRoot: string, epicId: string, taskId: stri
     return { path: worktreePath, branch };
   }
 
+  // Try cmux first (handles setup hooks, consistent naming)
+  if (isCmuxAvailable()) {
+    const cmuxPath = cmuxNew(branch, projectRoot);
+    if (cmuxPath) return { path: cmuxPath, branch };
+    // Fall through to git if cmux fails
+  }
+
+  // Direct git fallback (works on all platforms)
   try {
     git(["worktree", "add", worktreePath, "-b", branch], projectRoot);
   } catch (err: unknown) {
@@ -96,6 +106,10 @@ export function mergeWorktree(projectRoot: string, branch: string): { success: b
  * Remove a worktree and optionally delete its branch.
  */
 export function removeWorktree(projectRoot: string, worktreePath: string, branch?: string): void {
+  // Try cmux rm first (cleaner cleanup)
+  if (branch && cmuxRemove(branch, projectRoot, true)) return;
+
+  // Direct git fallback
   try {
     git(["worktree", "remove", worktreePath, "--force"], projectRoot, 15000);
   } catch {
