@@ -4,10 +4,10 @@
 // Usage: bun overseer/dashboard.ts --epic <id>
 //        bun overseer/dashboard.ts --latest
 
+import { Database } from "bun:sqlite";
 import { existsSync } from "fs";
 import { join } from "path";
-import { initDb, getEpic, getTasksByEpic, getEpicStats, getRunningAgents, getPendingMerges, getSprintLog } from "./db";
-import type { Task, AgentSession, SprintLogEntry } from "./types";
+import type { Task, AgentSession, SprintLogEntry, Epic } from "./types";
 
 const HOME = process.env.HOME || "~";
 const DB_PATH = join(HOME, ".claude", "data", "overseer.db");
@@ -40,13 +40,60 @@ Controls: Ctrl+C to exit
 
 if (!epicId) { console.error("Missing --epic <id> or --latest"); process.exit(1); }
 
-// --- Init DB ---
+// --- DB (readonly, safe for concurrent access while overseer writes) ---
 if (!existsSync(DB_PATH)) { console.error(`Database not found: ${DB_PATH}`); process.exit(1); }
-const db = initDb(DB_PATH);
+
+function openDb(): Database {
+  return new Database(DB_PATH, { readonly: true });
+}
+
+// Readonly query wrappers with retry on I/O errors
+function safeQuery<T>(fn: (db: Database) => T, fallback: T): T {
+  let db: Database | null = null;
+  try {
+    db = openDb();
+    return fn(db);
+  } catch {
+    return fallback;
+  } finally {
+    try { db?.close(); } catch { /* ignore */ }
+  }
+}
+
+function getEpic(id: string): Epic | null {
+  return safeQuery(db => db.prepare("SELECT * FROM epics WHERE id = $id").get({ $id: id }) as Epic | null, null);
+}
+
+function getTasksByEpic(epicId: string): Task[] {
+  return safeQuery(db => db.prepare("SELECT t.* FROM tasks t JOIN stories s ON t.story_id = s.id WHERE s.epic_id = $id ORDER BY t.created_at").all({ $id: epicId }) as Task[], []);
+}
+
+function getEpicStats(epicId: string): { total: number; queued: number; inProgress: number; done: number; failed: number } {
+  const tasks = getTasksByEpic(epicId);
+  return {
+    total: tasks.length,
+    queued: tasks.filter(t => t.status === "queued").length,
+    inProgress: tasks.filter(t => ["assigned", "in_progress", "review"].includes(t.status)).length,
+    done: tasks.filter(t => ["merged", "done"].includes(t.status)).length,
+    failed: tasks.filter(t => t.status === "failed").length,
+  };
+}
+
+function getRunningAgents(): AgentSession[] {
+  return safeQuery(db => db.prepare("SELECT * FROM agent_sessions WHERE status = 'running' ORDER BY started_at").all() as AgentSession[], []);
+}
+
+function getPendingMerges(): Array<{ branch_name: string; status: string; conflict_files?: string }> {
+  return safeQuery(db => db.prepare("SELECT * FROM merge_queue WHERE status IN ('pending','merging') ORDER BY rowid").all() as any[], []);
+}
+
+function getSprintLog(epicId: string, limit: number): SprintLogEntry[] {
+  return safeQuery(db => db.prepare("SELECT * FROM sprint_log WHERE epic_id = $id ORDER BY timestamp DESC LIMIT $limit").all({ $id: epicId, $limit: limit }) as SprintLogEntry[], []);
+}
 
 // Resolve --latest
 if (epicId === "__latest__") {
-  const latest = db.prepare("SELECT id FROM epics ORDER BY created_at DESC LIMIT 1").get() as { id: string } | null;
+  const latest = safeQuery(db => db.prepare("SELECT id FROM epics ORDER BY created_at DESC LIMIT 1").get() as { id: string } | null, null);
   if (!latest) { console.error("No epics found."); process.exit(1); }
   epicId = latest.id;
 }
