@@ -162,7 +162,8 @@ log(`Epic ID: ${epic.id.slice(0, 8)}`);
 
 // Auto-open dashboard in a new terminal tab (macOS + cmux only, no-op elsewhere)
 if (canUseCmux()) {
-  const opened = openDashboardTab(join(__dirname), epic.id);
+  const overseerDir = new URL(".", import.meta.url).pathname;
+  const opened = openDashboardTab(overseerDir, epic.id);
   if (opened) log("Dashboard opened in new terminal tab");
 }
 

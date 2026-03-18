@@ -38,18 +38,19 @@ export function canUseCmux(): boolean {
  * Uses AppleScript for tab management (macOS only).
  * Returns true on success, false on failure (never throws).
  */
-function openTerminalTab(title: string, command: string): boolean {
+function openTerminalTab(_title: string, command: string): boolean {
   if (!canUseCmux()) return false;
 
   try {
+    // Ensure bun/node are in PATH via mise or homebrew shims
+    const pathPrefix = 'eval "$(~/.local/bin/mise activate bash 2>/dev/null)" 2>/dev/null; export PATH="$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH";';
+    const fullCmd = `${pathPrefix} ${command}`;
+
     // Use AppleScript to open a new tab and run the command
     const script = `
       tell application "Terminal"
         activate
-        tell application "System Events" to keystroke "t" using command down
-        delay 0.3
-        do script "${command.replace(/"/g, '\\"')}" in front window
-        set custom title of front tab of front window to "${title.replace(/"/g, '\\"')}"
+        do script "${fullCmd.replace(/"/g, '\\"')}"
       end tell
     `;
     execFileSync("osascript", ["-e", script], { timeout: 5000, stdio: "ignore" });
