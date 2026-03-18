@@ -387,3 +387,121 @@ export function addAccount(label: string, credentials: Record<string, string>): 
   writeFileSync(ACCOUNTS_PATH, JSON.stringify(config, null, 2) + "\n", { mode: 0o600 });
   return `Added account "${label}" (${id}) with ${Object.keys(credentials).length} credential(s)`;
 }
+
+/**
+ * Load accounts from a CSV file. Replaces all existing accounts.
+ *
+ * Supported CSV formats:
+ *   1. One key per line:          ABSK_key1\nABSK_key2\nABSK_key3
+ *   2. Comma-separated one line:  ABSK_key1,ABSK_key2,ABSK_key3
+ *   3. Label + key:               Bedrock 1,ABSK_key1\nBedrock 2,ABSK_key2
+ *   4. Header row auto-detected:  key\nABSK_key1\nABSK_key2
+ *
+ * All keys are treated as Bedrock API keys (AWS_BEARER_TOKEN_BEDROCK).
+ * Region defaults to us-east-1 (override with --region flag).
+ */
+export function loadFromCsv(csvPath: string, region = "us-east-1"): string {
+  if (!existsSync(csvPath)) {
+    throw new Error(`CSV file not found: ${csvPath}`);
+  }
+
+  const raw = readFileSync(csvPath, "utf-8").trim();
+  if (!raw) throw new Error("CSV file is empty");
+
+  // Parse keys from CSV
+  const keys: Array<{ label: string; key: string }> = [];
+
+  const lines = raw.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+
+  // Detect format
+  if (lines.length === 1 && lines[0].includes(",")) {
+    // Single line, comma-separated keys
+    const parts = lines[0].split(",").map((s) => s.trim()).filter(Boolean);
+    for (const [i, part] of parts.entries()) {
+      // Skip if it looks like a header
+      if (part.toLowerCase() === "key" || part.toLowerCase() === "api_key") continue;
+      keys.push({ label: `Bedrock ${i + 1}`, key: part });
+    }
+  } else {
+    // Multi-line: either "key" per line or "label,key" per line
+    for (const [i, line] of lines.entries()) {
+      // Skip header row
+      if (i === 0 && (line.toLowerCase().includes("key") && !line.startsWith("ABSK"))) continue;
+
+      if (line.includes(",")) {
+        // label,key format
+        const commaIdx = line.lastIndexOf(",");
+        const maybeLabelPart = line.slice(0, commaIdx).trim();
+        const maybeKeyPart = line.slice(commaIdx + 1).trim();
+
+        // Determine which side is the key (starts with ABSK or is longer)
+        if (maybeKeyPart.startsWith("ABSK")) {
+          keys.push({ label: maybeLabelPart || `Bedrock ${keys.length + 1}`, key: maybeKeyPart });
+        } else if (maybeLabelPart.startsWith("ABSK")) {
+          keys.push({ label: maybeKeyPart || `Bedrock ${keys.length + 1}`, key: maybeLabelPart });
+        } else {
+          // Assume second column is key
+          keys.push({ label: maybeLabelPart || `Bedrock ${keys.length + 1}`, key: maybeKeyPart });
+        }
+      } else {
+        // Just a key per line
+        keys.push({ label: `Bedrock ${keys.length + 1}`, key: line });
+      }
+    }
+  }
+
+  if (keys.length === 0) {
+    throw new Error("No keys found in CSV file");
+  }
+
+  // Build accounts
+  const accounts: Account[] = keys.map((k, i) => ({
+    id: `acct-${i + 1}`,
+    label: k.label,
+    credentials: {
+      CLAUDE_CODE_USE_BEDROCK: "1",
+      AWS_BEARER_TOKEN_BEDROCK: k.key,
+      AWS_REGION: region,
+    },
+  }));
+
+  // Build config (preserve existing settings if config exists)
+  let settings = {
+    maxConcurrent: Math.min(accounts.length, 10),
+    cooldownMs: 60_000,
+    containerImage: "claude-fleet:latest",
+    runtime: "docker" as const,
+    taskTimeoutMs: 600_000,
+    containerMemory: "4g",
+    containerCpus: "2",
+    maxTotalSpawns: 500,
+  };
+
+  if (existsSync(ACCOUNTS_PATH)) {
+    try {
+      const existing = JSON.parse(readFileSync(ACCOUNTS_PATH, "utf-8"));
+      if (existing.settings) settings = { ...settings, ...existing.settings };
+    } catch { /* use defaults */ }
+  }
+
+  // Adjust maxConcurrent to match account count
+  settings.maxConcurrent = Math.min(accounts.length, settings.maxConcurrent);
+
+  const config: FleetConfig = { accounts, settings };
+
+  if (!existsSync(FLEET_DIR)) {
+    mkdirSync(FLEET_DIR, { recursive: true, mode: 0o700 });
+  }
+  writeFileSync(ACCOUNTS_PATH, JSON.stringify(config, null, 2) + "\n", { mode: 0o600 });
+
+  // Summary
+  const lines_out: string[] = [];
+  lines_out.push(`Loaded ${accounts.length} Bedrock account(s) from ${csvPath}`);
+  for (const acct of accounts) {
+    const masked = acct.credentials.AWS_BEARER_TOKEN_BEDROCK;
+    lines_out.push(`  ${acct.id}: ${acct.label} (${masked.slice(0, 4)}...${masked.slice(-4)}, ${region})`);
+  }
+  lines_out.push(`Config: ${ACCOUNTS_PATH}`);
+  lines_out.push(`Workers: ${settings.maxConcurrent} (auto-set to account count)`);
+  return lines_out.join("\n");
+}

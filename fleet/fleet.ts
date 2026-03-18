@@ -23,7 +23,7 @@ import {
 } from "./db";
 import type { FleetConfig, FleetTask, FleetRunResult, ScatterStrategy } from "./types";
 import { onFleetStart, onTaskComplete, onAccountCooldown, onFleetComplete } from "./bridge";
-import { runSetup, addAccount } from "./setup";
+import { runSetup, addAccount, loadFromCsv } from "./setup";
 import { selectProviderForTask, getAccountProviders, isLocalProvider } from "./container";
 
 // --- Logging ---
@@ -623,6 +623,7 @@ ${BOLD}Management:${RESET}
   --status                         Show fleet status + recent runs
   --build-image                    Build the fleet container image
   --setup                          Interactive account setup wizard
+  --from-csv <file>                Load accounts from CSV (one key per line or comma-separated)
   --init                           Create default config at ~/.claude/fleet/accounts.json
   --add-account                    Quick-add: --add-account "Label" KEY=val KEY2=val2
   --stop                           Stop all running fleet containers
@@ -635,6 +636,24 @@ ${BOLD}Management:${RESET}
 
   if (args.includes("--setup")) {
     await runSetup();
+    return;
+  }
+
+  if (args.includes("--from-csv")) {
+    const csvIdx = args.indexOf("--from-csv");
+    const csvPath = args[csvIdx + 1];
+    if (!csvPath || csvPath.startsWith("--")) {
+      error("Usage: fleet --from-csv keys.csv [--region us-east-1]");
+      process.exit(1);
+    }
+    const regionIdx = args.indexOf("--region");
+    const region = (regionIdx !== -1 && args[regionIdx + 1]) ? args[regionIdx + 1] : "us-east-1";
+    try {
+      console.log(loadFromCsv(csvPath, region));
+    } catch (err) {
+      error(err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    }
     return;
   }
 
