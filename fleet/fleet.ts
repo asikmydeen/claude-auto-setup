@@ -45,6 +45,63 @@ function generateId(): string {
 }
 
 // ============================================================================
+// PRE-FLIGHT: Ensure project has intel before dispatching
+// ============================================================================
+
+async function ensureProjectIntel(
+  config: FleetConfig,
+  projectRoot: string,
+  containers: ContainerManager,
+): Promise<void> {
+  const intelPath = join(projectRoot, ".claude", "rules", "project-intel.md");
+  if (existsSync(intelPath)) {
+    ok("Project intel: found");
+    return;
+  }
+
+  info("No project-intel.md found — generating before dispatch...");
+
+  // Use first account to generate intel
+  const pool = new AccountPool(config);
+  const account = pool.allocate("fleet-init");
+  if (!account) {
+    warn("No accounts available for intel generation — proceeding without intel");
+    return;
+  }
+
+  const initPrompt = `You are initializing a project. Scan the codebase and create a project intelligence file.
+
+1. Explore the directory structure, key files, and architecture
+2. Identify the tech stack, build commands, test commands
+3. Write a concise project-intel.md to .claude/rules/project-intel.md
+
+Keep it under 200 lines. Focus on: stack, architecture, key directories, build/test commands, API surface, known gotchas.
+Create the .claude/rules/ directory if it doesn't exist.`;
+
+  const outputDir = join(projectRoot, ".fleet", "init");
+  mkdirSync(outputDir, { recursive: true });
+
+  const container = containers.run({
+    account: account.account,
+    taskId: "fleet-init",
+    prompt: initPrompt,
+    projectRoot,
+    outputDir,
+    provider: "claude",
+  });
+
+  info("Generating project intel (this runs once per project)...");
+  const result = await containers.waitForContainer("fleet-init");
+  pool.release(account.account.id, result?.exitCode === 0);
+
+  if (result?.exitCode === 0 && existsSync(intelPath)) {
+    ok("Project intel: generated");
+  } else {
+    warn("Intel generation incomplete — fleet will proceed without it");
+  }
+}
+
+// ============================================================================
 // MODE 1: POOL — Worker pool processes a queue of independent tasks
 // ============================================================================
 
@@ -62,6 +119,9 @@ async function runPool(
 
   mkdirSync(outputBase, { recursive: true });
   createRun(runId, "pool", `Pool: ${tasksInput.length} tasks`, workers);
+
+  // Pre-flight: ensure project has intel
+  await ensureProjectIntel(config, projectRoot, containers);
 
   info(`Pool mode: ${tasksInput.length} tasks, ${workers} workers, ${pool.size} accounts`);
   onFleetStart("pool", tasksInput.length, workers);
@@ -378,6 +438,9 @@ async function runPipeline(
   const startedAt = new Date().toISOString();
   const outputBase = join(projectRoot, ".fleet", runId);
   mkdirSync(outputBase, { recursive: true });
+
+  // Pre-flight: ensure project has intel
+  await ensureProjectIntel(config, projectRoot, containers);
 
   createRun(runId, "pipeline", `Pipeline: ${stages.join(" → ")}`, stages.length);
   info(`Pipeline mode: ${stages.join(" → ")} (${stages.length} stages)`);
