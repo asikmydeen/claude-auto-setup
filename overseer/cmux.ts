@@ -8,6 +8,7 @@
 
 import { spawnSync } from "child_process";
 import { existsSync } from "fs";
+import { join } from "path";
 
 const IS_MACOS = process.platform === "darwin";
 const CMUX_APP_CLI = "/Applications/cmux.app/Contents/Resources/bin/cmux";
@@ -438,6 +439,28 @@ export function onEpicComplete(epicTitle: string, stats: { done: number; failed:
   setProgress(1.0, `SDLC: ${stats.done}/${stats.total} tasks`);
   sidebarLog(`Completed: ${stats.done} done, ${stats.failed} failed`, success ? "success" : "warning");
   notify(success ? "SDLC Complete" : "SDLC Complete (with issues)", `${epicTitle} — ${stats.done}/${stats.total} tasks`);
+}
+
+/**
+ * Launch the GSD 2 ↔ cmux bridge in a background process.
+ * Watches .gsd/ and mirrors state to cmux sidebar.
+ * Returns the child process or null.
+ */
+export function launchGsdBridge(overseerDir: string, projectDir: string): boolean {
+  if (!canUseCmux()) return false;
+
+  try {
+    const { spawn } = require("child_process");
+    const child = spawn("bun", [join(overseerDir, "gsd-bridge.ts"), projectDir], {
+      detached: true,
+      stdio: "ignore",
+    });
+    child.unref();
+    sidebarLog("GSD bridge started", "info");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
