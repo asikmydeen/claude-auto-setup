@@ -143,32 +143,241 @@ export function notify(title: string, body: string): boolean {
 }
 
 // ============================================================
-// BROWSER AUTOMATION
+// BROWSER AUTOMATION — UI Testing
 // ============================================================
 
 /**
- * Open a URL in a cmux browser surface (split pane).
+ * Open a URL in a cmux browser split pane.
+ * Returns the raw output (contains surface info) or null.
  */
-export function openBrowserSplit(url: string): string | null {
-  return cmux(["browser", "open-split", url]);
+export function browserOpen(url: string): string | null {
+  return cmux(["browser", "open-split", url], 10000);
 }
 
 /**
- * Wait for a page to load in a browser surface.
+ * Wait for a condition on a browser surface.
  */
-export function browserWait(surfaceId: string, opts: { loadState?: string; text?: string; timeoutMs?: number } = {}): boolean {
-  const args = ["browser", surfaceId, "wait"];
+export function browserWait(surface: string, opts: {
+  loadState?: string; text?: string; selector?: string;
+  urlContains?: string; jsCondition?: string; timeoutMs?: number;
+} = {}): boolean {
+  const args = ["browser", surface, "wait"];
   if (opts.loadState) args.push("--load-state", opts.loadState);
   if (opts.text) args.push("--text", opts.text);
-  if (opts.timeoutMs) args.push("--timeout-ms", String(opts.timeoutMs));
-  return cmux(args, opts.timeoutMs || 15000) !== null;
+  if (opts.selector) args.push("--selector", opts.selector);
+  if (opts.urlContains) args.push("--url-contains", opts.urlContains);
+  if (opts.jsCondition) args.push("--function", opts.jsCondition);
+  args.push("--timeout-ms", String(opts.timeoutMs || 15000));
+  return cmux(args, (opts.timeoutMs || 15000) + 2000) !== null;
 }
 
 /**
- * Take a screenshot of a browser surface.
+ * Take a DOM snapshot (structured text, good for LLM analysis).
  */
-export function browserScreenshot(surfaceId: string, outPath: string): boolean {
-  return cmux(["browser", surfaceId, "screenshot", "--out", outPath]) !== null;
+export function browserSnapshot(surface: string, opts: { selector?: string; compact?: boolean; interactive?: boolean } = {}): string | null {
+  const args = ["browser", surface, "snapshot"];
+  if (opts.selector) args.push("--selector", opts.selector);
+  if (opts.compact) args.push("--compact");
+  if (opts.interactive) args.push("--interactive");
+  return cmux(args, 10000);
+}
+
+/**
+ * Take a screenshot and save to file.
+ */
+export function browserScreenshot(surface: string, outPath: string): boolean {
+  return cmux(["browser", surface, "screenshot", "--out", outPath]) !== null;
+}
+
+/**
+ * Get a property from the page.
+ */
+export function browserGet(surface: string, prop: "title" | "url" | "text" | "html" | "value" | "count", selector?: string): string | null {
+  const args = ["browser", surface, "get", prop];
+  if (selector) args.push(selector);
+  return cmux(args, 5000);
+}
+
+/**
+ * Check element visibility/state.
+ */
+export function browserIs(surface: string, check: "visible" | "enabled" | "checked", selector: string): boolean {
+  const result = cmux(["browser", surface, "is", check, selector], 5000);
+  return result !== null && !result.toLowerCase().includes("false");
+}
+
+/**
+ * Find elements by various strategies.
+ */
+export function browserFind(surface: string, strategy: "role" | "text" | "label" | "testid" | "first" | "last", value: string): string | null {
+  return cmux(["browser", surface, "find", strategy, value], 5000);
+}
+
+/**
+ * Click an element.
+ */
+export function browserClick(surface: string, selector: string, snapshotAfter = false): string | null {
+  const args = ["browser", surface, "click", selector];
+  if (snapshotAfter) args.push("--snapshot-after");
+  return cmux(args, 5000);
+}
+
+/**
+ * Fill a form input.
+ */
+export function browserFill(surface: string, selector: string, text: string): boolean {
+  return cmux(["browser", surface, "fill", selector, "--text", text], 5000) !== null;
+}
+
+/**
+ * Execute JavaScript in the browser.
+ */
+export function browserEval(surface: string, script: string): string | null {
+  return cmux(["browser", surface, "eval", script], 10000);
+}
+
+/**
+ * Get console logs from the browser.
+ */
+export function browserConsoleLogs(surface: string): string | null {
+  return cmux(["browser", surface, "console", "list"], 5000);
+}
+
+/**
+ * Get browser errors.
+ */
+export function browserErrors(surface: string): string | null {
+  return cmux(["browser", surface, "errors", "list"], 5000);
+}
+
+/**
+ * Identify the current browser surface (get surface ID, URL, title).
+ */
+export function browserIdentify(): string | null {
+  return cmux(["browser", "identify", "--json"], 5000);
+}
+
+// ============================================================
+// UI VERIFICATION WORKFLOW
+// ============================================================
+
+export interface UIVerificationResult {
+  url: string;
+  surface: string | null;
+  pageTitle: string | null;
+  screenshot: string | null;
+  snapshot: string | null;
+  errors: string | null;
+  consoleLogs: string | null;
+  checks: Array<{ name: string; passed: boolean; detail: string }>;
+}
+
+/**
+ * Run a full UI verification against a URL.
+ * Opens browser, waits for load, takes snapshot + screenshot,
+ * checks for errors, and runs element checks.
+ *
+ * This is the main entry point for QA browser testing.
+ */
+export function verifyUI(
+  url: string,
+  checks: Array<{ name: string; type: "visible" | "text" | "title" | "count"; selector?: string; expected?: string }>,
+  screenshotDir?: string,
+): UIVerificationResult {
+  const result: UIVerificationResult = {
+    url,
+    surface: null,
+    pageTitle: null,
+    screenshot: null,
+    snapshot: null,
+    errors: null,
+    consoleLogs: null,
+    checks: [],
+  };
+
+  if (!canUseCmux()) return result;
+
+  // Open browser pane with URL — new-pane returns "OK surface:N pane:N workspace:N"
+  const paneResult = cmux(["new-pane", "--type", "browser", "--direction", "right", "--url", url], 10000);
+  let surface = "";
+
+  if (paneResult) {
+    // Parse surface ID from "OK surface:9 pane:7 workspace:1"
+    const match = paneResult.match(/surface:\d+/);
+    if (match) surface = match[0];
+  }
+
+  if (!surface) {
+    sidebarLog("Could not open browser surface", "warning");
+    return result;
+  }
+  result.surface = surface;
+
+  // Wait for page load
+  browserWait(surface, { loadState: "complete", timeoutMs: 15000 });
+
+  // Get page title
+  result.pageTitle = browserGet(surface, "title");
+
+  // Take snapshot
+  result.snapshot = browserSnapshot(surface, { compact: true, interactive: true });
+
+  // Take screenshot
+  if (screenshotDir) {
+    const ssPath = `${screenshotDir}/ui-verification-${Date.now()}.png`;
+    if (browserScreenshot(surface, ssPath)) {
+      result.screenshot = ssPath;
+    }
+  }
+
+  // Check for errors
+  result.errors = browserErrors(surface);
+  result.consoleLogs = browserConsoleLogs(surface);
+
+  // Run element checks
+  for (const check of checks) {
+    let passed = false;
+    let detail = "";
+
+    switch (check.type) {
+      case "visible":
+        if (check.selector) {
+          passed = browserIs(surface, "visible", check.selector);
+          detail = passed ? `Element ${check.selector} is visible` : `Element ${check.selector} NOT visible`;
+        }
+        break;
+      case "text":
+        if (check.selector) {
+          const text = browserGet(surface, "text", check.selector);
+          passed = text !== null && (check.expected ? text.includes(check.expected) : text.length > 0);
+          detail = `Text: "${text?.slice(0, 100) || "null"}"${check.expected ? ` (expected: "${check.expected}")` : ""}`;
+        }
+        break;
+      case "title":
+        passed = result.pageTitle !== null && (check.expected ? result.pageTitle.includes(check.expected) : true);
+        detail = `Title: "${result.pageTitle || "null"}"`;
+        break;
+      case "count":
+        if (check.selector) {
+          const count = browserGet(surface, "count", check.selector);
+          passed = count !== null && parseInt(count, 10) > 0;
+          detail = `Count of ${check.selector}: ${count || "0"}`;
+        }
+        break;
+    }
+
+    result.checks.push({ name: check.name, passed, detail });
+  }
+
+  // Log results to sidebar
+  const passCount = result.checks.filter(c => c.passed).length;
+  const failCount = result.checks.filter(c => !c.passed).length;
+  sidebarLog(
+    `UI Verify: ${passCount} passed, ${failCount} failed`,
+    failCount > 0 ? "warning" : "success",
+  );
+
+  return result;
 }
 
 // ============================================================

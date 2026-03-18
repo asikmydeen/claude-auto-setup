@@ -16,6 +16,7 @@ import { spawnAgent, selectProvider } from "./spawner";
 import { getNextBatch, isEpicComplete, getBlockedTasks, formatProgress } from "./scheduler";
 import { buildKnowledgeContext } from "./knowledge";
 import { generateBoard } from "./board";
+import { runBrowserVerification } from "./browser-verify";
 import { detectInternalProject, isKiroAvailable } from "./kiro";
 import { setInternalMode } from "./spawner";
 import { canUseCmux, onEpicStart, onProgress, onEpicComplete, onAgentStart, onMergeComplete, getPlatformInfo } from "./cmux";
@@ -501,6 +502,18 @@ log(`Epic: ${epic.title}`);
 log(`Tasks: ${stats.done} done, ${stats.failed} failed, ${stats.total} total`);
 log(`ID: ${epic.id}`);
 log(formatProgress(epic.id));
+
+// Browser verification (cmux only — opens browser, checks UI elements)
+log("Running browser verification...");
+const uiResult = await runBrowserVerification({ projectRoot: PROJECT_ROOT, epicId: epic.id });
+if (uiResult) {
+  const uiPass = uiResult.checks.filter(c => c.passed).length;
+  const uiTotal = uiResult.checks.length;
+  log(`UI Verification: ${uiPass}/${uiTotal} checks passed`);
+  if (uiResult.screenshot) log(`Screenshot: ${uiResult.screenshot}`);
+} else {
+  log("Browser verification skipped (cmux not available or not a web project)");
+}
 
 // Final board update + cmux completion
 generateBoard(epic.id, PROJECT_ROOT);
