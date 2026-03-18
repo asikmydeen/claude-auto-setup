@@ -20,6 +20,7 @@ function cmux(args: string[]): string | null {
       encoding: "utf-8",
       timeout: 5000,
       env: { ...process.env, CMUX_SOCKET: CMUX_SOCK },
+      stdio: ["ignore", "pipe", "ignore"], // suppress stderr noise
     }).trim();
   } catch {
     return null;
