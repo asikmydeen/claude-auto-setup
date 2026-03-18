@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (GSD 2 ↔ cmux bridge)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (Fleet multi-account orchestration)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -31,6 +31,7 @@
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
 - **Pattern conformance system** - Auto-extracted codebase patterns, enforcement rule, deviation protocol
 - **SDLC Overseer** - Full virtual engineering team: 13 role-based agents, DAG scheduler, git worktree isolation, SQLite task management, centralized knowledge store
+- **Fleet** - Multi-account container orchestration: 4 modes (pool, scatter, decompose, pipeline), Docker/Podman, hybrid dispatch (container for API-key CLIs, local for browser-auth CLIs)
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
@@ -342,6 +343,73 @@ Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better
 
 ---
 
+## Fleet — Multi-Account Container Orchestration (`fleet/`)
+
+Run AI tasks across multiple API accounts in isolated Docker/Podman containers. Complements the Overseer (which uses a single credential set) — Fleet adds N× throughput via pooled accounts.
+
+**Run**: `bun fleet/fleet.ts --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages r,i,t`
+**Setup**: `bun fleet/fleet.ts --setup` (interactive) | `--init` (template) | `--add-account "Label" KEY=val`
+**Manage**: `--status` | `--accounts` | `--stop` | `--build-image`
+**Config**: `~/.claude/fleet/accounts.json` (chmod 600, dir chmod 700)
+**Image**: `claude-fleet:latest` (~1.8GB) — claude-code + codex + gemini + copilot + bun + git, non-root `fleet` user
+**Database**: `~/.claude/data/fleet.db` (fleet_runs, fleet_tasks, fleet_containers)
+
+### 4 Execution Modes
+
+| Mode | Command | How It Works |
+|------|---------|-------------|
+| **Pool** | `--pool tasks.json` | Worker queue — N tasks round-robin across M accounts |
+| **Scatter** | `--scatter "prompt"` | Same task to N workers, results merged (best/merge/all) |
+| **Decompose** | `--decompose "task"` | AI splits into subtasks, parallel pool dispatch |
+| **Pipeline** | `--pipeline "task" --stages r,i,t` | Sequential stages, fresh account per stage |
+
+### Hybrid Dispatch (Container vs Local)
+
+| Auth Type | Providers | Runs In | Why |
+|-----------|-----------|---------|-----|
+| API key | claude, codex, gemini, copilot | **Container** | Credentials via `--env-file` (temp, deleted after spawn) |
+| Browser OAuth | kiro, amp | **Local** | Needs persistent `~/.kiro/`, `~/.amp/` auth tokens |
+
+Provider selection: task type → routing table → first available from account's credentials. Example: account with `ANTHROPIC_API_KEY` + `OPENAI_API_KEY` gets test-writing → routes to `codex`.
+
+### Core Modules (`fleet/*.ts`)
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `types.ts` | 168 | Account, Container, FleetTask, FleetConfig, DB records |
+| `pool.ts` | 283 | AccountPool: round-robin, cooldown, requeue history, spawn limit |
+| `container.ts` | 514 | ContainerManager: Docker/Podman lifecycle, provider command building, local fallback, stale detection |
+| `db.ts` | 223 | SQLite: fleet_runs, fleet_tasks, fleet_containers (cached prepared statements) |
+| `fleet.ts` | 826 | CLI orchestrator: all 4 modes + management commands |
+| `setup.ts` | 378 | Interactive account wizard: 11 providers, credential collection, review + save |
+| `bridge.ts` | 128 | cmux sidebar: status pills, progress bar, notifications (no-ops without cmux) |
+| `Dockerfile` | 40 | Non-root image: node:22-slim + claude/codex/gemini/copilot + bun |
+
+### Account Pool
+
+- **Round-robin allocation** with `attemptedAccounts[]` tracking (avoids retrying same account on rate limit)
+- **Rate limit detection**: scans output for 429/quota/overloaded → cooldown account → requeue task
+- **Spawn safety limit**: `maxTotalSpawns` (default 500) prevents runaway container creation
+- **Stale container detection**: warns on startup about orphaned `fleet-*` containers
+- **Configurable**: memory, CPUs, timeout, cooldown duration, max concurrent workers
+
+### install.sh Integration
+
+- Fresh install: detects runtime → interactive setup prompt → builds image → creates config
+- Update: rebuilds image if missing
+- Doctor: 6 fleet health checks (config, perms, runtime, image, DB, stale containers)
+- Dry run: all fleet operations preview without changes
+
+### E2E Tested
+
+| Mode | Tasks | Duration | Result |
+|------|-------|----------|--------|
+| Pool | 2/2 | 15s | `4`, `Paris` (parallel, Bedrock) |
+| Scatter | 2/2 | 11s | Both `Python, JavaScript, Java` (merged) |
+| Pipeline | 2/2 | 112s | implement → test → 11/11 tests pass |
+
+---
+
 ## Known Gotchas
 
 1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
@@ -379,6 +447,12 @@ Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better
 33. **Overseer nested Claude sessions** — must unset both `CLAUDECODE=''` AND `CLAUDE_CODE_ENTRYPOINT=''` or child sessions block
 34. **Overseer stories/tasks parsing** — PM/PjM may fail to write valid JSON; fallback story/task generation prevents pipeline stall
 35. **Overseer merge order** — follows DAG dependencies; tasks with failed deps get marked blocked→failed automatically
+36. **Fleet Docker volume mounts on macOS** — `/tmp` is `/private/tmp`, not accessible to Docker; use `~/` paths instead
+37. **Fleet `--dangerously-skip-permissions` as root** — Claude Code blocks this flag when running as root; Dockerfile must use non-root `fleet` user
+38. **Fleet container record uniqueness** — container DB IDs include timestamp to prevent UNIQUE constraint failures across runs
+39. **Fleet Bedrock in containers** — `AWS_PROFILE` alone insufficient; extract temp credentials via `aws configure export-credentials --format env` and inject `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` + `AWS_SESSION_TOKEN`
+40. **Fleet browser-auth CLIs** — Kiro (`kiro auth`) and Amp (`amp login`) use browser OAuth; cannot run in non-persistent containers; fleet dispatches these locally via `spawn()` instead
+41. **Fleet env-file cleanup** — credentials written to temp file for `--env-file`, deleted 5s after container start; timeout handler doesn't explicitly clean up (OS cleans `/tmp` eventually)
 
 ---
 
@@ -395,8 +469,7 @@ Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better
 - **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **14** overseer modules (`overseer/*.ts` including gsd-bridge) + architecture docs
-- **2** WebSocket endpoints (ops, terminal)
-- **3** container runtimes supported (Podman, Docker, Finch)
+- **8** fleet modules (`fleet/*.ts` + Dockerfile) — multi-account container orchestration
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
