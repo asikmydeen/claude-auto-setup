@@ -34,12 +34,23 @@ const PROVIDERS: Record<string, ProviderDef> = {
       { key: "ANTHROPIC_API_KEY", label: "Anthropic API Key", hint: "sk-ant-...", required: true },
     ],
   },
-  bedrock: {
-    name: "AWS Bedrock",
-    description: "Claude via AWS Bedrock (uses AWS credentials)",
+  "bedrock-apikey": {
+    name: "AWS Bedrock (API Key)",
+    description: "Claude via Bedrock long-term API key (ABSK...)",
     envVars: [
       { key: "CLAUDE_CODE_USE_BEDROCK", label: "Use Bedrock", hint: "1 (auto-set)", required: false },
-      { key: "AWS_PROFILE", label: "AWS Profile", hint: "e.g. bedrock-dev", required: true },
+      { key: "AWS_BEARER_TOKEN_BEDROCK", label: "Bedrock API Key", hint: "ABSK...", required: true },
+      { key: "AWS_REGION", label: "AWS Region", hint: "e.g. us-east-1", required: false },
+    ],
+  },
+  "bedrock-iam": {
+    name: "AWS Bedrock (IAM Credentials)",
+    description: "Claude via Bedrock with AWS access keys",
+    envVars: [
+      { key: "CLAUDE_CODE_USE_BEDROCK", label: "Use Bedrock", hint: "1 (auto-set)", required: false },
+      { key: "AWS_ACCESS_KEY_ID", label: "AWS Access Key ID", hint: "AKIA...", required: true },
+      { key: "AWS_SECRET_ACCESS_KEY", label: "AWS Secret Access Key", hint: "...", required: true },
+      { key: "AWS_SESSION_TOKEN", label: "AWS Session Token (optional)", hint: "leave blank for long-term keys", required: false },
       { key: "AWS_REGION", label: "AWS Region", hint: "e.g. us-east-1", required: false },
     ],
   },
@@ -239,8 +250,8 @@ export async function runSetup(): Promise<void> {
       console.error(`  ${CYAN}${pdef.name}:${RESET}`);
 
       for (const envVar of pdef.envVars) {
-        if (!envVar.required && pid === "bedrock" && envVar.key === "CLAUDE_CODE_USE_BEDROCK") {
-          credentials[envVar.key] = "1"; // Auto-set
+        if (!envVar.required && envVar.key === "CLAUDE_CODE_USE_BEDROCK") {
+          credentials[envVar.key] = "1"; // Auto-set for all Bedrock variants
           continue;
         }
 

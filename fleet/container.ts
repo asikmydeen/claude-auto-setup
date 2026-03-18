@@ -32,7 +32,7 @@ function selectProviderForAccount(account: Account): string {
   }
 
   // Infer from credentials
-  if (creds.ANTHROPIC_API_KEY || creds.CLAUDE_CODE_USE_BEDROCK) return "claude";
+  if (creds.ANTHROPIC_API_KEY || creds.CLAUDE_CODE_USE_BEDROCK || creds.AWS_BEARER_TOKEN_BEDROCK) return "claude";
   if (creds.OPENAI_API_KEY) return "codex";
   if (creds.GOOGLE_GENERATIVE_AI_API_KEY) return "gemini";
   if (creds.COPILOT_GITHUB_TOKEN || creds.GH_TOKEN || creds.GITHUB_TOKEN) return "copilot";
@@ -77,11 +77,11 @@ export function getAccountProviders(account: Account): string[] {
   const providers: string[] = [];
   const creds = account.credentials;
 
-  if (creds.ANTHROPIC_API_KEY || creds.CLAUDE_CODE_USE_BEDROCK) providers.push("claude");
+  if (creds.ANTHROPIC_API_KEY || creds.CLAUDE_CODE_USE_BEDROCK || creds.AWS_BEARER_TOKEN_BEDROCK) providers.push("claude");
   if (creds.OPENAI_API_KEY) providers.push("codex");
   if (creds.GOOGLE_GENERATIVE_AI_API_KEY) providers.push("gemini");
   if (creds.COPILOT_GITHUB_TOKEN || creds.GH_TOKEN || creds.GITHUB_TOKEN) providers.push("copilot");
-  if (creds.AWS_PROFILE && creds.CLAUDE_CODE_USE_BEDROCK) providers.push("kiro");
+  if ((creds.AWS_PROFILE || creds.AWS_ACCESS_KEY_ID) && creds.CLAUDE_CODE_USE_BEDROCK) providers.push("kiro");
 
   // If explicit providers set, use those
   if (account.providers && account.providers.length > 0) return account.providers;
