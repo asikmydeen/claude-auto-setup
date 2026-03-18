@@ -484,8 +484,8 @@ export function loadFromCsv(csvPath: string, region = "us-east-1"): string {
     } catch { /* use defaults */ }
   }
 
-  // Adjust maxConcurrent to match account count
-  settings.maxConcurrent = Math.min(accounts.length, settings.maxConcurrent);
+  // Set maxConcurrent to account count (CSV is the source of truth)
+  settings.maxConcurrent = accounts.length;
 
   const config: FleetConfig = { accounts, settings };
 
