@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (claude-mem deep integration)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (GSD 2 integration)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -371,7 +371,7 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 15 SDLC agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
-- **12** universal rule files, 57 command definitions (including sdlc, mem-search)
+- **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **13** overseer modules (`overseer/*.ts`) + architecture docs
 - **2** WebSocket endpoints (ops, terminal)

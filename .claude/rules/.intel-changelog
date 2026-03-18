@@ -57,3 +57,4 @@
 [2026-03-17T18:30:00Z] | build | Kiro deep integration + GSD requirements + live dashboard + Obsidian board + SSE | Sections updated: SDLC Overseer (major), Quick Reference | Files changed: 15
 [2026-03-17T20:30:00Z] | build | cmux app integration (sidebar, splits, browser automation, UI verification), platform safety validated | Sections updated: SDLC Overseer (cmux, browser-verify), Quick Reference | Files changed: 8
 [2026-03-17T21:00:00Z] | build | claude-mem deep integration (memory.ts, spawner reads/writes memory, overseer logs status + captures completion) | Sections updated: Quick Reference | Files changed: 3
+[2026-03-18T08:00:00Z] | build | GSD 2 integration (gsd-pi v2.28.0, gsd-integration.md, sdlc-routing updated, install.sh detection) | Sections updated: Quick Reference | Files changed: 4
