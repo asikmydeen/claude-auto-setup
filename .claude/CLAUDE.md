@@ -68,6 +68,15 @@ Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`
 
 Skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 
+## GSD 2 (Get Shit Done v2)
+Standalone coding agent with fresh-session-per-task architecture. Solves context rot at the engine level.
+- Install: `mise exec node@24 -- npm install -g gsd-pi`
+- Interactive: `gsd` then `/gsd auto` (autonomous) or `/gsd` (step mode)
+- Headless: `gsd headless` (CI/scripts), `gsd headless query` (instant JSON state)
+- Use for: greenfield external projects, cost-conscious builds, crash recovery
+- Config: `~/.gsd/preferences.md` (global), `.gsd/preferences.md` (project)
+- See `universal/rules/gsd-integration.md` for when to use GSD 2 vs Overseer
+
 ## Pattern Conformance
 All new code must follow patterns documented in `.claude/rules/codebase-patterns.md`.
 - Generated automatically during `/init` or `/deep-research` (7th parallel agent: `pattern-analyzer`)

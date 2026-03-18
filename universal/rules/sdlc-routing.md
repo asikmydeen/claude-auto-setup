@@ -39,19 +39,27 @@ Keep as regular Claude task when:
 When you detect a feature-level request, suggest the SDLC pipeline:
 
 ```
-This looks like a feature-level request. I recommend running the full SDLC pipeline:
+This looks like a feature-level request. You have two options:
 
+Option 1 — GSD 2 (recommended for external/greenfield):
+  gsd          # then /gsd auto
+  Better context management, cost tracking, crash recovery, verification.
+
+Option 2 — SDLC Overseer (recommended for internal/Amazon):
   /sdlc "your feature description"
+  Kiro integration, 15 role-based agents, cmux dashboard.
 
-This will spin up a virtual engineering team (PM, engineers, testers, security) to:
-1. Break it into stories and tasks
-2. Implement in parallel git worktrees (max 5 concurrent)
-3. Test, review, merge, and prepare for release
-
-Alternatively, I can handle it as a regular task if you prefer.
+Option 3 — I'll handle it as a regular multi-agent task:
+  /build "your feature description"
+  Faster, but less structured than a full pipeline.
 ```
 
-If the user has previously said "always use /sdlc for features" → route automatically without asking.
+If the user has previously said "always use GSD" or "always use /sdlc" → route automatically without asking.
+
+**Auto-selection heuristic:**
+- Internal project (packageInfo, .brazil.json, /workplace/) → suggest Overseer (`--internal`)
+- External + complex (multi-story, multi-layer) → suggest GSD 2 (`gsd auto`)
+- External + medium complexity → suggest `/build`
 
 ## Integration with Orchestration
 
@@ -63,6 +71,7 @@ This rule extends the existing task classification in `orchestration.md` Step 1.
 | Small | Quick task | 1-2 files, single concern |
 | Medium | Multi-agent /build | 2-5 files, single concern |
 | Large | Multi-agent /build | 6+ files, cross-cutting |
-| **Feature/Epic** | **/sdlc pipeline** | **New feature, multi-story, involves multiple roles/layers** |
+| **Feature/Epic (external)** | **GSD 2** (`gsd auto`) | **Greenfield, cost tracking, crash recovery** |
+| **Feature/Epic (internal)** | **Overseer** (`/sdlc --internal`) | **Amazon services, Kiro, cmux** |
 
-The /sdlc classification is NEW — it sits above "Large" because it involves planning (stories, tasks, architecture) before implementation.
+GSD 2 and Overseer are complementary — GSD 2 excels at context management and cost tracking, Overseer excels at internal integration and role-based orchestration.

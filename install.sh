@@ -170,6 +170,15 @@ detect_agents() {
     info "Copilot CLI: not found"
   fi
 
+  # GSD 2 (standalone agent, not a provider — just report availability)
+  if command -v gsd &>/dev/null && gsd --version &>/dev/null 2>&1; then
+    ok "GSD 2: $(gsd --version 2>/dev/null || echo 'found')"
+  elif mise exec node@24 -- gsd --version &>/dev/null 2>&1; then
+    ok "GSD 2: $(mise exec node@24 -- gsd --version 2>/dev/null) (via mise node@24)"
+  else
+    info "GSD 2: not found (install: npm install -g gsd-pi)"
+  fi
+
   # Count detected
   local count=0
   for key in $ALL_AGENTS; do
@@ -578,6 +587,11 @@ doctor() {
     agent_count=$((agent_count + 1))
   else
     check_warn "Kiro CLI: not installed"
+  fi
+  if command -v gsd &>/dev/null || mise exec node@24 -- gsd --version &>/dev/null 2>&1; then
+    check_pass "GSD 2: $(gsd --version 2>/dev/null || mise exec node@24 -- gsd --version 2>/dev/null || echo 'found')"
+  else
+    check_warn "GSD 2: not installed (npm install -g gsd-pi)"
   fi
   for cli in gemini codex cursor amp; do
     if command -v "$cli" &>/dev/null; then
