@@ -368,7 +368,12 @@ async function executionLoop() {
     // 1. Check for tasks in "review" status → enqueue for merge
     const allTasks = getTasksByEpic(epic.id);
     for (const task of allTasks) {
-      if (task.status === "review" && task.branch_name && task.worktree_path) {
+      if (task.status === "review") {
+        // Planning tasks (branch "main" or no branch) skip merge — mark done directly
+        if (!task.branch_name || task.branch_name === "main" || !task.worktree_path || task.worktree_path === PROJECT_ROOT) {
+          updateTaskStatus(task.id, "done");
+          continue;
+        }
         log(`Task completed, enqueueing merge: ${task.title}`);
         enqueueMerge(task.id, task.branch_name, task.worktree_path);
         updateTaskStatus(task.id, "merged"); // Move out of review to prevent re-enqueue
@@ -405,31 +410,36 @@ async function executionLoop() {
     // 3. Spawn new agents for ready tasks
     const batch = getNextBatch(epic.id, config.maxConcurrency);
     for (const task of batch) {
-      const wt = createWorktree(PROJECT_ROOT, epic.id, task.id);
-      const prov = selectProvider(task.type, PROJECT_ROOT);
-      const knowledgeCtx = buildKnowledgeContext(epic.id);
+      try {
+        const wt = createWorktree(PROJECT_ROOT, epic.id, task.id);
+        const prov = selectProvider(task.type, PROJECT_ROOT);
+        const knowledgeCtx = buildKnowledgeContext(epic.id);
 
-      const taskPrompt = [
-        task.description,
-        knowledgeCtx ? `\n${knowledgeCtx}` : "",
-        `\nWhen done, commit your changes and exit.`,
-      ].join("\n");
+        const taskPrompt = [
+          task.description,
+          knowledgeCtx ? `\n${knowledgeCtx}` : "",
+          `\nWhen done, commit your changes and exit.`,
+        ].join("\n");
 
-      log(`Spawning ${task.assigned_role}: ${task.title} [${wt.branch}]`);
+        log(`Spawning ${task.assigned_role}: ${task.title} [${wt.branch}]`);
 
-      const result = spawnAgent({
-        task,
-        epicId: epic.id,
-        role: (task.assigned_role || "engineer") as AgentRole,
-        worktreePath: wt.path,
-        branchName: wt.branch,
-        prompt: taskPrompt,
-        projectRoot: PROJECT_ROOT,
-        provider: prov,
-      });
+        const result = spawnAgent({
+          task,
+          epicId: epic.id,
+          role: (task.assigned_role || "engineer") as AgentRole,
+          worktreePath: wt.path,
+          branchName: wt.branch,
+          prompt: taskPrompt,
+          projectRoot: PROJECT_ROOT,
+          provider: prov,
+        });
 
-      if (result.process.pid) {
-        runningProcesses.set(task.id, { pid: result.process.pid, taskId: task.id });
+        if (result.process.pid) {
+          runningProcesses.set(task.id, { pid: result.process.pid, taskId: task.id });
+        }
+      } catch (err) {
+        logErr(`Failed to spawn agent for task "${task.title}": ${err}`);
+        updateTaskStatus(task.id, "failed");
       }
     }
 
@@ -504,12 +514,15 @@ async function runPlanningAgent(taskId: string, role: AgentRole, prompt: string)
   return new Promise<void>((resolve) => {
     result.process.on("close", (code) => {
       log(`  ${role} exited (code: ${code})`);
+      // Planning agents go straight to "done" — no merge queue
+      updateTaskStatus(taskId, code === 0 ? "done" : "failed");
       resolve();
     });
     // Timeout after 5 minutes
     setTimeout(() => {
       log(`  ${role} timed out — killing`);
       try { result.process.kill("SIGTERM"); } catch {}
+      updateTaskStatus(taskId, "done");
       resolve();
     }, 5 * 60 * 1000);
   });
