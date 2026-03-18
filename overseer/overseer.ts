@@ -16,6 +16,8 @@ import { spawnAgent, selectProvider } from "./spawner";
 import { getNextBatch, isEpicComplete, getBlockedTasks, formatProgress } from "./scheduler";
 import { buildKnowledgeContext } from "./knowledge";
 import { generateBoard } from "./board";
+import { detectInternalProject, isKiroAvailable } from "./kiro";
+import { setInternalMode } from "./spawner";
 import type { OverseerConfig, AgentRole, Priority, TaskType } from "./types";
 
 // --- Config ---
@@ -38,6 +40,7 @@ const args = process.argv.slice(2);
 let mode: "epic" | "status" | "list" | "cleanup" = "epic";
 let epicDescription = "";
 let epicId = "";
+let forceInternal: boolean | null = null; // null = auto-detect
 
 for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
@@ -45,6 +48,8 @@ for (let i = 0; i < args.length; i++) {
     case "--status": epicId = args[++i] || ""; mode = "status"; break;
     case "--list": mode = "list"; break;
     case "--cleanup": mode = "cleanup"; break;
+    case "--internal": forceInternal = true; break;
+    case "--external": forceInternal = false; break;
     case "--max-concurrency": config.maxConcurrency = parseInt(args[++i] || "5", 10); break;
     case "--help": case "-h":
       console.log(`
@@ -57,7 +62,9 @@ Usage:
   bun overseer/overseer.ts --cleanup                     Remove all worktrees
 
 Options:
-  --max-concurrency N    Max parallel agents (default: 5)
+  --internal               Force internal mode (Kiro-assisted, Amazon patterns)
+  --external               Force external mode (standard, no Kiro)
+  --max-concurrency N      Max parallel agents (default: 5)
 `);
       process.exit(0);
   }
@@ -116,7 +123,30 @@ if (mode === "cleanup") {
 // --- Mode: Epic ---
 if (!epicDescription) { logErr("Missing --epic. Use --help."); process.exit(1); }
 
+// --- Internal Mode Detection ---
+let isInternal = false;
+if (forceInternal !== null) {
+  isInternal = forceInternal;
+} else {
+  const detection = detectInternalProject(PROJECT_ROOT);
+  isInternal = detection.isInternal;
+  if (isInternal) {
+    log(`Internal project detected: ${detection.indicators.join(", ")}`);
+  }
+}
+
+if (isInternal) {
+  if (isKiroAvailable()) {
+    setInternalMode(true);
+    log("Internal mode: ON — Kiro CLI will be consulted for internal context");
+  } else {
+    log("WARNING: Internal project detected but kiro-cli not installed. Running without internal context.");
+    log("  Install: npm install -g @anthropic-ai/kiro-cli && kiro auth");
+  }
+}
+
 log(`Starting epic: "${epicDescription}"`);
+log(`Mode: ${isInternal ? "INTERNAL (Kiro-assisted)" : "EXTERNAL"}`);
 log(`Max concurrency: ${config.maxConcurrency}`);
 ensureWorktreeGitignore(PROJECT_ROOT);
 

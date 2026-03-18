@@ -5,7 +5,13 @@ import { spawn, type ChildProcess } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { createAgentSession, updateAgentSession, updateTaskStatus, assignTask, logEvent } from "./db";
+import { buildInternalContext, getInternalRouting, isKiroAvailable } from "./kiro";
 import type { AgentRole, AgentSession, Task } from "./types";
+
+// Global flag — set by overseer when --internal mode is active
+let internalMode = false;
+export function setInternalMode(enabled: boolean): void { internalMode = enabled; }
+export function getInternalMode(): boolean { return internalMode; }
 
 interface SpawnResult {
   session: AgentSession;
@@ -67,6 +73,15 @@ function buildAgentPrompt(opts: SpawnOptions): string {
     } catch { /* skip */ }
   }
 
+  // Internal context (Kiro consultation instructions)
+  if (internalMode) {
+    const internalCtx = buildInternalContext(opts.projectRoot);
+    if (internalCtx) {
+      parts.push(internalCtx);
+      parts.push("");
+    }
+  }
+
   // Custom prompt
   if (opts.prompt) {
     parts.push("## Instructions");
@@ -120,6 +135,10 @@ export function spawnAgent(opts: SpawnOptions): SpawnResult {
     case "gemini":
       cmd = "gemini";
       args = []; // gemini reads from stdin
+      break;
+    case "kiro":
+      cmd = "kiro-cli";
+      args = ["-p", fullPrompt, "--allow-tool=shell", "--allow-tool=write"];
       break;
     default: // claude
       cmd = "claude";
@@ -193,18 +212,20 @@ export function selectProvider(taskType: string, projectRoot: string): string {
   const dispatchPath = join(projectRoot, "dispatch.sh");
   if (!existsSync(dispatchPath)) return "claude";
 
-  // Simple mapping (matches providers.json routing)
-  const routing: Record<string, string[]> = {
-    frontend: ["codex", "claude"],
-    backend: ["claude", "codex"],
-    api: ["claude", "codex"],
-    test: ["codex", "claude"],
-    docs: ["gemini", "claude"],
-    infra: ["claude"],
-    devops: ["copilot", "claude"],
-    security: ["claude"],
-    design: ["claude"],
-  };
+  // Use internal routing when in internal mode
+  const routing: Record<string, string[]> = internalMode && isKiroAvailable()
+    ? getInternalRouting()
+    : {
+        frontend: ["codex", "claude"],
+        backend: ["claude", "codex"],
+        api: ["claude", "codex"],
+        test: ["codex", "claude"],
+        docs: ["gemini", "claude"],
+        infra: ["claude"],
+        devops: ["copilot", "claude"],
+        security: ["claude"],
+        design: ["claude"],
+      };
 
   const chain = routing[taskType] || ["claude"];
   for (const provider of chain) {
