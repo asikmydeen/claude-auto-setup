@@ -56,3 +56,4 @@
 [2026-03-17T16:30:00Z] | build | SDLC Overseer system (overseer/*.ts, agents/sdlc/*.md, /sdlc command, ARCHITECTURE.md) | Sections updated: Stack, SDLC Overseer (new), Known Gotchas, Quick Reference | Files changed: 26
 [2026-03-17T18:30:00Z] | build | Kiro deep integration + GSD requirements + live dashboard + Obsidian board + SSE | Sections updated: SDLC Overseer (major), Quick Reference | Files changed: 15
 [2026-03-17T20:30:00Z] | build | cmux app integration (sidebar, splits, browser automation, UI verification), platform safety validated | Sections updated: SDLC Overseer (cmux, browser-verify), Quick Reference | Files changed: 8
+[2026-03-17T21:00:00Z] | build | claude-mem deep integration (memory.ts, spawner reads/writes memory, overseer logs status + captures completion) | Sections updated: Quick Reference | Files changed: 3

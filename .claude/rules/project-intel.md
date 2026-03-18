@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (cmux browser integration + UI verification)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-17 (claude-mem deep integration)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -373,7 +373,7 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
 - **12** universal rule files, 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
-- **12** overseer modules (`overseer/*.ts`) + architecture docs
+- **13** overseer modules (`overseer/*.ts`) + architecture docs
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 - **2** WebSocket endpoints (ops, terminal)
