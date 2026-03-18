@@ -18,6 +18,7 @@ import { buildKnowledgeContext } from "./knowledge";
 import { generateBoard } from "./board";
 import { runBrowserVerification } from "./browser-verify";
 import { detectInternalProject, isKiroAvailable } from "./kiro";
+import { isMemoryAvailable, captureMemory } from "./memory";
 import { setInternalMode } from "./spawner";
 import { canUseCmux, onEpicStart, onProgress, onEpicComplete, onAgentStart, onMergeComplete, getPlatformInfo } from "./cmux";
 import type { OverseerConfig, AgentRole, Priority, TaskType } from "./types";
@@ -154,6 +155,13 @@ log(`Max concurrency: ${config.maxConcurrency}`);
 // Platform info
 const platform = getPlatformInfo();
 if (platform.ssh) log("Running over SSH — cmux terminal tabs disabled");
+
+// Memory status
+if (isMemoryAvailable()) {
+  log("claude-mem: connected — agents will read/write persistent memory");
+} else {
+  log("claude-mem: offline — agents run without cross-session memory");
+}
 
 ensureWorktreeGitignore(PROJECT_ROOT);
 
@@ -519,6 +527,13 @@ if (uiResult) {
 generateBoard(epic.id, PROJECT_ROOT);
 log("Final board written to .overseer/");
 onEpicComplete(epic.title, stats);
+
+// Persist epic completion to memory (cross-session learning)
+captureMemory({
+  type: "feature",
+  content: `SDLC Epic completed: "${epic.title}" — ${stats.done}/${stats.total} tasks done, ${stats.failed} failed. Mode: ${isInternal ? "internal" : "external"}.`,
+  context: `Epic ID: ${epic.id}. Project: ${PROJECT_ROOT}.`,
+});
 
 cleanupAllWorktrees(PROJECT_ROOT);
 log("Worktrees cleaned up.");

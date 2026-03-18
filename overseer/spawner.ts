@@ -5,7 +5,9 @@ import { spawn, type ChildProcess } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { createAgentSession, updateAgentSession, updateTaskStatus, assignTask, logEvent } from "./db";
+import { buildKnowledgeContext } from "./knowledge";
 import { buildInternalContext, getInternalRouting, isKiroAvailable } from "./kiro";
+import { buildMemoryContext, captureAgentCompletion } from "./memory";
 import type { AgentRole, AgentSession, Task } from "./types";
 
 // Global flag — set by overseer when --internal mode is active
@@ -80,6 +82,20 @@ function buildAgentPrompt(opts: SpawnOptions): string {
       parts.push(internalCtx);
       parts.push("");
     }
+  }
+
+  // Knowledge store (centralized decisions from this epic)
+  const knowledgeCtx = buildKnowledgeContext(opts.epicId);
+  if (knowledgeCtx) {
+    parts.push(knowledgeCtx);
+    parts.push("");
+  }
+
+  // claude-mem (cross-session memory — past observations, patterns, gotchas)
+  const memoryCtx = buildMemoryContext(opts.role, opts.task.title, opts.task.description);
+  if (memoryCtx) {
+    parts.push(memoryCtx);
+    parts.push("");
   }
 
   // Custom prompt
@@ -182,6 +198,9 @@ export function spawnAgent(opts: SpawnOptions): SpawnResult {
       `${opts.role}: ${opts.task.title} (exit ${code})`,
       opts.role,
     );
+
+    // Persist to claude-mem (cross-session learning)
+    captureAgentCompletion(opts.role, opts.task.title, success, stdout.slice(-500));
   });
 
   child.on("error", (err: Error) => {
