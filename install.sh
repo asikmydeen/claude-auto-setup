@@ -1034,11 +1034,20 @@ FLEET_EOF
       fi
     fi
 
-    info "Fleet usage: bun fleet/fleet.ts --help"
-    info "  Pool mode:      bun fleet/fleet.ts --pool tasks.json"
-    info "  Scatter mode:   bun fleet/fleet.ts --scatter \"review this code\""
-    info "  Decompose mode: bun fleet/fleet.ts --decompose \"build a REST API\""
-    info "  Pipeline mode:  bun fleet/fleet.ts --pipeline \"task\" --stages research,implement,test"
+    # Install fleet CLI wrapper (works from any directory)
+    if [ -f "$SCRIPT_DIR/fleet/fleet-wrapper.sh" ]; then
+      mkdir -p "$HOME/.local/bin"
+      sed "s|FLEET_HOME:-.*|FLEET_HOME:-$SCRIPT_DIR/fleet}\"|" "$SCRIPT_DIR/fleet/fleet-wrapper.sh" > "$HOME/.local/bin/fleet"
+      chmod +x "$HOME/.local/bin/fleet"
+      ok "Fleet CLI: ~/.local/bin/fleet (works from any directory)"
+    fi
+
+    info "Fleet usage: fleet --help"
+    info "  Setup:          fleet --setup"
+    info "  Pool mode:      fleet --pool tasks.json --workers 5"
+    info "  Scatter mode:   fleet --scatter \"review this code\" --workers 5"
+    info "  Decompose mode: fleet --decompose \"build a REST API\" --workers 5"
+    info "  Pipeline mode:  fleet --pipeline \"task\" --stages research,implement,test"
   fi
 
   summary "install"
