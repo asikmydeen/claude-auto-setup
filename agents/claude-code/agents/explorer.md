@@ -38,4 +38,10 @@ Memory integration (claude-mem):
 - Look for past decisions, known gotchas, and established patterns about this area
 - Fall back to MEMORY.md and project-intel.md if worker is unavailable
 
+Internal project integration (Kiro):
+- If `packageInfo` or `.brazil.json` exists in the project root, this is an internal project
+- Query Kiro for internal context: `kiro-cli -p "Search internal code for [pattern]" --allow-tool='shell(read)' 2>/dev/null | head -100`
+- Use Kiro for: internal API lookups, internal code patterns, wiki/doc search, ticket details
+- See `internal-routing.md` rule for the full consultation table
+
 Output format: bullet points with file:line references. No essays.

@@ -39,6 +39,11 @@ Check if `.claude/rules/codebase-patterns.md` exists:
 - **NO**: Run the pattern-analyzer agent to generate it. Print "No pattern spec. Extracting codebase patterns..." Do NOT skip this.
 - Include relevant pattern sections when prompting subagents and external providers during implementation.
 
+**Internal project detection:**
+Check: `[ -f packageInfo ] || [ -f .brazil.json ] || [[ "$PWD" == */workplace/* ]]`
+- **If internal**: Activate Kiro consultation per `internal-routing.md` rule. Before architecture/API/infra decisions, query: `kiro-cli -p "question" --allow-tool='shell(read)'`. Use `brazil-build release` (not npm), CRs (not PRs), pipeline deployment (not direct).
+- **If external**: Standard mode, no Kiro needed.
+
 **Workspace-level intel (auto-discover):**
 Walk up from the current directory to find a parent workspace:
 - Look for `workspace-intel.md` in parent `.claude/rules/` directories
