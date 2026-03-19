@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-18 (Fleet multi-account orchestration)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-19 (Fleet performance: warm containers, event-driven dispatch, task budget)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -31,7 +31,7 @@
 - **Native agent system** - Claude Code agents with model selection, tool restrictions, persistent memory
 - **Pattern conformance system** - Auto-extracted codebase patterns, enforcement rule, deviation protocol
 - **SDLC Overseer** - Full virtual engineering team: 13 role-based agents, DAG scheduler, git worktree isolation, SQLite task management, centralized knowledge store
-- **Fleet** - Multi-account container orchestration: 4 modes (pool, scatter, decompose, pipeline), Docker/Podman, hybrid dispatch (container for API-key CLIs, local for browser-auth CLIs)
+- **Fleet** - Multi-account container orchestration: 5 modes (pool, scatter, decompose, pipeline, superpowers), Docker/Podman, hybrid dispatch, warm container pool, event-driven dispatch, task budget system
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
@@ -347,16 +347,17 @@ Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better
 
 Run AI tasks across multiple API accounts in isolated Docker/Podman containers. Complements the Overseer (which uses a single credential set) — Fleet adds N× throughput via pooled accounts.
 
-**Run**: `fleet --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages r,i,t` | `--superpowers "feature"`
+**Run**: `fleet --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages r,i,t` | `--superpowers "feature"` | `--superpowers "feature" --decompose`
 **Setup**: `fleet --from-csv keys.csv` (recommended) | `--setup` (interactive) | `--add-account "Label" KEY=val`
 **Monitor**: `fleet --live` (progress from any terminal) | `--status` (history) | `--accounts`
 **Manage**: `--stop` | `--build-image` | `--live --all` (cross-project)
+**Options**: `--workers N` | `--max-tasks N` (task budget, default: workers×5)
 **CLI**: `~/.local/bin/fleet` (global wrapper, works from any directory)
 **Config**: `~/.claude/fleet/accounts.json` (chmod 600, dir chmod 700)
 **Image**: `claude-fleet:latest` (~1.8GB) — claude-code + codex + gemini + copilot + bun + git, non-root user
 **Database**: `~/.claude/data/fleet.db` (fleet_runs with project_root, fleet_tasks, fleet_containers)
 
-### 5 Execution Modes
+### 6 Execution Modes
 
 | Mode | Command | How It Works |
 |------|---------|-------------|
@@ -364,7 +365,8 @@ Run AI tasks across multiple API accounts in isolated Docker/Podman containers. 
 | **Scatter** | `--scatter "prompt"` | Same task to N workers, results merged (best/merge/all) |
 | **Decompose** | `--decompose "task"` | AI splits into subtasks, parallel pool dispatch |
 | **Pipeline** | `--pipeline "task" --stages r,i,t` | Sequential stages, fresh account per stage |
-| **Superpowers** | `--superpowers "feature"` | Plan → TDD tasks → fleet execute → review (see below) |
+| **Superpowers** | `--superpowers "feature"` | Plan → TDD tasks → fleet execute → two-stage review |
+| **Superpowers+Decompose** | `--superpowers "feature" --decompose` | Decompose → parallel plan per component → pool execute → review |
 
 ### Hybrid Dispatch (Container vs Local)
 
@@ -380,10 +382,10 @@ Provider selection: task type → routing table → first available from account
 | File | Lines | Purpose |
 |------|-------|---------|
 | `types.ts` | 168 | Account, Container, FleetTask, FleetConfig, DB records |
-| `pool.ts` | 283 | AccountPool: round-robin, cooldown, requeue history, spawn limit |
-| `container.ts` | 560+ | ContainerManager: Docker/Podman, provider commands, local fallback, stale detection, superpowers skills mount |
+| `pool.ts` | 320+ | AccountPool: round-robin, cooldown, event-driven waitForAvailable, spawn limit |
+| `container.ts` | 840+ | ContainerManager: Docker/Podman, provider commands, local fallback, warm container pool, completion notification queue, cached skills search |
 | `db.ts` | 230+ | SQLite: fleet_runs (with project_root), fleet_tasks, fleet_containers, migrations |
-| `fleet.ts` | 1280+ | CLI orchestrator: 5 modes + superpowers + live view + Ctrl+C + management |
+| `fleet.ts` | 1600+ | CLI orchestrator: 6 modes + superpowers+decompose + task budget + warm pool + live view + Ctrl+C |
 | `setup.ts` | 500+ | Interactive wizard, --from-csv, --add-account, Bedrock API key support |
 | `bridge.ts` | 128 | cmux sidebar: status pills, progress bar, notifications (stderr suppressed) |
 | `fleet-wrapper.sh` | 43 | Global CLI wrapper installed to ~/.local/bin/fleet |
@@ -393,9 +395,31 @@ Provider selection: task type → routing table → first available from account
 
 - **Round-robin allocation** with `attemptedAccounts[]` tracking (avoids retrying same account on rate limit)
 - **Rate limit detection**: scans output for 429/quota/overloaded → cooldown account → requeue task
+- **Event-driven waitForAvailable**: notified instantly on account release (replaces 1s polling). Cooldown expiry checked via 1s interval fallback.
 - **Spawn safety limit**: `maxTotalSpawns` (default 500) prevents runaway container creation
 - **Stale container detection**: warns on startup about orphaned `fleet-*` containers
 - **Configurable**: memory, CPUs, timeout, cooldown duration, max concurrent workers
+
+### Performance Optimizations
+
+Three optimizations reduce fleet run overhead by ~5-7 minutes (25-35% speedup):
+
+1. **Warm container pool** — Pre-starts containers with `sleep infinity` during pool warmup. Tasks run via `docker exec` (reuses existing container) instead of `docker run` (creates new one). Saves ~2-3s per task. Containers are shared per-account, shut down in `try/finally`. Liveness check via `docker inspect` before each exec (falls back to cold start if dead).
+
+2. **Event-driven dispatch** — Completion notification queue (`notifyCompletion` → `waitForAnyCompletion`) replaces 3s `setTimeout` polling. Container close/error/timeout handlers push to queue. Dispatch loop processes one completed task per iteration with zero delay. Single-threaded event loop guarantees no race conditions.
+
+3. **Intel injection into planning** — Reads `project-intel.md` (up to 8KB, truncated at section boundaries) and injects into superpowers planning prompt. Planner skips exploration and uses pre-scanned intel directly. Saves 60-80% of planning time (1.5-4 min → 30s-1min).
+
+### Task Budget System
+
+Prevents over-decomposition (e.g., 138 tasks for a calculator API).
+
+- **Auto-computed**: `workers × 5` (3 workers = 15 task budget, 5 workers = 25)
+- **Override**: `--max-tasks N` CLI flag
+- **Injected into prompts**: decompose prompt gets component count target, planning prompts get per-component task limit
+- **Full TDD cycles**: each task = write test + implement + verify + commit (not micro-steps)
+- **Smart batch detection**: new-style tasks (contain "TDD:" or "test + implement") → 1:1 batching. Legacy micro-step tasks → grouped by 5.
+- **Before/after**: Calculator API went from 138 tasks / 31 batches / 28 min → 6 tasks / 6 batches / 12 min
 
 ### Container Mounts (what workers get)
 
@@ -439,6 +463,8 @@ Also supports: `--setup` (interactive wizard, 11 providers), `--add-account` (qu
 | Scatter | 2/2 | 11s | Both `Python, JavaScript, Java` (merged) |
 | Pipeline | 2/2 | 112s | implement → test → 11/11 tests pass |
 | Superpowers | 10/10 | ~20min | Todo REST API: 111 lines + 145 lines tests, 12 commits |
+| Superpowers+Decompose (no budget) | 31/31 | 1711s (28min) | Calculator API: 138 tasks, 20+ commits, 0 failures |
+| Superpowers+Decompose (with budget) | 6/6 | 717s (12min) | Calculator API: 6 tasks, 6 commits, 43 files, 0 failures |
 
 ---
 
@@ -464,27 +490,32 @@ Plugin (97K stars) providing 14 composable skills for systematic development. In
 
 ### fleet --superpowers Pipeline
 
-4-phase autonomous feature development:
+5-phase autonomous feature development (4 phases without `--decompose`):
 
-1. **Planning** — One container explores project, creates TDD implementation plan with checkbox tasks (`- [ ] **Step N:**`)
-2. **Task extraction** — Parses checkboxes from plan, groups TDD steps into batches (test→implement→verify→commit)
-3. **Fleet execution** — Dispatches batches to pool (N parallel workers with TDD skill)
-4. **Code review** — Final review of all changes (spec compliance + code quality)
+**Without --decompose** (single plan):
+1. **Planning** — One container creates TDD plan. Intel injected to skip exploration.
+2. **Task extraction** — Parses checkboxes, smart batch detection (full-cycle vs micro-step)
+3. **Fleet execution** — Dispatches to warm container pool (docker exec, event-driven)
+4. **Two-stage review** — Spec compliance + code quality in parallel
 
-Falls back to decompose mode if plan doesn't contain checkbox format.
+**With --decompose** (parallel plans):
+0. **Decompose** — One container splits feature into 2-5 independent components (budget-aware)
+1. **Parallel planning** — One container per component, all run simultaneously, each produces TDD plan
+2. **Task extraction** — Merges all component plans, extracts checkboxes
+3. **Fleet execution** — All tasks across all components in one pool
+4. **Two-stage review** — Spec compliance + code quality in parallel
+
+Falls back gracefully: failed decomposition → single-plan mode. Failed component plan → becomes single pool task.
 
 ### Key Design Decisions
 
-- **Brainstorming skill skipped in fleet** — HARD-GATE requires interactive user approval, which conflicts with non-interactive containers. Planning prompt replaces it.
-- **TDD batching** — Sequential TDD steps (write test → run → implement → run → commit) grouped into single fleet tasks to maintain ordering.
-- **Skills auto-mounted** — `findSuperpowersSkills()` searches plugin cache paths, mounts read-only into containers.
-
-### E2E Test: Todo REST API
-
-```bash
-fleet --superpowers "Build a REST API for managing todos"
-```
-Result: 48 TDD tasks → 10 batches → 12 commits → 111-line API + 145-line test suite with 9 test cases. Full CRUD with validation, error handling, UUID generation.
+- **Brainstorming skill skipped in fleet** — HARD-GATE requires interactive user approval; planning prompt replaces it
+- **Full TDD cycles as single tasks** — Each task = write test + implement + verify + commit (not micro-steps). Prevents over-decomposition.
+- **Task budget** — `workers × 5` default, injected into prompts. `--max-tasks N` override.
+- **Skills cached** — `findSuperpowersSkills()` searches plugin cache once per process (was per-container)
+- **Warm containers** — Pre-started with `sleep infinity`, tasks via `docker exec`, shut down in `try/finally`
+- **Event-driven dispatch** — Completion queue replaces 3s polling. Zero delay between task completion and next dispatch.
+- **Intel injection** — `project-intel.md` (up to 8KB, section-boundary truncation) injected into all planning prompts
 
 ---
 
@@ -537,6 +568,12 @@ Result: 48 TDD tasks → 10 batches → 12 commits → 111-line API + 145-line t
 45. **Fleet --from-csv replaces all accounts** — CSV is source of truth; workers auto-set to key count; re-run to update
 46. **Fleet project-scoped status** — `fleet --live` and `--status` filter by cwd; `--all` flag for global view; `project_root` stored in DB per run
 47. **Fleet cmux stderr suppression** — cmux binary writes `Error: Unknown command` to stderr; bridge.ts uses `stdio: ["ignore", "pipe", "ignore"]` to suppress
+48. **Fleet warm container liveness** — `hasWarmContainer()` runs `docker inspect` before each `execInWarm()`. If container died externally, falls back to cold `run()`. Inspect uses `stdio: ["pipe","pipe","pipe"]` to suppress "No such object" stderr.
+49. **Fleet warm container SIGINT** — `stopAll()` matches `name=fleet-` which catches both `fleet-acct-*` (cold) and `fleet-warm-*` (warm). No separate SIGINT handler needed.
+50. **Fleet task budget vs micro-steps** — Old plans with micro-steps (write test, run test, implement, commit as separate tasks) still work via legacy batch detection. New plans with full TDD cycles get 1:1 batching. Heuristic: >50% tasks contain "TDD:" or "test+implement" = full-cycle format.
+51. **Fleet --decompose with --superpowers** — `--decompose` flag is only consumed when `--superpowers` is present. Standalone `--decompose "task"` still works as before (checks `!hasSuperpowers` before matching).
+52. **Fleet completion queue ordering** — Single-threaded JS event loop guarantees no race between `completionQueue.length` check and `active.size` check in `waitForAnyCompletion()`. Container `close` handlers only fire at `await` yield points.
+53. **Fleet intel truncation** — `project-intel.md` injected into planning prompts is truncated at the last `\n## ` boundary before 8KB (not mid-sentence). Falls back to hard 8KB if no section boundary found after 2KB.
 
 ---
 
@@ -553,7 +590,7 @@ Result: 48 TDD tasks → 10 batches → 12 commits → 111-line API + 145-line t
 - **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **14** overseer modules (`overseer/*.ts` including gsd-bridge) + architecture docs
-- **9** fleet modules (`fleet/*.ts` + Dockerfile + wrapper) — multi-account container orchestration, 5 modes, superpowers integration
+- **9** fleet modules (`fleet/*.ts` + Dockerfile + wrapper) — multi-account container orchestration, 6 modes, warm containers, event-driven dispatch, task budget
 - **14** superpowers skills (TDD, debugging, brainstorming, subagent-driven-development, etc.) — via plugin
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
