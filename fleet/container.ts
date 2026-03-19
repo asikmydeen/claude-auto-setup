@@ -3,11 +3,44 @@
 // captures output, handles cleanup. Supports Docker + Podman.
 
 import { spawn, execFileSync, type ChildProcess } from "child_process";
-import { existsSync, mkdirSync, writeFileSync, unlinkSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync, unlinkSync, readdirSync } from "fs";
 import { join } from "path";
 import type { Account, FleetContainer, FleetSettings } from "./types";
 
 const MAX_LOG_SIZE = 100_000; // 100KB per stream during accumulation
+
+/** Find superpowers skills directory (searches known plugin install paths). */
+function findSuperpowersSkills(homeDir: string): string | null {
+  const candidates = [
+    // Claude Code official marketplace
+    join(homeDir, ".claude", "plugins", "cache", "claude-plugins-official", "superpowers"),
+    // obra marketplace
+    join(homeDir, ".claude", "plugins", "cache", "superpowers-marketplace", "superpowers"),
+    // User-installed skills
+    join(homeDir, ".claude", "skills"),
+  ];
+
+  for (const base of candidates) {
+    // Check for versioned path (e.g. superpowers/5.0.5/skills/)
+    if (existsSync(base)) {
+      try {
+        const entries = readdirSync(base);
+        for (const entry of entries) {
+          const skillsDir = join(base, entry, "skills");
+          if (existsSync(skillsDir) && existsSync(join(skillsDir, "test-driven-development"))) {
+            return skillsDir;
+          }
+        }
+      } catch { /* skip */ }
+      // Direct skills dir (non-versioned)
+      const directSkills = join(base, "skills");
+      if (existsSync(directSkills)) return directSkills;
+      // Is itself a skills dir
+      if (existsSync(join(base, "test-driven-development"))) return base;
+    }
+  }
+  return null;
+}
 
 // --- Provider Auth Classification ---
 // Browser-auth providers run LOCALLY (need persistent auth in ~/.kiro, ~/.amp, etc.)
@@ -231,6 +264,14 @@ export class ContainerManager {
       [join(claudeDir, "commands"), join(fleetUser, ".claude", "commands")],
       [join(claudeDir, "agents"), join(fleetUser, ".claude", "agents")],
     ];
+
+    // Mount superpowers skills (if installed) — gives containers TDD, debugging,
+    // brainstorming, subagent-driven-development, etc.
+    const superpowersSkills = findSuperpowersSkills(homeDir);
+    if (superpowersSkills) {
+      configMounts.push([superpowersSkills, join(fleetUser, ".claude", "skills")]);
+    }
+
     for (const [hostPath, containerPath] of configMounts) {
       if (existsSync(hostPath)) {
         args.push("-v", `${hostPath}:${containerPath}:ro`);
