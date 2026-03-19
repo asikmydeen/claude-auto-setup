@@ -246,9 +246,20 @@ export class ContainerManager {
     const claudeDir = join(homeDir, ".claude");
     const fleetUser = "/home/fleet"; // non-root user in Dockerfile
 
+    // Run as host user's UID/GID so writes to mounted project dir work.
+    // Create a temp home dir on host (writable) — config dirs overlaid via bind mounts.
+    const hostUid = process.getuid?.() ?? 1000;
+    const hostGid = process.getgid?.() ?? 1000;
+    const tempHome = join(opts.outputDir, `.home-${shortId}`);
+    mkdirSync(join(tempHome, ".claude"), { recursive: true });
+
     const args: string[] = [
       "run", "--rm",
       "--name", containerName,
+      "--user", `${hostUid}:${hostGid}`,
+      "-e", `HOME=${fleetUser}`,
+      // Writable home dir (temp on host, cleaned up with --rm output dir)
+      "-v", `${tempHome}:${fleetUser}`,
       // Mount project (read-write) and output dir
       "-v", `${opts.projectRoot}:/project`,
       "-v", `${opts.outputDir}:/output`,

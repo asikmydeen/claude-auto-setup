@@ -628,54 +628,72 @@ async function runSuperpowers(
   info(`Workers: ${workers} accounts`);
 
   // ── Phase 1: Brainstorm ──────────────────────────────────────────────────
-  console.error(`\n${BOLD}Phase 1: Brainstorming${RESET} ${DIM}(design before code)${RESET}`);
+  console.error(`\n${BOLD}Phase 1: Planning${RESET} ${DIM}(design + implementation plan)${RESET}`);
 
-  const brainstormAccount = pool.allocate("sp-brainstorm");
+  const brainstormAccount = pool.allocate("sp-plan");
   if (!brainstormAccount) {
     error("No accounts available");
     return emptyResult("superpowers");
   }
 
-  const brainstormPrompt = `You have superpowers. Use the brainstorming skill.
+  const brainstormPrompt = `You are a senior engineer creating an implementation plan. This is a NON-INTERACTIVE autonomous session — do NOT ask questions, make all decisions yourself.
 
-The user wants to build: ${featureDescription}
+## Feature Request
+${featureDescription}
 
-IMPORTANT: Since this is a non-interactive session, you cannot ask the user clarifying questions. Instead:
-1. Explore the project context (files, docs, recent commits)
-2. Make reasonable assumptions based on the codebase
-3. Propose 2-3 approaches with trade-offs and pick the best one
-4. Write a complete design document to docs/superpowers/specs/ and commit it
-5. Do NOT ask questions — make decisions and document your reasoning
+## Your Task
+1. Quickly explore the project (ls, read key files, check package.json)
+2. Design the solution (pick the simplest approach that works)
+3. Write an implementation plan with CHECKBOX TASKS
 
-After writing the design doc, immediately invoke the writing-plans skill to create the implementation plan.
-Save the plan to docs/superpowers/plans/ and commit it.
+## Plan Format (CRITICAL — follow exactly)
+Write the plan as a series of checkbox tasks. Each task is one small action (2-5 minutes).
+Follow TDD: write test first, then implement.
 
-The plan MUST use checkbox format: - [ ] **Step N: description**
-Each step should be 2-5 minutes of work, with exact file paths and code.`;
+Example format:
+\`\`\`
+- [ ] **Create test file tests/todo.test.js with failing test for GET /todos**
+- [ ] **Run test to verify it fails**
+- [ ] **Implement GET /todos endpoint in index.js**
+- [ ] **Run test to verify it passes**
+- [ ] **Commit: feat: GET /todos endpoint**
+- [ ] **Add failing test for POST /todos**
+- [ ] **Implement POST /todos**
+- [ ] **Run tests, verify all pass**
+- [ ] **Commit: feat: POST /todos endpoint**
+\`\`\`
+
+## Rules
+- Write the plan directly to stdout (do NOT save to a file)
+- Use EXACTLY the \`- [ ] **description**\` format for every task
+- Keep tasks small and concrete (exact file paths, exact code)
+- Follow TDD: failing test → implement → passing test → commit
+- No frameworks, keep it simple
+- Do NOT implement anything — ONLY write the plan`;
 
   const brainstormOutputDir = join(projectRoot, ".fleet", "superpowers-brainstorm");
   mkdirSync(brainstormOutputDir, { recursive: true });
 
   containers.run({
     account: brainstormAccount.account,
-    taskId: "sp-brainstorm",
+    taskId: "sp-plan",
     prompt: brainstormPrompt,
     projectRoot,
     outputDir: brainstormOutputDir,
     provider: "claude",
   });
 
-  info("Brainstorming + planning (this takes a few minutes)...");
-  const brainstormResult = await containers.waitForContainer("sp-brainstorm");
+  info("Planning (exploring project + creating task plan)...");
+  const brainstormResult = await containers.waitForContainer("sp-plan");
   pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
 
   if (brainstormResult?.exitCode !== 0) {
-    error("Brainstorming failed");
+    error("Planning failed");
     if (brainstormResult?.error) error(brainstormResult.error.slice(0, 500));
     return emptyResult("superpowers");
   }
 
-  ok("Brainstorming + planning complete");
+  ok("Planning complete");
 
   // ── Phase 2: Extract tasks from plan ─────────────────────────────────────
   console.error(`\n${BOLD}Phase 2: Extracting tasks from plan${RESET}`);
