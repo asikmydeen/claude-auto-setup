@@ -608,6 +608,272 @@ function stageToTaskType(stage: string): string {
 }
 
 // ============================================================================
+// MODE 5: SUPERPOWERS — Brainstorm → Plan → Fleet Execute
+// ============================================================================
+
+async function runSuperpowers(
+  config: FleetConfig,
+  featureDescription: string,
+  workers: number,
+  projectRoot: string,
+): Promise<FleetRunResult> {
+  const pool = new AccountPool(config);
+  const containers = new ContainerManager(config.settings);
+
+  // Pre-flight
+  await ensureProjectIntel(config, projectRoot, containers);
+
+  console.error(`\n${BOLD}Superpowers Mode${RESET} ${DIM}brainstorm → plan → execute${RESET}`);
+  info(`Feature: "${featureDescription.slice(0, 80)}..."`);
+  info(`Workers: ${workers} accounts`);
+
+  // ── Phase 1: Brainstorm ──────────────────────────────────────────────────
+  console.error(`\n${BOLD}Phase 1: Brainstorming${RESET} ${DIM}(design before code)${RESET}`);
+
+  const brainstormAccount = pool.allocate("sp-brainstorm");
+  if (!brainstormAccount) {
+    error("No accounts available");
+    return emptyResult("superpowers");
+  }
+
+  const brainstormPrompt = `You have superpowers. Use the brainstorming skill.
+
+The user wants to build: ${featureDescription}
+
+IMPORTANT: Since this is a non-interactive session, you cannot ask the user clarifying questions. Instead:
+1. Explore the project context (files, docs, recent commits)
+2. Make reasonable assumptions based on the codebase
+3. Propose 2-3 approaches with trade-offs and pick the best one
+4. Write a complete design document to docs/superpowers/specs/ and commit it
+5. Do NOT ask questions — make decisions and document your reasoning
+
+After writing the design doc, immediately invoke the writing-plans skill to create the implementation plan.
+Save the plan to docs/superpowers/plans/ and commit it.
+
+The plan MUST use checkbox format: - [ ] **Step N: description**
+Each step should be 2-5 minutes of work, with exact file paths and code.`;
+
+  const brainstormOutputDir = join(projectRoot, ".fleet", "superpowers-brainstorm");
+  mkdirSync(brainstormOutputDir, { recursive: true });
+
+  containers.run({
+    account: brainstormAccount.account,
+    taskId: "sp-brainstorm",
+    prompt: brainstormPrompt,
+    projectRoot,
+    outputDir: brainstormOutputDir,
+    provider: "claude",
+  });
+
+  info("Brainstorming + planning (this takes a few minutes)...");
+  const brainstormResult = await containers.waitForContainer("sp-brainstorm");
+  pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
+
+  if (brainstormResult?.exitCode !== 0) {
+    error("Brainstorming failed");
+    if (brainstormResult?.error) error(brainstormResult.error.slice(0, 500));
+    return emptyResult("superpowers");
+  }
+
+  ok("Brainstorming + planning complete");
+
+  // ── Phase 2: Extract tasks from plan ─────────────────────────────────────
+  console.error(`\n${BOLD}Phase 2: Extracting tasks from plan${RESET}`);
+
+  // Find the plan file
+  const planDir = join(projectRoot, "docs", "superpowers", "plans");
+  let planContent = "";
+
+  if (existsSync(planDir)) {
+    const planFiles = Bun.spawnSync(["find", planDir, "-name", "*.md", "-type", "f"])
+      .stdout.toString().trim().split("\n").filter(Boolean);
+
+    if (planFiles.length > 0) {
+      // Get most recent plan
+      const sorted = planFiles.sort().reverse();
+      planContent = readFileSync(sorted[0], "utf-8");
+      ok(`Found plan: ${sorted[0]}`);
+    }
+  }
+
+  // If no plan file on disk, extract from brainstorm output
+  if (!planContent && brainstormResult?.output) {
+    planContent = brainstormResult.output;
+    info("Using plan from brainstorm output");
+  }
+
+  if (!planContent) {
+    error("No plan found — brainstorming didn't produce a plan");
+    return emptyResult("superpowers");
+  }
+
+  // Parse checkbox tasks from plan
+  const tasks = parsePlanTasks(planContent);
+
+  if (tasks.length === 0) {
+    // Fallback: if no checkboxes found, treat the whole plan as context and decompose
+    warn("No checkbox tasks found in plan — falling back to decompose mode");
+    return runDecompose(config, `${featureDescription}\n\nContext from design:\n${planContent.slice(0, 5000)}`, workers, projectRoot);
+  }
+
+  ok(`Extracted ${tasks.length} tasks from plan`);
+  for (const [i, t] of tasks.entries()) {
+    info(`  ${i + 1}. ${t.prompt.slice(0, 70)}...`);
+  }
+
+  // ── Phase 3: Fleet Execute ───────────────────────────────────────────────
+  console.error(`\n${BOLD}Phase 3: Fleet execution${RESET} ${DIM}(${tasks.length} tasks, ${workers} workers)${RESET}`);
+
+  // Group sequential tasks into batches (TDD tasks must run in order within a batch)
+  const taskBatches = batchTddTasks(tasks);
+  info(`Organized into ${taskBatches.length} batch(es)`);
+
+  // Execute batches
+  const allTasks: Array<{ prompt: string; taskType?: string }> = [];
+  for (const batch of taskBatches) {
+    // Each batch becomes a single fleet task (steps run sequentially inside)
+    const batchPrompt = batch.map((t, i) => `Step ${i + 1}: ${t.prompt}`).join("\n\n");
+    allTasks.push({
+      prompt: `You have superpowers. Use the test-driven-development skill.\n\nExecute these steps IN ORDER (they are TDD red-green-refactor steps):\n\n${batchPrompt}\n\nAfter completing all steps, commit your work with a descriptive message.`,
+      taskType: batch[0].taskType || "backend",
+    });
+  }
+
+  const result = await runPool(config, allTasks, workers, projectRoot);
+
+  // ── Phase 4: Final review ────────────────────────────────────────────────
+  if (result.summary.completed > 0) {
+    console.error(`\n${BOLD}Phase 4: Code review${RESET}`);
+
+    const reviewAccount = pool.allocate("sp-review");
+    if (reviewAccount) {
+      const reviewPrompt = `You have superpowers. Use the requesting-code-review skill.
+
+Review all changes made in this session. Check:
+1. Spec compliance — does the implementation match the design doc in docs/superpowers/specs/?
+2. Code quality — clean, tested, no dead code, follows codebase patterns
+3. Test coverage — are all cases covered? Do tests actually test behavior?
+
+Write your review to docs/superpowers/reviews/ and commit.`;
+
+      containers.run({
+        account: reviewAccount.account,
+        taskId: "sp-review",
+        prompt: reviewPrompt,
+        projectRoot,
+        outputDir: join(projectRoot, ".fleet", "superpowers-review"),
+        provider: "claude",
+      });
+
+      info("Running final code review...");
+      const reviewResult = await containers.waitForContainer("sp-review");
+      pool.release(reviewAccount.account.id, reviewResult?.exitCode === 0);
+
+      if (reviewResult?.exitCode === 0) {
+        ok("Code review complete");
+        // Write review output
+        const reviewPath = join(projectRoot, ".fleet", "superpowers-review", "review.txt");
+        writeFileSync(reviewPath, reviewResult?.output || "(no output)");
+      } else {
+        warn("Code review failed (non-critical)");
+      }
+    }
+  }
+
+  result.mode = "superpowers" as any;
+  return result;
+}
+
+/** Parse checkbox tasks from a superpowers plan. */
+function parsePlanTasks(planContent: string): Array<{ prompt: string; taskType: string }> {
+  const tasks: Array<{ prompt: string; taskType: string }> = [];
+  const lines = planContent.split("\n");
+
+  let currentTask = "";
+  let inTask = false;
+
+  for (const line of lines) {
+    // Match: - [ ] **Step N: description** or - [ ] description
+    const checkboxMatch = line.match(/^-\s*\[\s*[\sx]?\s*\]\s*(.+)/);
+
+    if (checkboxMatch) {
+      // Save previous task
+      if (inTask && currentTask) {
+        tasks.push({ prompt: currentTask.trim(), taskType: inferTaskType(currentTask) });
+      }
+      currentTask = checkboxMatch[1];
+      inTask = true;
+    } else if (inTask) {
+      // Continue collecting lines for current task (code blocks, instructions, etc.)
+      if (line.match(/^-\s*\[/) || line.match(/^#{1,3}\s/) || line.match(/^---/)) {
+        // New section or checkbox — save current task
+        tasks.push({ prompt: currentTask.trim(), taskType: inferTaskType(currentTask) });
+        currentTask = "";
+        inTask = false;
+      } else {
+        currentTask += "\n" + line;
+      }
+    }
+  }
+
+  // Don't forget last task
+  if (inTask && currentTask) {
+    tasks.push({ prompt: currentTask.trim(), taskType: inferTaskType(currentTask) });
+  }
+
+  return tasks;
+}
+
+/** Infer task type from task content. */
+function inferTaskType(task: string): string {
+  const lower = task.toLowerCase();
+  if (lower.includes("test") || lower.includes("spec") || lower.includes("assert")) return "test";
+  if (lower.includes("commit") || lower.includes("git")) return "general";
+  if (lower.includes("frontend") || lower.includes("component") || lower.includes("ui")) return "frontend";
+  if (lower.includes("api") || lower.includes("endpoint") || lower.includes("route")) return "api";
+  if (lower.includes("doc") || lower.includes("readme")) return "docs";
+  return "backend";
+}
+
+/** Group TDD tasks into batches (test+implement+verify should stay together). */
+function batchTddTasks(
+  tasks: Array<{ prompt: string; taskType: string }>,
+): Array<Array<{ prompt: string; taskType: string }>> {
+  const batches: Array<Array<{ prompt: string; taskType: string }>> = [];
+  let current: Array<{ prompt: string; taskType: string }> = [];
+
+  for (const task of tasks) {
+    current.push(task);
+
+    // TDD cycle: write test → run test → implement → run test → commit
+    // Group these into batches of ~5 steps, or break on "commit" step
+    const lower = task.prompt.toLowerCase();
+    if (lower.includes("commit") || current.length >= 5) {
+      batches.push([...current]);
+      current = [];
+    }
+  }
+
+  // Remaining tasks
+  if (current.length > 0) {
+    batches.push(current);
+  }
+
+  return batches;
+}
+
+/** Empty result for early exits. */
+function emptyResult(mode: string): FleetRunResult {
+  return {
+    mode: mode as any,
+    tasks: [],
+    startedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+    summary: { total: 0, completed: 0, failed: 0, requeued: 0 },
+  };
+}
+
+// ============================================================================
 // UTILITY — Print summary, parse args
 // ============================================================================
 
@@ -760,6 +1026,7 @@ ${BOLD}Modes:${RESET}
   --scatter <prompt>               Same task to N workers, merge results
   --decompose <prompt>             Split into subtasks, one per worker
   --pipeline <prompt> --stages ... Sequential stages, fresh account per stage
+  --superpowers <feature>          Brainstorm → plan → fleet execute (TDD, reviews)
 
 ${BOLD}Options:${RESET}
   --workers <N>                    Max concurrent workers (default: all accounts)
@@ -996,7 +1263,15 @@ ${BOLD}Management:${RESET}
     return;
   }
 
-  error("No mode specified. Use --pool, --scatter, --decompose, or --pipeline. See --help.");
+  // --superpowers <feature>
+  const spIdx = args.indexOf("--superpowers");
+  if (spIdx !== -1 && args[spIdx + 1]) {
+    const feature = args[spIdx + 1];
+    await runSuperpowers(config, feature, workers, projectRoot);
+    return;
+  }
+
+  error("No mode specified. Use --pool, --scatter, --decompose, --pipeline, or --superpowers. See --help.");
   process.exit(1);
 }
 
