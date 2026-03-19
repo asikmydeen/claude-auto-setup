@@ -630,6 +630,7 @@ async function runSuperpowers(
   featureDescription: string,
   workers: number,
   projectRoot: string,
+  decompose = false,
 ): Promise<FleetRunResult> {
   const pool = new AccountPool(config);
   const containers = new ContainerManager(config.settings);
@@ -637,18 +638,10 @@ async function runSuperpowers(
   // Pre-flight
   await ensureProjectIntel(config, projectRoot, containers);
 
-  console.error(`\n${BOLD}Superpowers Mode${RESET} ${DIM}brainstorm → plan → execute${RESET}`);
+  const modeLabel = decompose ? "decompose → plan → execute" : "brainstorm → plan → execute";
+  console.error(`\n${BOLD}Superpowers Mode${RESET} ${DIM}${modeLabel}${RESET}`);
   info(`Feature: "${featureDescription.slice(0, 80)}..."`);
   info(`Workers: ${workers} accounts`);
-
-  // ── Phase 1: Brainstorm ──────────────────────────────────────────────────
-  console.error(`\n${BOLD}Phase 1: Planning${RESET} ${DIM}(design + implementation plan)${RESET}`);
-
-  const brainstormAccount = pool.allocate("sp-plan");
-  if (!brainstormAccount) {
-    error("No accounts available");
-    return emptyResult("superpowers");
-  }
 
   // Inject project intel to skip exploration (saves 60-80% of planning time)
   const intelPath = join(projectRoot, ".claude", "rules", "project-intel.md");
@@ -656,7 +649,6 @@ async function runSuperpowers(
   if (existsSync(intelPath)) {
     try {
       const raw = readFileSync(intelPath, "utf-8");
-      // Truncate at a section boundary (## heading) near 8KB to avoid mid-sentence cuts
       if (raw.length > 8000) {
         const lastSection = raw.lastIndexOf("\n## ", 8000);
         intelContext = lastSection > 2000 ? raw.slice(0, lastSection) : raw.slice(0, 8000);
@@ -665,17 +657,180 @@ async function runSuperpowers(
       }
     } catch { /* proceed without */ }
   }
+  if (intelContext) ok("Loaded project intel for planning prompts");
 
-  const brainstormPrompt = `You are a senior engineer creating an implementation plan. This is a NON-INTERACTIVE autonomous session — do NOT ask questions, make all decisions yourself.
+  const intelBlock = intelContext ? `\n## Project Intelligence (pre-scanned — use this instead of exploring)\n${intelContext}\n` : "";
+  const exploreInstruction = intelContext
+    ? "The project has already been scanned (see above). Use the intel directly — do NOT run ls or read files unless you need specific implementation details not covered above."
+    : "1. Quickly explore the project (ls, read key files, check package.json)";
+
+  // ── Decompose + parallel plan (when --decompose flag is set) ────────────
+  let allPlanContents: string[] = [];
+
+  if (decompose) {
+    // Phase 0: Decompose feature into independent components
+    console.error(`\n${BOLD}Phase 0: Decomposing feature${RESET} ${DIM}(splitting into independent components)${RESET}`);
+
+    const decompAccount = pool.allocate("sp-decompose");
+    if (!decompAccount) {
+      error("No accounts available for decomposition");
+      return emptyResult("superpowers");
+    }
+
+    const decompPrompt = `You are a senior architect. Break this feature into independent components that can be built in parallel by separate teams. This is NON-INTERACTIVE — make all decisions yourself.
+${intelBlock}
+## Feature
+${featureDescription}
+
+## Output Format (CRITICAL)
+Output ONLY a JSON array. Each item has "name" (short component name) and "description" (what to build, specific enough for a developer to create a TDD plan).
+
+Example:
+[
+  {"name": "auth-api", "description": "Build JWT authentication endpoints: POST /auth/login, POST /auth/register, POST /auth/refresh. Include bcrypt password hashing, token generation, and middleware for protected routes."},
+  {"name": "user-model", "description": "Create User database model with fields: id, email, passwordHash, createdAt. Include migration and seed data."},
+  {"name": "auth-ui", "description": "Build login and registration React components with form validation, error handling, and token storage in localStorage."}
+]
+
+Rules:
+- Each component must be independently buildable (no circular dependencies)
+- 2-6 components (no more). Fewer large components > many tiny ones.
+- Be SPECIFIC in descriptions — include file paths, endpoints, field names
+- Output the JSON array and NOTHING else`;
+
+    const decompOutputDir = join(projectRoot, ".fleet", "superpowers-decompose");
+    mkdirSync(decompOutputDir, { recursive: true });
+
+    containers.run({
+      account: decompAccount.account,
+      taskId: "sp-decompose",
+      prompt: decompPrompt,
+      projectRoot,
+      outputDir: decompOutputDir,
+      provider: "claude",
+    });
+
+    info("Decomposing feature into components...");
+    const decompResult = await containers.waitForContainer("sp-decompose");
+    pool.release(decompAccount.account.id, decompResult?.exitCode === 0);
+
+    let components: Array<{ name: string; description: string }>;
+    try {
+      const output = decompResult?.output || "";
+      const jsonMatch = output.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error("No JSON array in decomposition output");
+      components = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(components) || components.length === 0) throw new Error("Empty component array");
+    } catch {
+      warn("Decomposition failed — falling back to single-plan mode");
+      components = [{ name: "full-feature", description: featureDescription }];
+    }
+
+    ok(`Decomposed into ${components.length} components:`);
+    for (const [i, c] of components.entries()) {
+      info(`  ${i + 1}. ${c.name}: ${c.description.slice(0, 70)}...`);
+    }
+
+    // Phase 1: Plan each component in parallel
+    console.error(`\n${BOLD}Phase 1: Parallel planning${RESET} ${DIM}(${components.length} components, one plan each)${RESET}`);
+
+    const planOutputDir = join(projectRoot, ".fleet", "superpowers-plans");
+    mkdirSync(planOutputDir, { recursive: true });
+
+    // Launch planning containers in parallel (one per component)
+    const planningTasks: Array<{ taskId: string; accountId: string; componentName: string }> = [];
+
+    for (const [i, component] of components.entries()) {
+      const planAccount = pool.allocate(`sp-plan-${i}`);
+      if (!planAccount) {
+        warn(`No account available for component "${component.name}" — will be planned later`);
+        // Fall back: add component description directly so it gets decomposed in pool
+        allPlanContents.push(`- [ ] **Implement ${component.name}: ${component.description}**`);
+        continue;
+      }
+
+      const componentPrompt = `You are a senior engineer creating a TDD implementation plan for ONE component. This is NON-INTERACTIVE — make all decisions yourself.
+${intelBlock}
+## Component: ${component.name}
+${component.description}
+
+## Context
+This is part of a larger feature: "${featureDescription}"
+Other components are being built in parallel — focus ONLY on this component.
+
+## Your Task
+${exploreInstruction}
+${intelContext ? "1." : "2."} Write an implementation plan with CHECKBOX TASKS for this component ONLY
+
+## Plan Format (CRITICAL — follow exactly)
+Write the plan as a series of checkbox tasks. Each task is one small action (2-5 minutes).
+Follow TDD: write test first, then implement.
+
+Example:
+- [ ] **Create test file tests/${component.name}.test.js with failing test for first behavior**
+- [ ] **Run test to verify it fails**
+- [ ] **Implement the behavior**
+- [ ] **Run test to verify it passes**
+- [ ] **Commit: feat: ${component.name} — first behavior**
+
+## Rules
+- Write the plan directly to stdout (do NOT save to a file)
+- Use EXACTLY the \`- [ ] **description**\` format for every task
+- Keep tasks small and concrete (exact file paths, exact code)
+- Follow TDD: failing test → implement → passing test → commit
+- Do NOT implement anything — ONLY write the plan`;
+
+      const taskId = `sp-plan-${i}`;
+      containers.run({
+        account: planAccount.account,
+        taskId,
+        prompt: componentPrompt,
+        projectRoot,
+        outputDir: join(planOutputDir, component.name),
+        provider: "claude",
+      });
+
+      planningTasks.push({ taskId, accountId: planAccount.account.id, componentName: component.name });
+      info(`  Planning: ${component.name} → ${planAccount.account.label}`);
+    }
+
+    // Wait for all planning containers to complete
+    if (planningTasks.length > 0) {
+      info(`Waiting for ${planningTasks.length} planning containers...`);
+      for (const pt of planningTasks) {
+        const planResult = await containers.waitForContainer(pt.taskId);
+        pool.release(pt.accountId, planResult?.exitCode === 0);
+
+        if (planResult?.exitCode === 0 && planResult.output) {
+          allPlanContents.push(`## Component: ${pt.componentName}\n\n${planResult.output}`);
+          ok(`  ${pt.componentName}: plan ready`);
+        } else {
+          warn(`  ${pt.componentName}: planning failed — adding as single task`);
+          const comp = components.find((c) => c.name === pt.componentName);
+          allPlanContents.push(`- [ ] **Implement ${pt.componentName}: ${comp?.description || "see feature description"}**`);
+        }
+      }
+    }
+
+    ok(`All ${components.length} component plans ready`);
+
+  } else {
+    // ── Original single-plan mode ───────────────────────────────────────────
+    console.error(`\n${BOLD}Phase 1: Planning${RESET} ${DIM}(design + implementation plan)${RESET}`);
+
+    const brainstormAccount = pool.allocate("sp-plan");
+    if (!brainstormAccount) {
+      error("No accounts available");
+      return emptyResult("superpowers");
+    }
+
+    const brainstormPrompt = `You are a senior engineer creating an implementation plan. This is a NON-INTERACTIVE autonomous session — do NOT ask questions, make all decisions yourself.
 
 ## Feature Request
 ${featureDescription}
-${intelContext ? `
-## Project Intelligence (pre-scanned — use this instead of exploring)
-${intelContext}
-` : ""}
+${intelBlock}
 ## Your Task
-${intelContext ? "The project has already been scanned (see above). Use the intel directly — do NOT run ls or read files unless you need specific implementation details not covered above." : "1. Quickly explore the project (ls, read key files, check package.json)"}
+${exploreInstruction}
 ${intelContext ? "1." : "2."} Design the solution (pick the simplest approach that works)
 ${intelContext ? "2." : "3."} Write an implementation plan with CHECKBOX TASKS
 
@@ -704,60 +859,54 @@ Example format:
 - No frameworks, keep it simple
 - Do NOT implement anything — ONLY write the plan`;
 
-  const brainstormOutputDir = join(projectRoot, ".fleet", "superpowers-brainstorm");
-  mkdirSync(brainstormOutputDir, { recursive: true });
+    const brainstormOutputDir = join(projectRoot, ".fleet", "superpowers-brainstorm");
+    mkdirSync(brainstormOutputDir, { recursive: true });
 
-  containers.run({
-    account: brainstormAccount.account,
-    taskId: "sp-plan",
-    prompt: brainstormPrompt,
-    projectRoot,
-    outputDir: brainstormOutputDir,
-    provider: "claude",
-  });
+    containers.run({
+      account: brainstormAccount.account,
+      taskId: "sp-plan",
+      prompt: brainstormPrompt,
+      projectRoot,
+      outputDir: brainstormOutputDir,
+      provider: "claude",
+    });
 
-  if (intelContext) {
-    ok("Injected project intel into planning prompt (skipping exploration)");
-  }
-  info("Planning (creating task plan)...");
-  const brainstormResult = await containers.waitForContainer("sp-plan");
-  pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
+    info("Planning (creating task plan)...");
+    const brainstormResult = await containers.waitForContainer("sp-plan");
+    pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
 
-  if (brainstormResult?.exitCode !== 0) {
-    error("Planning failed");
-    if (brainstormResult?.error) error(brainstormResult.error.slice(0, 500));
-    return emptyResult("superpowers");
-  }
+    if (brainstormResult?.exitCode !== 0) {
+      error("Planning failed");
+      if (brainstormResult?.error) error(brainstormResult.error.slice(0, 500));
+      return emptyResult("superpowers");
+    }
 
-  ok("Planning complete");
+    ok("Planning complete");
 
-  // ── Phase 2: Extract tasks from plan ─────────────────────────────────────
-  console.error(`\n${BOLD}Phase 2: Extracting tasks from plan${RESET}`);
-
-  // Find the plan file
-  const planDir = join(projectRoot, "docs", "superpowers", "plans");
-  let planContent = "";
-
-  if (existsSync(planDir)) {
-    const planFiles = Bun.spawnSync(["find", planDir, "-name", "*.md", "-type", "f"])
-      .stdout.toString().trim().split("\n").filter(Boolean);
-
-    if (planFiles.length > 0) {
-      // Get most recent plan
-      const sorted = planFiles.sort().reverse();
-      planContent = readFileSync(sorted[0], "utf-8");
-      ok(`Found plan: ${sorted[0]}`);
+    // Collect plan content from output or disk
+    const planDir = join(projectRoot, "docs", "superpowers", "plans");
+    if (existsSync(planDir)) {
+      const planFiles = Bun.spawnSync(["find", planDir, "-name", "*.md", "-type", "f"])
+        .stdout.toString().trim().split("\n").filter(Boolean);
+      if (planFiles.length > 0) {
+        const sorted = planFiles.sort().reverse();
+        allPlanContents.push(readFileSync(sorted[0], "utf-8"));
+        ok(`Found plan: ${sorted[0]}`);
+      }
+    }
+    if (allPlanContents.length === 0 && brainstormResult?.output) {
+      allPlanContents.push(brainstormResult.output);
+      info("Using plan from brainstorm output");
     }
   }
 
-  // If no plan file on disk, extract from brainstorm output
-  if (!planContent && brainstormResult?.output) {
-    planContent = brainstormResult.output;
-    info("Using plan from brainstorm output");
-  }
+  // ── Phase 2: Extract tasks from plan(s) ────────────────────────────────
+  console.error(`\n${BOLD}Phase 2: Extracting tasks from plan${decompose ? "s" : ""}${RESET}`);
+
+  const planContent = allPlanContents.join("\n\n");
 
   if (!planContent) {
-    error("No plan found — brainstorming didn't produce a plan");
+    error("No plan found — planning didn't produce output");
     return emptyResult("superpowers");
   }
 
@@ -1181,7 +1330,8 @@ ${BOLD}Modes:${RESET}
   --scatter <prompt>               Same task to N workers, merge results
   --decompose <prompt>             Split into subtasks, one per worker
   --pipeline <prompt> --stages ... Sequential stages, fresh account per stage
-  --superpowers <feature>          Brainstorm → plan → fleet execute (TDD, reviews)
+  --superpowers <feature>          Plan → fleet execute → review (TDD)
+  --superpowers <feature> --decompose  Decompose → parallel plan → execute → review
 
 ${BOLD}Options:${RESET}
   --workers <N>                    Max concurrent workers (default: all accounts)
@@ -1396,9 +1546,10 @@ ${BOLD}Management:${RESET}
     return;
   }
 
-  // --decompose <prompt>
+  // --decompose <prompt> (standalone mode — not used with --superpowers)
   const decomposeIdx = args.indexOf("--decompose");
-  if (decomposeIdx !== -1 && args[decomposeIdx + 1]) {
+  const hasSuperpowers = args.includes("--superpowers");
+  if (decomposeIdx !== -1 && !hasSuperpowers && args[decomposeIdx + 1] && !args[decomposeIdx + 1].startsWith("--")) {
     const prompt = args[decomposeIdx + 1];
     await runDecompose(config, prompt, workers, projectRoot);
     return;
@@ -1418,11 +1569,12 @@ ${BOLD}Management:${RESET}
     return;
   }
 
-  // --superpowers <feature>
+  // --superpowers <feature> [--decompose]
   const spIdx = args.indexOf("--superpowers");
   if (spIdx !== -1 && args[spIdx + 1]) {
     const feature = args[spIdx + 1];
-    await runSuperpowers(config, feature, workers, projectRoot);
+    const spDecompose = args.includes("--decompose");
+    await runSuperpowers(config, feature, workers, projectRoot, spDecompose);
     return;
   }
 
