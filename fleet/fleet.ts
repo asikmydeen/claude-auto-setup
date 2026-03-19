@@ -631,6 +631,7 @@ async function runSuperpowers(
   workers: number,
   projectRoot: string,
   decompose = false,
+  maxTasks = 0, // 0 = auto (workers * 5)
 ): Promise<FleetRunResult> {
   const pool = new AccountPool(config);
   const containers = new ContainerManager(config.settings);
@@ -638,10 +639,13 @@ async function runSuperpowers(
   // Pre-flight
   await ensureProjectIntel(config, projectRoot, containers);
 
+  // Task budget: prevents over-decomposition (138 tasks for a calculator = bad)
+  const taskBudget = maxTasks > 0 ? maxTasks : workers * 5;
+
   const modeLabel = decompose ? "decompose → plan → execute" : "brainstorm → plan → execute";
   console.error(`\n${BOLD}Superpowers Mode${RESET} ${DIM}${modeLabel}${RESET}`);
   info(`Feature: "${featureDescription.slice(0, 80)}..."`);
-  info(`Workers: ${workers} accounts`);
+  info(`Workers: ${workers} accounts, task budget: ~${taskBudget}`);
 
   // Inject project intel to skip exploration (saves 60-80% of planning time)
   const intelPath = join(projectRoot, ".claude", "rules", "project-intel.md");
@@ -677,10 +681,19 @@ async function runSuperpowers(
       return emptyResult("superpowers");
     }
 
+    const componentsTarget = Math.min(Math.max(2, workers), 5); // 2-5 components, scaled to workers
+    const tasksPerComponent = Math.max(3, Math.floor(taskBudget / componentsTarget));
+
     const decompPrompt = `You are a senior architect. Break this feature into independent components that can be built in parallel by separate teams. This is NON-INTERACTIVE — make all decisions yourself.
 ${intelBlock}
 ## Feature
 ${featureDescription}
+
+## Budget
+- Target: ${componentsTarget} components (we have ${workers} parallel workers)
+- Each component will get ~${tasksPerComponent} implementation tasks
+- Total task budget: ~${taskBudget} tasks across ALL components
+- DO NOT over-decompose. A simple feature = 2 components. A complex feature = 4-5 max.
 
 ## Output Format (CRITICAL)
 Output ONLY a JSON array. Each item has "name" (short component name) and "description" (what to build, specific enough for a developer to create a TDD plan).
@@ -688,13 +701,12 @@ Output ONLY a JSON array. Each item has "name" (short component name) and "descr
 Example:
 [
   {"name": "auth-api", "description": "Build JWT authentication endpoints: POST /auth/login, POST /auth/register, POST /auth/refresh. Include bcrypt password hashing, token generation, and middleware for protected routes."},
-  {"name": "user-model", "description": "Create User database model with fields: id, email, passwordHash, createdAt. Include migration and seed data."},
   {"name": "auth-ui", "description": "Build login and registration React components with form validation, error handling, and token storage in localStorage."}
 ]
 
 Rules:
 - Each component must be independently buildable (no circular dependencies)
-- 2-6 components (no more). Fewer large components > many tiny ones.
+- ${componentsTarget} components (±1). Fewer large components > many tiny ones.
 - Be SPECIFIC in descriptions — include file paths, endpoints, field names
 - Output the JSON array and NOTHING else`;
 
@@ -762,22 +774,30 @@ Other components are being built in parallel — focus ONLY on this component.
 ${exploreInstruction}
 ${intelContext ? "1." : "2."} Write an implementation plan with CHECKBOX TASKS for this component ONLY
 
-## Plan Format (CRITICAL — follow exactly)
-Write the plan as a series of checkbox tasks. Each task is one small action (2-5 minutes).
-Follow TDD: write test first, then implement.
+## Task Budget: ${tasksPerComponent} tasks MAX
+Each task is a COMPLETE TDD cycle (write test + implement + verify + commit).
+Do NOT split "write test" and "implement" into separate tasks.
 
-Example:
-- [ ] **Create test file tests/${component.name}.test.js with failing test for first behavior**
+## Plan Format (CRITICAL — follow exactly)
+Each checkbox = one complete TDD cycle. NOT micro-steps.
+
+GOOD (one task = full cycle):
+- [ ] **TDD: GET /todos endpoint — write failing test in tests/todo.test.js, implement handler in routes/todo.js, verify test passes, commit**
+- [ ] **TDD: POST /todos endpoint — write failing test, implement with validation, verify, commit**
+- [ ] **TDD: Input validation middleware — test missing/invalid fields, implement validateTodo(), verify, commit**
+
+BAD (too granular — DO NOT do this):
+- [ ] **Create test file with failing test**
 - [ ] **Run test to verify it fails**
-- [ ] **Implement the behavior**
+- [ ] **Implement the handler**
 - [ ] **Run test to verify it passes**
-- [ ] **Commit: feat: ${component.name} — first behavior**
+- [ ] **Commit**
 
 ## Rules
 - Write the plan directly to stdout (do NOT save to a file)
 - Use EXACTLY the \`- [ ] **description**\` format for every task
-- Keep tasks small and concrete (exact file paths, exact code)
-- Follow TDD: failing test → implement → passing test → commit
+- MAXIMUM ${tasksPerComponent} tasks. Group related work into single tasks.
+- Each task = write test + implement + verify + commit (full TDD cycle)
 - Do NOT implement anything — ONLY write the plan`;
 
       const taskId = `sp-plan-${i}`;
@@ -834,28 +854,30 @@ ${exploreInstruction}
 ${intelContext ? "1." : "2."} Design the solution (pick the simplest approach that works)
 ${intelContext ? "2." : "3."} Write an implementation plan with CHECKBOX TASKS
 
-## Plan Format (CRITICAL — follow exactly)
-Write the plan as a series of checkbox tasks. Each task is one small action (2-5 minutes).
-Follow TDD: write test first, then implement.
+## Task Budget: ~${taskBudget} tasks MAXIMUM
+Each task is a COMPLETE TDD cycle (write test + implement + verify + commit).
+Do NOT split "write test" and "implement" into separate tasks.
 
-Example format:
-\`\`\`
-- [ ] **Create test file tests/todo.test.js with failing test for GET /todos**
+## Plan Format (CRITICAL — follow exactly)
+Each checkbox = one complete TDD cycle. NOT micro-steps.
+
+GOOD (one task = full cycle):
+- [ ] **TDD: GET /todos — write failing test in tests/todo.test.js, implement handler in index.js, verify passes, commit**
+- [ ] **TDD: POST /todos — write failing test, implement with validation, verify, commit**
+- [ ] **TDD: Error handling — test 404/400 responses, implement error middleware, verify, commit**
+
+BAD (too granular — DO NOT do this):
+- [ ] **Create test file with failing test**
 - [ ] **Run test to verify it fails**
-- [ ] **Implement GET /todos endpoint in index.js**
+- [ ] **Implement the handler**
 - [ ] **Run test to verify it passes**
-- [ ] **Commit: feat: GET /todos endpoint**
-- [ ] **Add failing test for POST /todos**
-- [ ] **Implement POST /todos**
-- [ ] **Run tests, verify all pass**
-- [ ] **Commit: feat: POST /todos endpoint**
-\`\`\`
+- [ ] **Commit**
 
 ## Rules
 - Write the plan directly to stdout (do NOT save to a file)
 - Use EXACTLY the \`- [ ] **description**\` format for every task
-- Keep tasks small and concrete (exact file paths, exact code)
-- Follow TDD: failing test → implement → passing test → commit
+- MAXIMUM ${taskBudget} tasks total. Group related work into single tasks.
+- Each task = write test + implement + verify + commit (full TDD cycle)
 - No frameworks, keep it simple
 - Do NOT implement anything — ONLY write the plan`;
 
@@ -1139,29 +1161,44 @@ function inferTaskType(task: string): string {
   return "backend";
 }
 
-/** Group TDD tasks into batches (test+implement+verify should stay together). */
+/**
+ * Group TDD tasks into batches for fleet dispatch.
+ *
+ * New-style tasks (full TDD cycles like "TDD: GET /todos — write test, implement, verify, commit")
+ * become 1 batch each (1:1 mapping — each is already a complete unit of work).
+ *
+ * Old-style micro-step tasks ("Create test file", "Run test", "Implement", "Commit")
+ * are grouped into batches of ~5 (backward compat).
+ */
 function batchTddTasks(
   tasks: Array<{ prompt: string; taskType: string }>,
 ): Array<Array<{ prompt: string; taskType: string }>> {
+  // Detect if tasks are new-style (full cycles) or old-style (micro-steps)
+  // Heuristic: if most tasks contain "TDD:" or "commit" in the prompt, they're full cycles
+  const fullCycleCount = tasks.filter((t) => {
+    const lower = t.prompt.toLowerCase();
+    return lower.includes("tdd:") || (lower.includes("test") && lower.includes("implement"));
+  }).length;
+  const isFullCycleFormat = fullCycleCount > tasks.length * 0.5;
+
+  if (isFullCycleFormat) {
+    // Each task is a complete TDD cycle — 1 batch per task
+    return tasks.map((t) => [t]);
+  }
+
+  // Legacy micro-step format — group into batches of ~5
   const batches: Array<Array<{ prompt: string; taskType: string }>> = [];
   let current: Array<{ prompt: string; taskType: string }> = [];
 
   for (const task of tasks) {
     current.push(task);
-
-    // TDD cycle: write test → run test → implement → run test → commit
-    // Group these into batches of ~5 steps, or break on "commit" step
     const lower = task.prompt.toLowerCase();
     if (lower.includes("commit") || current.length >= 5) {
       batches.push([...current]);
       current = [];
     }
   }
-
-  // Remaining tasks
-  if (current.length > 0) {
-    batches.push(current);
-  }
+  if (current.length > 0) batches.push(current);
 
   return batches;
 }
@@ -1331,7 +1368,8 @@ ${BOLD}Modes:${RESET}
   --decompose <prompt>             Split into subtasks, one per worker
   --pipeline <prompt> --stages ... Sequential stages, fresh account per stage
   --superpowers <feature>          Plan → fleet execute → review (TDD)
-  --superpowers <feature> --decompose  Decompose → parallel plan → execute → review
+  --superpowers ... --decompose    Decompose → parallel plan → execute → review
+  --superpowers ... --max-tasks N  Task budget (default: workers × 5)
 
 ${BOLD}Options:${RESET}
   --workers <N>                    Max concurrent workers (default: all accounts)
@@ -1569,12 +1607,14 @@ ${BOLD}Management:${RESET}
     return;
   }
 
-  // --superpowers <feature> [--decompose]
+  // --superpowers <feature> [--decompose] [--max-tasks N]
   const spIdx = args.indexOf("--superpowers");
   if (spIdx !== -1 && args[spIdx + 1]) {
     const feature = args[spIdx + 1];
     const spDecompose = args.includes("--decompose");
-    await runSuperpowers(config, feature, workers, projectRoot, spDecompose);
+    const maxTasksIdx = args.indexOf("--max-tasks");
+    const spMaxTasks = (maxTasksIdx !== -1 && args[maxTasksIdx + 1]) ? parseInt(args[maxTasksIdx + 1], 10) : 0;
+    await runSuperpowers(config, feature, workers, projectRoot, spDecompose, spMaxTasks);
     return;
   }
 
