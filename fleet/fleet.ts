@@ -157,6 +157,12 @@ async function runPool(
   const failed: FleetTask[] = [];
   let requeued = 0;
 
+  // Warm up containers for all accounts (saves ~2-3s per task)
+  const accountsToWarm = config.accounts.slice(0, workers);
+  const warmedUp = await containers.warmUp(accountsToWarm, projectRoot, outputBase);
+  if (warmedUp > 0) ok(`Warmed up ${warmedUp} container(s) — tasks will use docker exec`);
+
+  try {
   while (pending.length > 0 || running.size > 0) {
     // Dispatch tasks to available accounts (up to worker limit)
     while (pending.length > 0 && running.size < workers) {
@@ -184,16 +190,22 @@ async function runPool(
       const local = isLocalProvider(provider);
       info(`[${task.id}] → ${account.account.label} (${provider}${local ? ", local" : ""}) | ${task.prompt.slice(0, 60)}...`);
 
-      const container = local
-        ? containers.runLocal({ taskId: task.id, prompt: task.prompt, projectRoot, provider })
-        : containers.run({
-            account: account.account,
-            taskId: task.id,
-            prompt: task.prompt,
-            projectRoot,
-            outputDir,
-            provider,
-          });
+      // Use warm container (docker exec) if available, else cold start
+      let container;
+      if (local) {
+        container = containers.runLocal({ taskId: task.id, prompt: task.prompt, projectRoot, provider });
+      } else if (containers.hasWarmContainer(account.account.id)) {
+        container = containers.execInWarm({ accountId: account.account.id, taskId: task.id, prompt: task.prompt, provider });
+      } else {
+        container = containers.run({
+          account: account.account,
+          taskId: task.id,
+          prompt: task.prompt,
+          projectRoot,
+          outputDir,
+          provider,
+        });
+      }
 
       task.containerId = container.name;
       pool.setContainer(account.account.id, container.name);
@@ -206,7 +218,7 @@ async function runPool(
     }
 
     if (running.size === 0 && pending.length > 0) {
-      // All accounts busy or in cooldown — wait
+      // All accounts busy or in cooldown — wait (event-driven)
       info(`Waiting for account... (${pending.length} pending, ${pool.counts().cooldown} cooling down)`);
       await pool.waitForAvailable(30_000);
       continue;
@@ -214,67 +226,69 @@ async function runPool(
 
     if (running.size === 0) break; // All done
 
-    // Wait for any container to finish
-    await new Promise((r) => setTimeout(r, 3000));
+    // Event-driven: wait for ANY container to complete (no polling delay)
+    const result = await containers.waitForAnyCompletion();
+    if (!result) continue;
 
-    // Check for completed containers
-    for (const [taskId, entry] of running) {
-      const result = await containers.waitForContainer(taskId);
-      if (!result) continue; // Still running
-      if (result.status !== "stopped" && result.status !== "failed") continue;
+    // Find the running entry for this completed container
+    const taskId = result.taskId;
+    const entry = running.get(taskId);
+    if (!entry) continue; // Shouldn't happen, but safety
 
-      const success = result.exitCode === 0;
-      const isRateLimited = ContainerManager.isRateLimited(result.output || "", result.error || "");
+    const success = result.exitCode === 0;
+    const isRateLimited = ContainerManager.isRateLimited(result.output || "", result.error || "");
 
-      entry.task.completedAt = new Date().toISOString();
+    entry.task.completedAt = new Date().toISOString();
 
-      if (isRateLimited) {
-        // Rate limited — cooldown account, record attempt, requeue task
-        warn(`[${taskId}] Rate limited on ${entry.accountId} — requeuing`);
-        pool.cooldown(entry.accountId);
-        onAccountCooldown(entry.accountId);
-        entry.task.attemptedAccounts.push(entry.accountId);
-        entry.task.status = "pending";
-        entry.task.accountId = null;
-        entry.task.containerId = null;
-        pending.push(entry.task);
-        requeued++;
-        updateFleetTask(taskId, { status: "pending" });
-      } else if (success) {
-        entry.task.status = "completed";
-        entry.task.result = result.output;
-        completed.push(entry.task);
-        pool.release(entry.accountId, true);
-        ok(`[${taskId}] Completed (${entry.accountId})`);
-        onTaskComplete(taskId, completed.length, tasks.length, "pool", true);
+    if (isRateLimited) {
+      warn(`[${taskId}] Rate limited on ${entry.accountId} — requeuing`);
+      pool.cooldown(entry.accountId);
+      onAccountCooldown(entry.accountId);
+      entry.task.attemptedAccounts.push(entry.accountId);
+      entry.task.status = "pending";
+      entry.task.accountId = null;
+      entry.task.containerId = null;
+      pending.push(entry.task);
+      requeued++;
+      updateFleetTask(taskId, { status: "pending" });
+    } else if (success) {
+      entry.task.status = "completed";
+      entry.task.result = result.output;
+      completed.push(entry.task);
+      pool.release(entry.accountId, true);
+      ok(`[${taskId}] Completed (${entry.accountId})`);
+      onTaskComplete(taskId, completed.length, tasks.length, "pool", true);
 
-        updateFleetTask(taskId, {
-          status: "completed",
-          result: result.output,
-          completed_at: entry.task.completedAt,
-        });
+      updateFleetTask(taskId, {
+        status: "completed",
+        result: result.output,
+        completed_at: entry.task.completedAt,
+      });
 
-        // Write result to file
-        const resultPath = join(outputBase, `${taskId}.txt`);
-        writeFileSync(resultPath, result.output || "(no output)");
-      } else {
-        entry.task.status = "failed";
-        entry.task.error = result.error;
-        failed.push(entry.task);
-        pool.release(entry.accountId, false);
-        error(`[${taskId}] Failed (exit ${result.exitCode})`);
-        onTaskComplete(taskId, completed.length + failed.length, tasks.length, "pool", false);
+      const resultPath = join(outputBase, `${taskId}.txt`);
+      writeFileSync(resultPath, result.output || "(no output)");
+    } else {
+      entry.task.status = "failed";
+      entry.task.error = result.error;
+      failed.push(entry.task);
+      pool.release(entry.accountId, false);
+      error(`[${taskId}] Failed (exit ${result.exitCode})`);
+      onTaskComplete(taskId, completed.length + failed.length, tasks.length, "pool", false);
 
-        updateFleetTask(taskId, {
-          status: "failed",
-          error: result.error,
-          completed_at: entry.task.completedAt,
-        });
-      }
-
-      updateContainerRecord(result.name, result.status, result.exitCode);
-      running.delete(taskId);
+      updateFleetTask(taskId, {
+        status: "failed",
+        error: result.error,
+        completed_at: entry.task.completedAt,
+      });
     }
+
+    updateContainerRecord(result.name, result.status, result.exitCode);
+    running.delete(taskId);
+  }
+  } finally {
+    // Always shut down warm containers, even on error
+    const warmStopped = containers.shutdownWarm();
+    if (warmStopped > 0) info(`Stopped ${warmStopped} warm container(s)`);
   }
 
   const summary = { total: tasks.length, completed: completed.length, failed: failed.length, requeued };
@@ -636,15 +650,34 @@ async function runSuperpowers(
     return emptyResult("superpowers");
   }
 
+  // Inject project intel to skip exploration (saves 60-80% of planning time)
+  const intelPath = join(projectRoot, ".claude", "rules", "project-intel.md");
+  let intelContext = "";
+  if (existsSync(intelPath)) {
+    try {
+      const raw = readFileSync(intelPath, "utf-8");
+      // Truncate at a section boundary (## heading) near 8KB to avoid mid-sentence cuts
+      if (raw.length > 8000) {
+        const lastSection = raw.lastIndexOf("\n## ", 8000);
+        intelContext = lastSection > 2000 ? raw.slice(0, lastSection) : raw.slice(0, 8000);
+      } else {
+        intelContext = raw;
+      }
+    } catch { /* proceed without */ }
+  }
+
   const brainstormPrompt = `You are a senior engineer creating an implementation plan. This is a NON-INTERACTIVE autonomous session — do NOT ask questions, make all decisions yourself.
 
 ## Feature Request
 ${featureDescription}
-
+${intelContext ? `
+## Project Intelligence (pre-scanned — use this instead of exploring)
+${intelContext}
+` : ""}
 ## Your Task
-1. Quickly explore the project (ls, read key files, check package.json)
-2. Design the solution (pick the simplest approach that works)
-3. Write an implementation plan with CHECKBOX TASKS
+${intelContext ? "The project has already been scanned (see above). Use the intel directly — do NOT run ls or read files unless you need specific implementation details not covered above." : "1. Quickly explore the project (ls, read key files, check package.json)"}
+${intelContext ? "1." : "2."} Design the solution (pick the simplest approach that works)
+${intelContext ? "2." : "3."} Write an implementation plan with CHECKBOX TASKS
 
 ## Plan Format (CRITICAL — follow exactly)
 Write the plan as a series of checkbox tasks. Each task is one small action (2-5 minutes).
@@ -683,7 +716,10 @@ Example format:
     provider: "claude",
   });
 
-  info("Planning (exploring project + creating task plan)...");
+  if (intelContext) {
+    ok("Injected project intel into planning prompt (skipping exploration)");
+  }
+  info("Planning (creating task plan)...");
   const brainstormResult = await containers.waitForContainer("sp-plan");
   pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
 

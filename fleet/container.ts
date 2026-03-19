@@ -9,36 +9,37 @@ import type { Account, FleetContainer, FleetSettings } from "./types";
 
 const MAX_LOG_SIZE = 100_000; // 100KB per stream during accumulation
 
-/** Find superpowers skills directory (searches known plugin install paths). */
-function findSuperpowersSkills(homeDir: string): string | null {
+// --- Cached superpowers skills path (searched once per process) ---
+let _cachedSkillsPath: string | null | undefined; // undefined = not searched yet
+
+/** Find superpowers skills directory (cached — filesystem walk happens once). */
+export function findSuperpowersSkills(homeDir: string): string | null {
+  if (_cachedSkillsPath !== undefined) return _cachedSkillsPath;
+
   const candidates = [
-    // Claude Code official marketplace
     join(homeDir, ".claude", "plugins", "cache", "claude-plugins-official", "superpowers"),
-    // obra marketplace
     join(homeDir, ".claude", "plugins", "cache", "superpowers-marketplace", "superpowers"),
-    // User-installed skills
     join(homeDir, ".claude", "skills"),
   ];
 
   for (const base of candidates) {
-    // Check for versioned path (e.g. superpowers/5.0.5/skills/)
     if (existsSync(base)) {
       try {
         const entries = readdirSync(base);
         for (const entry of entries) {
           const skillsDir = join(base, entry, "skills");
           if (existsSync(skillsDir) && existsSync(join(skillsDir, "test-driven-development"))) {
+            _cachedSkillsPath = skillsDir;
             return skillsDir;
           }
         }
       } catch { /* skip */ }
-      // Direct skills dir (non-versioned)
       const directSkills = join(base, "skills");
-      if (existsSync(directSkills)) return directSkills;
-      // Is itself a skills dir
-      if (existsSync(join(base, "test-driven-development"))) return base;
+      if (existsSync(directSkills)) { _cachedSkillsPath = directSkills; return directSkills; }
+      if (existsSync(join(base, "test-driven-development"))) { _cachedSkillsPath = base; return base; }
     }
   }
+  _cachedSkillsPath = null;
   return null;
 }
 
@@ -161,6 +162,13 @@ export class ContainerManager {
   private containerMemory: string;
   private containerCpus: string;
   private active: Map<string, { process: ChildProcess; container: FleetContainer }> = new Map();
+
+  // Event-driven completion notification (replaces polling)
+  private completionQueue: FleetContainer[] = [];
+  private completionWaiters: Array<(container: FleetContainer) => void> = [];
+
+  // Warm container pool (reuse containers across tasks)
+  private warmContainers: Map<string, { name: string; ready: boolean }> = new Map();
 
   constructor(settings: FleetSettings) {
     this.runtime = settings.runtime;
@@ -371,17 +379,19 @@ export class ContainerManager {
       container.error = `Timeout after ${this.taskTimeoutMs}ms`;
       container.stoppedAt = new Date().toISOString();
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     }, this.taskTimeoutMs);
 
     child.on("close", (code: number | null) => {
       clearTimeout(timeout);
-      if (timedOut) return; // Don't overwrite timeout error
+      if (timedOut) return;
       container.exitCode = code;
       container.status = code === 0 ? "stopped" : "failed";
       container.stoppedAt = new Date().toISOString();
-      container.output = stdout.slice(-50_000); // Last 50KB
+      container.output = stdout.slice(-50_000);
       container.error = stderr.slice(-10_000);
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     });
 
     child.on("error", (err: Error) => {
@@ -391,6 +401,7 @@ export class ContainerManager {
       container.error = err.message;
       container.stoppedAt = new Date().toISOString();
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     });
 
     return container;
@@ -461,6 +472,7 @@ export class ContainerManager {
       container.error = `Timeout after ${this.taskTimeoutMs}ms`;
       container.stoppedAt = new Date().toISOString();
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     }, this.taskTimeoutMs);
 
     child.on("close", (code: number | null) => {
@@ -472,6 +484,7 @@ export class ContainerManager {
       container.output = stdout.slice(-50_000);
       container.error = stderr.slice(-10_000);
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     });
 
     child.on("error", (err: Error) => {
@@ -481,6 +494,7 @@ export class ContainerManager {
       container.error = err.message;
       container.stoppedAt = new Date().toISOString();
       this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
     });
 
     return container;
@@ -581,5 +595,246 @@ export class ContainerManager {
   /** Get the number of currently active containers. */
   get activeCount(): number {
     return this.active.size;
+  }
+
+  // ===========================================================================
+  // Completion Notification (event-driven — replaces 3s polling)
+  // ===========================================================================
+
+  /** Notify that a container/exec completed. Wakes waitForAnyCompletion(). */
+  private notifyCompletion(container: FleetContainer): void {
+    if (this.completionWaiters.length > 0) {
+      const waiter = this.completionWaiters.shift()!;
+      waiter(container);
+    } else {
+      this.completionQueue.push(container);
+    }
+  }
+
+  /** Wait for any active container to complete. Event-driven — zero polling delay. */
+  async waitForAnyCompletion(): Promise<FleetContainer | null> {
+    // Drain queue first (containers that completed while we were processing)
+    if (this.completionQueue.length > 0) {
+      return this.completionQueue.shift()!;
+    }
+    // Nothing active = nothing to wait for
+    if (this.active.size === 0) return null;
+    // Wait for next completion notification
+    return new Promise((resolve) => {
+      this.completionWaiters.push(resolve);
+    });
+  }
+
+  // ===========================================================================
+  // Warm Container Pool (reuse containers across tasks)
+  // ===========================================================================
+
+  /** Build the common config volume mounts array. */
+  private getConfigMounts(homeDir: string, fleetUser: string): Array<[string, string]> {
+    const claudeDir = join(homeDir, ".claude");
+    const mounts: Array<[string, string]> = [
+      [join(claudeDir, "CLAUDE.md"), join(fleetUser, ".claude", "CLAUDE.md")],
+      [join(claudeDir, "rules"), join(fleetUser, ".claude", "rules")],
+      [join(claudeDir, "commands"), join(fleetUser, ".claude", "commands")],
+      [join(claudeDir, "agents"), join(fleetUser, ".claude", "agents")],
+    ];
+    const superpowersSkills = findSuperpowersSkills(homeDir);
+    if (superpowersSkills) {
+      mounts.push([superpowersSkills, join(fleetUser, ".claude", "skills")]);
+    }
+    return mounts;
+  }
+
+  /** Check if a named container is already running. */
+  private isContainerRunning(containerName: string): boolean {
+    try {
+      const out = execFileSync(this.runtime, ["inspect", "-f", "{{.State.Running}}", containerName], {
+        encoding: "utf-8", timeout: 5000,
+      }).trim();
+      return out === "true";
+    } catch { return false; }
+  }
+
+  /**
+   * Pre-start warm containers for the given accounts.
+   * Each container runs `sleep infinity` and accepts tasks via `docker exec`.
+   * Saves ~2-3s per task by eliminating container creation overhead.
+   */
+  async warmUp(
+    accounts: Account[],
+    projectRoot: string,
+    baseOutputDir: string,
+  ): Promise<number> {
+    const homeDir = process.env.HOME || "/tmp";
+    const fleetUser = "/home/fleet";
+    const hostUid = process.getuid?.() ?? 1000;
+    const hostGid = process.getgid?.() ?? 1000;
+    let started = 0;
+
+    for (const account of accounts) {
+      const containerName = `fleet-warm-${account.id}`;
+
+      // Reuse if already running (e.g. from a previous run)
+      if (this.isContainerRunning(containerName)) {
+        this.warmContainers.set(account.id, { name: containerName, ready: true });
+        started++;
+        continue;
+      }
+
+      // Create persistent temp home dir for this account
+      const tempHome = join(baseOutputDir, `.warm-home-${account.id}`);
+      mkdirSync(join(tempHome, ".claude"), { recursive: true });
+
+      const args: string[] = [
+        "run", "-d", "--rm",
+        "--name", containerName,
+        "--user", `${hostUid}:${hostGid}`,
+        "-e", `HOME=${fleetUser}`,
+        "-v", `${tempHome}:${fleetUser}`,
+        "-v", `${projectRoot}:/project`,
+        "-w", "/project",
+        "--memory", this.containerMemory,
+        "--cpus", this.containerCpus,
+      ];
+
+      // Config mounts (read-only)
+      for (const [hostPath, containerPath] of this.getConfigMounts(homeDir, fleetUser)) {
+        if (existsSync(hostPath)) {
+          args.push("-v", `${hostPath}:${containerPath}:ro`);
+        }
+      }
+
+      // Inject credentials via env-file
+      const envLines = Object.entries(account.credentials).map(([k, v]) => `${k}=${v}`);
+      envLines.push("CLAUDECODE=", "CLAUDE_CODE_ENTRYPOINT=");
+      const envFilePath = join(baseOutputDir, `.env-warm-${account.id}`);
+      writeFileSync(envFilePath, envLines.join("\n"), { mode: 0o600 });
+      args.push("--env-file", envFilePath);
+
+      // Entrypoint: sleep infinity (container stays alive for docker exec)
+      args.push("--entrypoint", "sleep");
+      args.push(this.image, "infinity");
+
+      try {
+        execFileSync(this.runtime, args, { encoding: "utf-8", timeout: 30_000 });
+        this.warmContainers.set(account.id, { name: containerName, ready: true });
+        started++;
+        // Clean up env file
+        setTimeout(() => { try { unlinkSync(envFilePath); } catch { /* gone */ } }, 5000);
+      } catch (err) {
+        console.error(`\x1b[31m[fleet]\x1b[0m Failed to start warm container for ${account.id}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    return started;
+  }
+
+  /** Check if a warm container exists and is still running for an account. */
+  hasWarmContainer(accountId: string): boolean {
+    const warm = this.warmContainers.get(accountId);
+    if (!warm?.ready) return false;
+    // Verify container is actually still alive (could have been killed externally)
+    if (!this.isContainerRunning(warm.name)) {
+      warm.ready = false;
+      return false;
+    }
+    return true;
+  }
+
+  /** Execute a task in a warm container via `docker exec`. */
+  execInWarm(opts: {
+    accountId: string;
+    taskId: string;
+    prompt: string;
+    provider?: string;
+  }): FleetContainer {
+    const warm = this.warmContainers.get(opts.accountId);
+    if (!warm?.ready) throw new Error(`No warm container for account ${opts.accountId}`);
+
+    const provider = opts.provider || "claude";
+    const cmd = buildProviderCommand(provider, opts.prompt);
+    const execArgs = ["exec", warm.name, ...cmd];
+
+    const container: FleetContainer = {
+      id: warm.name,
+      accountId: opts.accountId,
+      name: warm.name,
+      status: "running",
+      taskId: opts.taskId,
+      pid: null,
+      startedAt: new Date().toISOString(),
+      stoppedAt: null,
+      exitCode: null,
+      output: null,
+      error: null,
+    };
+
+    const child = spawn(this.runtime, execArgs, {
+      stdio: ["ignore", "pipe", "pipe"],
+      detached: false,
+    });
+
+    container.pid = child.pid ?? null;
+
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString();
+      if (stdout.length > MAX_LOG_SIZE) stdout = stdout.slice(-MAX_LOG_SIZE);
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+      if (stderr.length > MAX_LOG_SIZE) stderr = stderr.slice(-MAX_LOG_SIZE);
+    });
+
+    this.active.set(opts.taskId, { process: child, container });
+
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      try { child.kill("SIGTERM"); } catch { /* already dead */ }
+      container.status = "failed";
+      container.error = `Timeout after ${this.taskTimeoutMs}ms`;
+      container.stoppedAt = new Date().toISOString();
+      this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
+    }, this.taskTimeoutMs);
+
+    child.on("close", (code: number | null) => {
+      clearTimeout(timeout);
+      if (timedOut) return;
+      container.exitCode = code;
+      container.status = code === 0 ? "stopped" : "failed";
+      container.stoppedAt = new Date().toISOString();
+      container.output = stdout.slice(-50_000);
+      container.error = stderr.slice(-10_000);
+      this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
+    });
+
+    child.on("error", (err: Error) => {
+      clearTimeout(timeout);
+      if (timedOut) return;
+      container.status = "failed";
+      container.error = err.message;
+      container.stoppedAt = new Date().toISOString();
+      this.active.delete(opts.taskId);
+      this.notifyCompletion(container);
+    });
+
+    return container;
+  }
+
+  /** Shut down all warm containers. */
+  shutdownWarm(): number {
+    let stopped = 0;
+    for (const [, warm] of this.warmContainers) {
+      try {
+        execFileSync(this.runtime, ["stop", warm.name], { encoding: "utf-8", timeout: 15_000 });
+        stopped++;
+      } catch { /* already stopped */ }
+    }
+    this.warmContainers.clear();
+    return stopped;
   }
 }

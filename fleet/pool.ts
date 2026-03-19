@@ -15,6 +15,7 @@ export class AccountPool {
   private cooldownMs: number;
   private totalSpawned = 0;
   private maxTotalSpawns: number;
+  private availableWaiters: Array<() => void> = [];
 
   constructor(config: FleetConfig) {
     this.cooldownMs = config.settings.cooldownMs;
@@ -114,6 +115,17 @@ export class AccountPool {
     status.state = "idle";
     status.currentTaskId = null;
     status.containerId = null;
+
+    // Notify anyone waiting for an available account
+    this.notifyAvailable();
+  }
+
+  /** Wake the first waiter when an account becomes available. */
+  private notifyAvailable(): void {
+    if (this.availableWaiters.length > 0) {
+      const waiter = this.availableWaiters.shift()!;
+      waiter();
+    }
   }
 
   /** Put an account in cooldown (e.g. after rate limit 429). */
@@ -160,20 +172,51 @@ export class AccountPool {
     return this.counts().idle;
   }
 
-  /** Wait for at least one account to become available. */
+  /** Wait for at least one account to become available. Event-driven with cooldown fallback. */
   async waitForAvailable(timeoutMs = 120_000): Promise<AccountStatus | null> {
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-      this.expireCooldowns();
-
-      // Try to find an idle account
-      for (const status of this.statuses.values()) {
-        if (status.state === "idle") return status;
-      }
-
-      await new Promise((r) => setTimeout(r, 1000));
+    // Check immediately
+    this.expireCooldowns();
+    for (const status of this.statuses.values()) {
+      if (status.state === "idle") return status;
     }
-    return null; // Timeout
+
+    return new Promise((resolve) => {
+      let resolved = false;
+
+      const done = (result: AccountStatus | null) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timer);
+        clearInterval(cooldownCheck);
+        // Remove from waiters
+        const idx = this.availableWaiters.indexOf(onRelease);
+        if (idx >= 0) this.availableWaiters.splice(idx, 1);
+        resolve(result);
+      };
+
+      // Timeout
+      const timer = setTimeout(() => done(null), timeoutMs);
+
+      // Woken by release()
+      const onRelease = () => {
+        this.expireCooldowns();
+        for (const status of this.statuses.values()) {
+          if (status.state === "idle") { done(status); return; }
+        }
+        // Account was re-allocated before we could grab it — re-queue
+        if (!resolved) this.availableWaiters.push(onRelease);
+      };
+
+      this.availableWaiters.push(onRelease);
+
+      // Periodic cooldown expiry check (only matters when all accounts are cooling down)
+      const cooldownCheck = setInterval(() => {
+        this.expireCooldowns();
+        for (const status of this.statuses.values()) {
+          if (status.state === "idle") { done(status); return; }
+        }
+      }, 1000);
+    });
   }
 
   /** Set the container ID for a busy account. */
