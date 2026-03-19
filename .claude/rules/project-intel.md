@@ -347,14 +347,16 @@ Standalone coding agent (v2.28.0) on Pi SDK. Complements the Overseer — better
 
 Run AI tasks across multiple API accounts in isolated Docker/Podman containers. Complements the Overseer (which uses a single credential set) — Fleet adds N× throughput via pooled accounts.
 
-**Run**: `bun fleet/fleet.ts --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages r,i,t`
-**Setup**: `bun fleet/fleet.ts --setup` (interactive) | `--init` (template) | `--add-account "Label" KEY=val`
-**Manage**: `--status` | `--accounts` | `--stop` | `--build-image`
+**Run**: `fleet --pool tasks.json` | `--scatter "prompt"` | `--decompose "task"` | `--pipeline "task" --stages r,i,t` | `--superpowers "feature"`
+**Setup**: `fleet --from-csv keys.csv` (recommended) | `--setup` (interactive) | `--add-account "Label" KEY=val`
+**Monitor**: `fleet --live` (progress from any terminal) | `--status` (history) | `--accounts`
+**Manage**: `--stop` | `--build-image` | `--live --all` (cross-project)
+**CLI**: `~/.local/bin/fleet` (global wrapper, works from any directory)
 **Config**: `~/.claude/fleet/accounts.json` (chmod 600, dir chmod 700)
-**Image**: `claude-fleet:latest` (~1.8GB) — claude-code + codex + gemini + copilot + bun + git, non-root `fleet` user
-**Database**: `~/.claude/data/fleet.db` (fleet_runs, fleet_tasks, fleet_containers)
+**Image**: `claude-fleet:latest` (~1.8GB) — claude-code + codex + gemini + copilot + bun + git, non-root user
+**Database**: `~/.claude/data/fleet.db` (fleet_runs with project_root, fleet_tasks, fleet_containers)
 
-### 4 Execution Modes
+### 5 Execution Modes
 
 | Mode | Command | How It Works |
 |------|---------|-------------|
@@ -362,6 +364,7 @@ Run AI tasks across multiple API accounts in isolated Docker/Podman containers. 
 | **Scatter** | `--scatter "prompt"` | Same task to N workers, results merged (best/merge/all) |
 | **Decompose** | `--decompose "task"` | AI splits into subtasks, parallel pool dispatch |
 | **Pipeline** | `--pipeline "task" --stages r,i,t` | Sequential stages, fresh account per stage |
+| **Superpowers** | `--superpowers "feature"` | Plan → TDD tasks → fleet execute → review (see below) |
 
 ### Hybrid Dispatch (Container vs Local)
 
@@ -378,12 +381,13 @@ Provider selection: task type → routing table → first available from account
 |------|-------|---------|
 | `types.ts` | 168 | Account, Container, FleetTask, FleetConfig, DB records |
 | `pool.ts` | 283 | AccountPool: round-robin, cooldown, requeue history, spawn limit |
-| `container.ts` | 514 | ContainerManager: Docker/Podman lifecycle, provider command building, local fallback, stale detection |
-| `db.ts` | 223 | SQLite: fleet_runs, fleet_tasks, fleet_containers (cached prepared statements) |
-| `fleet.ts` | 826 | CLI orchestrator: all 4 modes + management commands |
-| `setup.ts` | 378 | Interactive account wizard: 11 providers, credential collection, review + save |
-| `bridge.ts` | 128 | cmux sidebar: status pills, progress bar, notifications (no-ops without cmux) |
-| `Dockerfile` | 40 | Non-root image: node:22-slim + claude/codex/gemini/copilot + bun |
+| `container.ts` | 560+ | ContainerManager: Docker/Podman, provider commands, local fallback, stale detection, superpowers skills mount |
+| `db.ts` | 230+ | SQLite: fleet_runs (with project_root), fleet_tasks, fleet_containers, migrations |
+| `fleet.ts` | 1280+ | CLI orchestrator: 5 modes + superpowers + live view + Ctrl+C + management |
+| `setup.ts` | 500+ | Interactive wizard, --from-csv, --add-account, Bedrock API key support |
+| `bridge.ts` | 128 | cmux sidebar: status pills, progress bar, notifications (stderr suppressed) |
+| `fleet-wrapper.sh` | 43 | Global CLI wrapper installed to ~/.local/bin/fleet |
+| `Dockerfile` | 47 | Non-root image: node:22-slim + claude/codex/gemini/copilot + bun |
 
 ### Account Pool
 
@@ -393,12 +397,39 @@ Provider selection: task type → routing table → first available from account
 - **Stale container detection**: warns on startup about orphaned `fleet-*` containers
 - **Configurable**: memory, CPUs, timeout, cooldown duration, max concurrent workers
 
+### Container Mounts (what workers get)
+
+Each fleet container is mounted with the full local setup (all read-only except project dir):
+- `~/.claude/CLAUDE.md` — global instructions
+- `~/.claude/rules/` — 13 rule files
+- `~/.claude/commands/` — 57 commands
+- `~/.claude/agents/` — 9 native agents
+- Superpowers skills (14 skills — TDD, debugging, brainstorming, etc.)
+- Writable temp home dir (Claude Code session data)
+- Project directory (read-write, host UID/GID for permissions)
+
+### Account Setup
+
+**Recommended**: CSV file with Bedrock API keys (ABSK format):
+```bash
+echo "ABSKkey1,ABSKkey2,ABSKkey3,ABSKkey4,ABSKkey5" > ~/keys.csv
+fleet --from-csv ~/keys.csv   # creates 5 accounts, sets workers=5
+```
+Also supports: `--setup` (interactive wizard, 11 providers), `--add-account` (quick CLI).
+
+### Project-Scoped Tracking
+
+- `fleet --live` and `fleet --status` filter by current working directory
+- `fleet --live --all` / `fleet --status --all` for cross-project view
+- Each run stores `project_root` in DB — multiple projects can run simultaneously
+- Shared account pool: 5 accounts total, round-robin across all projects
+
 ### install.sh Integration
 
-- Fresh install: detects runtime → interactive setup prompt → builds image → creates config
+- Fresh install: detects runtime → interactive setup prompt (or CSV) → builds image → installs `fleet` CLI wrapper
 - Update: rebuilds image if missing
 - Doctor: 6 fleet health checks (config, perms, runtime, image, DB, stale containers)
-- Dry run: all fleet operations preview without changes
+- Global CLI: `~/.local/bin/fleet` (works from any directory)
 
 ### E2E Tested
 
@@ -407,6 +438,53 @@ Provider selection: task type → routing table → first available from account
 | Pool | 2/2 | 15s | `4`, `Paris` (parallel, Bedrock) |
 | Scatter | 2/2 | 11s | Both `Python, JavaScript, Java` (merged) |
 | Pipeline | 2/2 | 112s | implement → test → 11/11 tests pass |
+| Superpowers | 10/10 | ~20min | Todo REST API: 111 lines + 145 lines tests, 12 commits |
+
+---
+
+## Superpowers Integration (obra/superpowers)
+
+Plugin (97K stars) providing 14 composable skills for systematic development. Installed via Claude Code marketplace, skills auto-mounted into fleet containers.
+
+**Install**: `claude plugin install superpowers@claude-plugins-official`
+**Skills path**: `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/`
+**Fleet integration**: `fleet --superpowers "feature description"` — autonomous 4-phase pipeline
+
+### 14 Skills
+
+| Category | Skills |
+|----------|--------|
+| **Workflow** | brainstorming, writing-plans, executing-plans, subagent-driven-development |
+| **Quality** | test-driven-development, verification-before-completion |
+| **Debugging** | systematic-debugging (4-phase root cause) |
+| **Collaboration** | requesting-code-review, receiving-code-review |
+| **Git** | using-git-worktrees, finishing-a-development-branch |
+| **Parallel** | dispatching-parallel-agents |
+| **Meta** | using-superpowers, writing-skills |
+
+### fleet --superpowers Pipeline
+
+4-phase autonomous feature development:
+
+1. **Planning** — One container explores project, creates TDD implementation plan with checkbox tasks (`- [ ] **Step N:**`)
+2. **Task extraction** — Parses checkboxes from plan, groups TDD steps into batches (test→implement→verify→commit)
+3. **Fleet execution** — Dispatches batches to pool (N parallel workers with TDD skill)
+4. **Code review** — Final review of all changes (spec compliance + code quality)
+
+Falls back to decompose mode if plan doesn't contain checkbox format.
+
+### Key Design Decisions
+
+- **Brainstorming skill skipped in fleet** — HARD-GATE requires interactive user approval, which conflicts with non-interactive containers. Planning prompt replaces it.
+- **TDD batching** — Sequential TDD steps (write test → run → implement → run → commit) grouped into single fleet tasks to maintain ordering.
+- **Skills auto-mounted** — `findSuperpowersSkills()` searches plugin cache paths, mounts read-only into containers.
+
+### E2E Test: Todo REST API
+
+```bash
+fleet --superpowers "Build a REST API for managing todos"
+```
+Result: 48 TDD tasks → 10 batches → 12 commits → 111-line API + 145-line test suite with 9 test cases. Full CRUD with validation, error handling, UUID generation.
 
 ---
 
@@ -453,6 +531,12 @@ Provider selection: task type → routing table → first available from account
 39. **Fleet Bedrock in containers** — `AWS_PROFILE` alone insufficient; extract temp credentials via `aws configure export-credentials --format env` and inject `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` + `AWS_SESSION_TOKEN`
 40. **Fleet browser-auth CLIs** — Kiro (`kiro auth`) and Amp (`amp login`) use browser OAuth; cannot run in non-persistent containers; fleet dispatches these locally via `spawn()` instead
 41. **Fleet env-file cleanup** — credentials written to temp file for `--env-file`, deleted 5s after container start; timeout handler doesn't explicitly clean up (OS cleans `/tmp` eventually)
+42. **Fleet container home dir** — `--user` flag matches host UID/GID for project writes; temp home dir created per container (Claude Code needs writable HOME); macOS Docker doesn't support tmpfs uid option
+43. **Fleet Bedrock API keys** — use `AWS_BEARER_TOKEN_BEDROCK=ABSK...` env var (not `ANTHROPIC_API_KEY`); Claude Code uses this to skip IAM credential resolution
+44. **Fleet --superpowers brainstorming skip** — superpowers brainstorming skill has HARD-GATE that blocks without user approval; fleet uses direct planning prompt instead (autonomous, non-interactive)
+45. **Fleet --from-csv replaces all accounts** — CSV is source of truth; workers auto-set to key count; re-run to update
+46. **Fleet project-scoped status** — `fleet --live` and `--status` filter by cwd; `--all` flag for global view; `project_root` stored in DB per run
+47. **Fleet cmux stderr suppression** — cmux binary writes `Error: Unknown command` to stderr; bridge.ts uses `stdio: ["ignore", "pipe", "ignore"]` to suppress
 
 ---
 
@@ -469,7 +553,8 @@ Provider selection: task type → routing table → first available from account
 - **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **14** overseer modules (`overseer/*.ts` including gsd-bridge) + architecture docs
-- **8** fleet modules (`fleet/*.ts` + Dockerfile) — multi-account container orchestration
+- **9** fleet modules (`fleet/*.ts` + Dockerfile + wrapper) — multi-account container orchestration, 5 modes, superpowers integration
+- **14** superpowers skills (TDD, debugging, brainstorming, subagent-driven-development, etc.) — via plugin
 - **2** WebSocket endpoints (ops, terminal)
 - **3** container runtimes supported (Podman, Docker, Finch)
 
