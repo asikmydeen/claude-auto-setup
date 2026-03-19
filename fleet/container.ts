@@ -645,11 +645,11 @@ export class ContainerManager {
     return mounts;
   }
 
-  /** Check if a named container is already running. */
+  /** Check if a named container is already running (silent — no stderr noise). */
   private isContainerRunning(containerName: string): boolean {
     try {
       const out = execFileSync(this.runtime, ["inspect", "-f", "{{.State.Running}}", containerName], {
-        encoding: "utf-8", timeout: 5000,
+        encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"],
       }).trim();
       return out === "true";
     } catch { return false; }
