@@ -1,5 +1,15 @@
 # Security Standards
 
+## Red Flags — STOP Immediately
+
+| Thought | Reality |
+|---------|---------|
+| "This is internal, no one will attack it" | Internal services get compromised too. Defense in depth. |
+| "I'll add validation later" | You won't. Validate now at the boundary. |
+| "The framework handles security" | Partially. You still need to configure it correctly. |
+| "It's just a prototype" | Prototypes become production. Secure it now. |
+| "This secret is only in env vars" | Env vars leak via logs, process listings, error messages. |
+
 ## OWASP Top 10 Awareness
 - Validate and sanitize all user input at API boundaries
 - Use parameterized queries — never string-concatenate SQL/DynamoDB expressions

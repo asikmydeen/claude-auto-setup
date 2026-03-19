@@ -207,9 +207,18 @@ For **Large** tasks, use the **Explore → Plan → Implement → Review → Ver
 - Agent 3: Use `serena` to map code relationships and dependencies
 
 ### Phase B: Plan
+
+<HARD-GATE>
+Do NOT proceed to implementation until the user has reviewed and approved the spec.
+Present it in sections short enough to read. Wait for explicit approval.
+This applies to EVERY task regardless of perceived simplicity.
+"This is too simple to need a spec" = the project where unexamined assumptions waste the most work.
+</HARD-GATE>
+
 - Synthesize exploration results into a spec
 - Present spec with `@@@task` blocks
 - STOP and wait for user approval
+- After approval: break into bite-sized tasks (2-5 min each, TDD-first)
 
 ### Phase C: Implement (parallel agents by concern, auto-dispatch to providers)
 - Split implementation by concern (not by file):

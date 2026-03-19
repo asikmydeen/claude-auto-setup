@@ -759,42 +759,143 @@ Example format:
 
   const result = await runPool(config, allTasks, workers, projectRoot);
 
-  // ── Phase 4: Final review ────────────────────────────────────────────────
+  // ── Phase 4: Two-stage review (parallel) ──────────────────────────────────
   if (result.summary.completed > 0) {
-    console.error(`\n${BOLD}Phase 4: Code review${RESET}`);
+    console.error(`\n${BOLD}Phase 4: Two-Stage Review${RESET} ${DIM}(spec compliance + code quality in parallel)${RESET}`);
 
-    const reviewAccount = pool.allocate("sp-review");
-    if (reviewAccount) {
-      const reviewPrompt = `You have superpowers. Use the requesting-code-review skill.
+    const reviewDir = join(projectRoot, ".fleet", "superpowers-review");
+    mkdirSync(reviewDir, { recursive: true });
 
-Review all changes made in this session. Check:
-1. Spec compliance — does the implementation match the design doc in docs/superpowers/specs/?
-2. Code quality — clean, tested, no dead code, follows codebase patterns
-3. Test coverage — are all cases covered? Do tests actually test behavior?
+    // Stage 1: Spec compliance review
+    const specAccount = pool.allocate("sp-spec-review");
+    let specReviewDone: Promise<void> | null = null;
+    if (specAccount) {
+      const specPrompt = `You are a SPEC COMPLIANCE REVIEWER. This is stage 1 of a 2-stage review.
 
-Write your review to docs/superpowers/reviews/ and commit.`;
+Your ONLY job: verify the implementation matches the design specification.
+
+1. Read the design doc in docs/superpowers/specs/ (or the plan in docs/superpowers/plans/)
+2. Read the actual implementation (all source files, not just index.js)
+3. For EACH requirement in the spec, check if it's implemented:
+   - List each requirement and mark it PASS or FAIL
+   - For FAIL items, explain what's missing or wrong
+4. Check that no EXTRA features were added beyond the spec (gold plating)
+
+Output format:
+## Spec Compliance Review
+
+### Requirements Checklist
+- [PASS/FAIL] Requirement 1: description
+- [PASS/FAIL] Requirement 2: description
+...
+
+### Missing Requirements
+(list any spec items not implemented)
+
+### Extra Features (Gold Plating)
+(list any features added that weren't in the spec)
+
+### Verdict: PASS / FAIL (with summary)`;
 
       containers.run({
-        account: reviewAccount.account,
-        taskId: "sp-review",
-        prompt: reviewPrompt,
+        account: specAccount.account,
+        taskId: "sp-spec-review",
+        prompt: specPrompt,
         projectRoot,
-        outputDir: join(projectRoot, ".fleet", "superpowers-review"),
+        outputDir: join(reviewDir, "spec"),
         provider: "claude",
       });
 
-      info("Running final code review...");
-      const reviewResult = await containers.waitForContainer("sp-review");
-      pool.release(reviewAccount.account.id, reviewResult?.exitCode === 0);
+      specReviewDone = containers.waitForContainer("sp-spec-review").then((r) => {
+        pool.release(specAccount.account.id, r?.exitCode === 0);
+        if (r?.exitCode === 0) {
+          writeFileSync(join(reviewDir, "spec-review.txt"), r?.output || "");
+          ok("Stage 1: Spec compliance — done");
+        } else {
+          warn("Stage 1: Spec compliance — failed (non-critical)");
+        }
+      });
+      info("Stage 1: Spec compliance reviewer dispatched");
+    }
 
-      if (reviewResult?.exitCode === 0) {
-        ok("Code review complete");
-        // Write review output
-        const reviewPath = join(projectRoot, ".fleet", "superpowers-review", "review.txt");
-        writeFileSync(reviewPath, reviewResult?.output || "(no output)");
-      } else {
-        warn("Code review failed (non-critical)");
+    // Stage 2: Code quality review (parallel with stage 1)
+    const qualityAccount = pool.allocate("sp-quality-review");
+    let qualityReviewDone: Promise<void> | null = null;
+    if (qualityAccount) {
+      const qualityPrompt = `You are a CODE QUALITY REVIEWER. This is stage 2 of a 2-stage review.
+
+Your ONLY job: review code quality, NOT spec compliance (that's handled separately).
+
+Review ALL source files for:
+1. **Bugs**: logic errors, off-by-one, null handling, race conditions
+2. **Security**: injection, XSS, auth issues, input validation
+3. **Tests**: coverage gaps, tests that don't test real behavior, missing edge cases
+4. **Code quality**: naming, structure, DRY, error handling, readability
+5. **Performance**: obvious N+1, memory leaks, unnecessary allocations
+
+Output format:
+## Code Quality Review
+
+### Critical Issues (must fix)
+1. [file:line] Description — fix suggestion
+
+### Warnings (should fix)
+1. [file:line] Description — fix suggestion
+
+### Good Practices Found
+- What's done well
+
+### Test Coverage Assessment
+- What's covered, what's missing
+
+### Verdict: APPROVE / REQUEST CHANGES (with summary)`;
+
+      containers.run({
+        account: qualityAccount.account,
+        taskId: "sp-quality-review",
+        prompt: qualityPrompt,
+        projectRoot,
+        outputDir: join(reviewDir, "quality"),
+        provider: "claude",
+      });
+
+      qualityReviewDone = containers.waitForContainer("sp-quality-review").then((r) => {
+        pool.release(qualityAccount.account.id, r?.exitCode === 0);
+        if (r?.exitCode === 0) {
+          writeFileSync(join(reviewDir, "quality-review.txt"), r?.output || "");
+          ok("Stage 2: Code quality — done");
+        } else {
+          warn("Stage 2: Code quality — failed (non-critical)");
+        }
+      });
+      info("Stage 2: Code quality reviewer dispatched");
+    }
+
+    // Wait for both reviews to complete (they run in parallel)
+    if (specReviewDone || qualityReviewDone) {
+      info("Waiting for reviews (running in parallel)...");
+      await Promise.all([specReviewDone, qualityReviewDone].filter(Boolean));
+
+      // Print review summaries
+      const specReview = existsSync(join(reviewDir, "spec-review.txt"))
+        ? readFileSync(join(reviewDir, "spec-review.txt"), "utf-8") : null;
+      const qualityReview = existsSync(join(reviewDir, "quality-review.txt"))
+        ? readFileSync(join(reviewDir, "quality-review.txt"), "utf-8") : null;
+
+      if (specReview || qualityReview) {
+        console.error(`\n${BOLD}Review Results${RESET}`);
+        if (specReview) {
+          const verdict = specReview.match(/Verdict:\s*(PASS|FAIL)/i);
+          console.error(`  Spec compliance: ${verdict?.[1] === "PASS" ? GREEN : RED}${verdict?.[1] || "unknown"}${RESET}`);
+        }
+        if (qualityReview) {
+          const verdict = qualityReview.match(/Verdict:\s*(APPROVE|REQUEST CHANGES)/i);
+          console.error(`  Code quality:    ${verdict?.[1] === "APPROVE" ? GREEN : YELLOW}${verdict?.[1] || "unknown"}${RESET}`);
+        }
+        console.error(`  Full reports: ${reviewDir}/`);
       }
+    } else {
+      warn("No accounts available for review (all busy or in cooldown)");
     }
   }
 
