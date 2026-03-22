@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-19 (Fleet performance: warm containers, event-driven dispatch, task budget)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-22 (Community integrations: ui-ux-pro-max, language rules, build-error-resolver, /security-scan, /discover, overseer vault)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -32,6 +32,9 @@
 - **Pattern conformance system** - Auto-extracted codebase patterns, enforcement rule, deviation protocol
 - **SDLC Overseer** - Full virtual engineering team: 13 role-based agents, DAG scheduler, git worktree isolation, SQLite task management, centralized knowledge store
 - **Fleet** - Multi-account container orchestration: 5 modes (pool, scatter, decompose, pipeline, superpowers), Docker/Podman, hybrid dispatch, warm container pool, event-driven dispatch, task budget system
+- **Language rules system** - 10 language-specific rule sets (TypeScript, Python, Go, Rust, Swift, PHP, Java, Kotlin, C++, Perl), auto-detected per project, copied to `.claude/rules/`
+- **UI/UX Pro Max** - Marketplace plugin for design system intelligence (161 industry rules, 67 UI styles, 57 font pairings)
+- **Community discovery** - `/discover` command fetches awesome-claude-code catalog, diffs against installed tools
 - **Git-based distribution** - Self-updating via `git pull`
 
 ---
@@ -298,9 +301,9 @@ Full virtual engineering team system. User describes an epic → pipeline of 15 
 - `scheduler.ts` — DAG-based scheduling, max concurrency, blocked task detection
 - `worktree.ts` — git worktree create/merge/cleanup (`.worktrees/task-{id}`)
 - `spawner.ts` — spawn Claude/Codex/Copilot/Gemini/Kiro with `CLAUDECODE=''` in worktrees; internal-mode aware
-- `knowledge.ts` — centralized shared brain (architecture decisions, API contracts, patterns)
+- `knowledge.ts` — centralized shared brain (architecture decisions, API contracts, patterns) + `exportKnowledgeToVault()` for Obsidian Notes/
 - `kiro.ts` — Kiro consultation module: consultKiro(), detectInternalProject(), buildInternalContext()
-- `board.ts` — Obsidian-compatible markdown board generator (board.md, epic.md, stories/, timeline.md)
+- `board.ts` — Obsidian-compatible vault board generator (board.md, epic.md, Daily/, Stories/, Notes/, References/, Templates/)
 - `dashboard.ts` — Live terminal TUI (readonly DB, safe concurrent access): progress bar, Kanban board, agent cards, event timeline
 - `cmux.ts` — cmux app integration: sidebar status/progress, split dashboard, browser automation, notifications. All no-ops on non-macOS/SSH.
 - `browser-verify.ts` — Automated UI verification: detect web project → start dev server → cmux browser split → run checks → screenshot → report
@@ -425,9 +428,11 @@ Prevents over-decomposition (e.g., 138 tasks for a calculator API).
 
 Each fleet container is mounted with the full local setup (all read-only except project dir):
 - `~/.claude/CLAUDE.md` — global instructions
-- `~/.claude/rules/` — 13 rule files
-- `~/.claude/commands/` — 57 commands
-- `~/.claude/agents/` — 9 native agents
+- `~/.claude/rules/` — 14 rule files + `lang/` subdirectory (10 language rules)
+- `~/.claude/commands/` — 59 commands (including /security-scan, /discover)
+- `~/.claude/agents/` — 10 native agents (including build-error-resolver)
+- `~/.claude/plugins/` — ALL installed plugins (ui-ux-pro-max, superpowers, claude-mem, etc.)
+- `~/.claude/settings.json` — plugin activation, permissions (read-only)
 - Superpowers skills (14 skills — TDD, debugging, brainstorming, etc.)
 - Writable temp home dir (Claude Code session data)
 - Project directory (read-write, host UID/GID for permissions)
@@ -519,6 +524,53 @@ Falls back gracefully: failed decomposition → single-plan mode. Failed compone
 
 ---
 
+## Community Integrations
+
+Four community GitHub repos integrated via hybrid approach (plugin where designed, vendor where selective).
+
+### UI/UX Pro Max (`nextlevelbuilder/ui-ux-pro-max-skill`)
+- **Type**: Marketplace plugin — design system intelligence
+- **Install**: `claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`
+- **Capabilities**: 161 industry-specific reasoning rules, 67 UI styles, 57 font pairings, 25 chart types, 99 UX guidelines
+- **Wired into**: adapter.sh (plugin array + marketplace install), fleet containers (plugins/ mount), settings.json (enabledPlugins)
+
+### Language Rules (`affaan-m/everything-claude-code`)
+- **Type**: Vendored cherry-pick — 10 language-specific rule sets
+- **Files**: `universal/rules/lang/lang-{typescript,python,go,rust,swift,php,java,kotlin,cpp,perl}.md`
+- **Detection**: `lib/lang-detect.sh` — `detect_project_languages()` checks marker files (tsconfig.json, go.mod, Cargo.toml, etc.)
+- **Activation**: project-scoped — `project-init.sh` or `/init` copies matching rules into `.claude/rules/`
+- **NOT global**: Rules staged in `~/.claude/rules/lang/` but only activated per-project to avoid context waste
+- **Each file**: 58-66 lines covering coding standards, naming, error handling, testing, anti-patterns
+
+### Build-Error-Resolver Agent (`affaan-m/everything-claude-code`)
+- **File**: `agents/claude-code/agents/build-error-resolver.md`
+- **Gap filled**: We had `debugger` (runtime) and `error-detective` (correlation) but nothing for build failures
+- **Categorizes**: dependency, type, import, config, bundler errors
+- **Referenced in**: `orchestration.md` Step 7 (Build Failure) — spawn this agent first
+- **PUA persistence**: escalates through 4 levels on repeated failures
+
+### /security-scan Command (`affaan-m/everything-claude-code`)
+- **File**: `universal/commands/security-scan.md`
+- **5 phases**: detect stack → dep audit → secret detection → OWASP code review (via security-auditor agent) → structured report
+- **Language-aware**: runs `npm audit`, `pip audit`, `cargo audit`, `govulncheck` based on detected stack
+
+### /discover Command (`hesreallyhim/awesome-claude-code`)
+- **File**: `universal/commands/discover.md`
+- **Behavior**: fetches awesome-claude-code README → parses entries → diffs against installed tools → shows what's available
+- **Manual**: invoke with `/discover` — no background fetching, no auto-updates
+
+### Overseer Vault Structure (`kepano/kepano-obsidian`)
+- **Changed**: `overseer/board.ts`, `knowledge.ts`, `overseer.ts`
+- **New `.overseer/` layout**: Daily/ (sprint logs), Stories/ (one per story), Notes/ (knowledge categories), References/ (RESEARCH.md, REQUIREMENTS.md), Templates/ (story + task templates)
+- **Knowledge export**: `exportKnowledgeToVault()` writes each knowledge category as a separate markdown file
+- **Backward compatible**: old epics keep flat structure, new epics get vault layout
+
+### Skipped: LightRAG (`hkuds/lightrag`)
+- Knowledge graph RAG framework — skipped because claude-mem + project-intel.md already cover memory needs
+- Would add Python server dependency for marginal gain over existing vector search
+
+---
+
 ## Known Gotchas
 
 1. **Electrobun PATH limited** — augment with mise shims, homebrew, .local/bin
@@ -574,6 +626,11 @@ Falls back gracefully: failed decomposition → single-plan mode. Failed compone
 51. **Fleet --decompose with --superpowers** — `--decompose` flag is only consumed when `--superpowers` is present. Standalone `--decompose "task"` still works as before (checks `!hasSuperpowers` before matching).
 52. **Fleet completion queue ordering** — Single-threaded JS event loop guarantees no race between `completionQueue.length` check and `active.size` check in `waitForAnyCompletion()`. Container `close` handlers only fire at `await` yield points.
 53. **Fleet intel truncation** — `project-intel.md` injected into planning prompts is truncated at the last `\n## ` boundary before 8KB (not mid-sentence). Falls back to hard 8KB if no section boundary found after 2KB.
+54. **Language rules must be COPIED not symlinked** — symlinks to `~/.claude/rules/lang/` use absolute host paths that break inside fleet containers (mount boundary). `lib/lang-detect.sh` uses `\cp -f` always.
+55. **`local` keyword in install.sh** — only works inside bash functions. Top-level code in the if/else blocks must use bare variable assignment (no `local`).
+56. **Language rules are project-scoped** — installed to `~/.claude/rules/lang/` (staging area) but only activated per-project via `project-init.sh` or `/init`. NOT loaded globally — avoids 10 extra rule files in every session.
+57. **Overseer vault backward compatible** — old `.overseer/` directories still work. Vault structure (Daily/, Stories/, Notes/, References/, Templates/) only generated on new epics.
+58. **UI/UX Pro Max install** — marketplace plugin via `claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`. Also added to adapter.sh official plugin install loop as `ui-ux-pro-max`.
 
 ---
 
@@ -584,10 +641,10 @@ Falls back gracefully: failed decomposition → single-plan mode. Failed compone
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 15 SDLC agents
+- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 10 native agents + 15 SDLC agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
-- **12** server route modules (Elysia) + 4 lib modules (shared, database, cleanup, logger)
-- **14** universal rule files (including gsd-integration, internal-routing), 57 command definitions (including sdlc, mem-search)
+- **12** server route modules (Elysia) + 5 lib modules (shared, database, cleanup, logger, lang-detect)
+- **14** universal rule files + 10 language-specific rules (`lang/`), 59 command definitions (including sdlc, mem-search, security-scan, discover)
 - **1** pattern template (`patterns-template.md`) + per-project `codebase-patterns.md`
 - **14** overseer modules (`overseer/*.ts` including gsd-bridge) + architecture docs
 - **9** fleet modules (`fleet/*.ts` + Dockerfile + wrapper) — multi-account container orchestration, 6 modes, warm containers, event-driven dispatch, task budget
