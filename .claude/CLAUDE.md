@@ -18,8 +18,9 @@ Universal AI agent orchestration system with a native desktop app.
 - Source: `install.sh`, `dispatch.sh`, `project-init.sh` (top-level entry points)
 - Desktop app: `app/` (Electrobun, see app/package.json)
 - Universal config: `universal/rules/`, `universal/commands/`
+- Language rules: `universal/rules/lang/` (10 language-specific rule sets)
 - Agent adapters: `agents/`
-- Shared lib: `lib/common.sh`
+- Shared lib: `lib/common.sh`, `lib/lang-detect.sh`
 - Tests: `tests/run.sh`
 
 ## Common Commands
@@ -64,7 +65,7 @@ Native agents: all set to `model: sonnet` (configurable in Settings → Agent Mo
 
 Orchestration MCP tools: `pipeline_*`, `checkpoint_*`, `queue_*`, `analytics_*`, `agent_*`
 
-Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`
+Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`, `ui-ux-pro-max`
 
 Skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 
@@ -94,6 +95,7 @@ Run tasks across multiple API accounts in isolated Docker/Podman containers.
 - Database: `~/.claude/data/fleet.db` (fleet_runs, fleet_tasks, fleet_containers)
 - cmux bridge: sidebar progress, desktop notifications (all no-ops without cmux)
 - Docker + Podman support (auto-detect, configurable)
+- **Full plugin parity**: containers mount `~/.claude/plugins/` + `settings.json` (all plugins available)
 
 ## Pattern Conformance
 All new code must follow patterns documented in `.claude/rules/codebase-patterns.md`.
@@ -114,7 +116,8 @@ Full virtual engineering team. User describes an epic → 15 agents gather requi
 - Pipeline: Requirements (GSD) → Planning → Execution (max 5 concurrent) → Merge → Browser Verify → Release
 - Database: `~/.claude/data/overseer.db` (7 tables: epics, stories, tasks, agent_sessions, knowledge, merge_queue, sprint_log)
 - Worktrees: `.worktrees/task-{id}` (gitignored, one per active task, auto-cleanup)
-- Knowledge store: centralized decisions shared across all agents (prevents conflicting choices)
+- Knowledge store: centralized decisions shared across all agents (prevents conflicting choices) + `exportKnowledgeToVault()` for Obsidian Notes/
+- Vault structure: `.overseer/` uses Obsidian-compatible layout (Daily/, Stories/, Notes/, References/, Templates/)
 - Guardian: continuous monitoring — build health, scope creep, dangerous ops, non-technical user safety
 - Command: `/sdlc` (invokes overseer pipeline)
 - Planning agents work in project root (not worktrees); execution agents get isolated worktrees
@@ -131,6 +134,15 @@ claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - Database: `~/.claude-mem/claude-mem.db` (SQLite + Chroma vector DB)
 - Desktop app: Settings → Memory tab shows status, search, observation count
 - See `universal/rules/memory-system.md` for usage patterns
+
+## Community Integrations
+4 community repos integrated via hybrid approach (plugin where designed, vendor where selective).
+- **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — design system intelligence (161 industry rules, 67 UI styles). Auto-installed via adapter.sh. Available in fleet containers.
+- **Language Rules** (`affaan-m/everything-claude-code`): 10 language rule sets (TypeScript, Python, Go, Rust, Swift, PHP, Java, Kotlin, C++, Perl) in `universal/rules/lang/`. Auto-detected per project via `lib/lang-detect.sh`. Activated by `project-init.sh` or `/init` (copies to `.claude/rules/`, NOT symlinks — fleet compat).
+- **Build-Error-Resolver Agent** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md` — categorizes build errors (dependency, type, import, config, bundler). Referenced in `orchestration.md` Step 7.
+- **/security-scan** (`affaan-m/everything-claude-code`): `universal/commands/security-scan.md` — dep audit + secret detection + OWASP code review + structured severity report.
+- **/discover** (`hesreallyhim/awesome-claude-code`): `universal/commands/discover.md` — fetches community tool catalog, diffs against installed, shows what's available.
+- **Overseer Vault** (`kepano/kepano-obsidian`): `.overseer/` now uses Obsidian-compatible vault structure (Daily/, Stories/, Notes/, References/, Templates/).
 
 ## Sequential Thinking Skill
 Structured reasoning via `universal/skills/sequential-thinking/`. Installed to `~/.claude/skills/sequential-thinking/`.
