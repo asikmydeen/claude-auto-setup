@@ -83,7 +83,6 @@ EOF
   else
     ok "CLAUDE.md: already exists"
   fi
-fi
 
   # Detect and activate language-specific rules
   if [ -d "$HOME/.claude/rules/lang" ]; then
@@ -96,7 +95,7 @@ fi
           \cp -f "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md"
         fi
       done
-      ok "Language rules: activated for$detected_langs"
+      ok "Language rules: activated for $detected_langs"
     fi
   fi
 fi
