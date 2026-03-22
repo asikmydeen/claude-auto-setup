@@ -306,11 +306,17 @@ After ANY task that changes code (build, debug, review with fixes), update the c
 When a build, test, or lint fails during any phase, follow this structured recovery:
 
 ### Build Failure
-1. Read the FULL error output — don't guess from the first line
-2. Check if it's a dependency issue (`npm install` / `brazil-build install` first)
-3. Check if it's a type error (read the file + line referenced in the error)
-4. Fix the root cause, not the symptom. Don't add `// @ts-ignore` or `any` types.
-5. Re-run build. If it fails again with a DIFFERENT error, you made progress — continue.
+1. **Spawn build-error-resolver agent** for systematic resolution:
+   ```
+   Agent(subagent_type="build-error-resolver", prompt="Build failed. Output: {error_output}. Fix root cause and verify with rebuild.")
+   ```
+   The build-error-resolver categorizes errors (dependency, type, import, config, bundler) and applies targeted fixes.
+2. If the agent doesn't resolve it, fall back to manual investigation:
+3. Read the FULL error output — don't guess from the first line
+4. Check if it's a dependency issue (`npm install` / `brazil-build install` first)
+5. Check if it's a type error (read the file + line referenced in the error)
+6. Fix the root cause, not the symptom. Don't add `// @ts-ignore` or `any` types.
+7. Re-run build. If it fails again with a DIFFERENT error, you made progress — continue.
 6. If it fails with the SAME error, re-read your change and the error carefully.
 7. After 2 failed attempts at the same error, step back: read surrounding code, check intel for patterns, use `context7` to verify API usage.
 

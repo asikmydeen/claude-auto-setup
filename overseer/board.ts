@@ -37,6 +37,36 @@ export function generateBoard(epicId: string, projectRoot: string): void {
   // 4. Timeline
   const events = getSprintLog(epicId, 50);
   writeFileSync(join(overseerDir, "timeline.md"), generateTimeline(epic, events));
+
+  // 5. Vault directories (Obsidian-compatible layout)
+  const vaultDirs = ["Daily", "Stories", "Notes", "References", "Templates"];
+  for (const dir of vaultDirs) {
+    const dirPath = join(overseerDir, dir);
+    if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
+  }
+
+  // 6. Individual story files in Stories/
+  for (const story of stories) {
+    const storyTasks = tasks.filter(t => t.story_id === story.id);
+    writeFileSync(join(overseerDir, "Stories", `${slugify(story.title)}.md`), generateStoryFile(story, storyTasks));
+  }
+
+  // 7. Templates
+  writeFileSync(join(overseerDir, "Templates", "story-template.md"), generateStoryTemplate());
+  writeFileSync(join(overseerDir, "Templates", "task-template.md"), generateTaskTemplate());
+
+  // 8. Sprint log entries as daily files in Daily/
+  const dailyEvents = getSprintLog(epicId, 200);
+  const eventsByDate = new Map<string, typeof dailyEvents>();
+  for (const ev of dailyEvents) {
+    const date = ev.timestamp.slice(0, 10); // YYYY-MM-DD
+    const existing = eventsByDate.get(date) || [];
+    existing.push(ev);
+    eventsByDate.set(date, existing);
+  }
+  for (const [date, evts] of eventsByDate) {
+    writeFileSync(join(overseerDir, "Daily", `${date}.md`), generateDailyFile(date, epic.title, evts));
+  }
 }
 
 function slugify(s: string): string {
@@ -165,6 +195,91 @@ function generateStoryFile(story: Story, tasks: Task[]): string {
     if (task.branch_name) {
       lines.push(`  - Branch: \`${task.branch_name}\``);
     }
+  }
+
+  return lines.join("\n");
+}
+
+// --- Story Template ---
+
+function generateStoryTemplate(): string {
+  return [
+    "---",
+    "title: ",
+    "priority: P0",
+    "status: backlog",
+    "story_points: 1",
+    "---",
+    "",
+    "# Story Title",
+    "",
+    "## Description",
+    "What to build and why.",
+    "",
+    "## Acceptance Criteria",
+    "- [ ] Criterion 1",
+    "- [ ] Criterion 2",
+    "",
+    "## Tasks",
+    "- [ ] Task 1",
+    "- [ ] Task 2",
+    "",
+    "## Notes",
+    "",
+  ].join("\n");
+}
+
+// --- Task Template ---
+
+function generateTaskTemplate(): string {
+  return [
+    "---",
+    "title: ",
+    "type: backend",
+    "assigned_role: engineer",
+    "status: queued",
+    "dependencies: []",
+    "---",
+    "",
+    "# Task Title",
+    "",
+    "## Description",
+    "Specific instructions for the engineer.",
+    "",
+    "## Acceptance Criteria",
+    "- [ ] Criterion 1",
+    "",
+    "## Implementation Notes",
+    "",
+    "## Branch",
+    "`branch-name`",
+    "",
+  ].join("\n");
+}
+
+// --- Daily File ---
+
+function generateDailyFile(
+  date: string,
+  epicTitle: string,
+  events: Array<{ event_type: string; details: string; agent_role: string; timestamp: string }>,
+): string {
+  const lines = [
+    `# ${date}`,
+    "",
+    `**Epic**: ${epicTitle}`,
+    "",
+    "## Events",
+    "",
+  ];
+
+  for (const ev of events) {
+    const time = ev.timestamp.slice(11, 19);
+    const emoji = ev.event_type.includes("fail") || ev.event_type.includes("conflict") ? "🔴"
+      : ev.event_type.includes("complete") || ev.event_type.includes("merged") ? "🟢"
+      : ev.event_type.includes("start") ? "🟡"
+      : "⚪";
+    lines.push(`- **${time}** ${emoji} \`${ev.event_type}\` — ${ev.agent_role}: ${ev.details}`);
   }
 
   return lines.join("\n");

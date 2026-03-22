@@ -78,6 +78,15 @@ Read and analyze these signals (use parallel tool calls):
    - If installed, report observation count and database size
    - If not installed, note: "claude-mem not installed — run: claude plugin marketplace add thedotmack/claude-mem"
 
+## Phase 1b: Language Rule Activation
+
+Detect project languages and activate matching rule sets:
+1. Check for language markers: `tsconfig.json` (TypeScript), `pyproject.toml`/`requirements.txt` (Python), `go.mod` (Go), `Cargo.toml` (Rust), `Package.swift` (Swift), `composer.json` (PHP), `pom.xml`/`build.gradle` (Java), `build.gradle.kts` (Kotlin), `CMakeLists.txt` (C++), `Makefile.PL`/`cpanfile` (Perl)
+2. For each detected language, symlink `lang-{language}.md` from `~/.claude/rules/lang/` into `.claude/rules/`
+3. Report activated languages: "Language rules: activated for TypeScript, Python"
+
+This gives all subsequent agents language-specific coding standards, testing patterns, and security guidelines.
+
 ## Phase 2: Generate Project CLAUDE.md
 
 If `.claude/CLAUDE.md` does not exist, create it. If it exists, suggest additions only.

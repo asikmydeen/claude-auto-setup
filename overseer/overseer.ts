@@ -14,7 +14,7 @@ import {
 import { createWorktree, mergeWorktree, removeWorktree, ensureWorktreeGitignore, cleanupAllWorktrees } from "./worktree";
 import { spawnAgent, selectProvider } from "./spawner";
 import { getNextBatch, isEpicComplete, getBlockedTasks, formatProgress } from "./scheduler";
-import { buildKnowledgeContext } from "./knowledge";
+import { buildKnowledgeContext, exportKnowledgeToVault } from "./knowledge";
 import { generateBoard } from "./board";
 import { runBrowserVerification } from "./browser-verify";
 import { detectInternalProject, isKiroAvailable } from "./kiro";
@@ -220,6 +220,18 @@ Focus on decisions that would be expensive to change later. Time-box: investigat
 const drTask = createTask(planningStory.id, epic.id, "Research domain", drPrompt, "docs" as TaskType, "domain-researcher");
 await runPlanningAgent(drTask.id, "domain-researcher", drPrompt);
 log("Domain Researcher completed.");
+
+// Move research artifacts to References/ vault directory
+const refsDir = join(overseerDir, "References");
+if (!existsSync(refsDir)) mkdirSync(refsDir, { recursive: true });
+for (const docName of ["RESEARCH.md", "REQUIREMENTS.md", "PROJECT.md"]) {
+  const srcPath = join(overseerDir, docName);
+  if (existsSync(srcPath)) {
+    const content = readFileSync(srcPath, "utf-8");
+    writeFileSync(join(refsDir, docName), content);
+    log(`Moved ${docName} → References/${docName}`);
+  }
+}
 
 // ===== PHASE 1: PLANNING =====
 log("\n=== PLANNING PHASE ===");
@@ -522,6 +534,10 @@ if (uiResult) {
 } else {
   log("Browser verification skipped (cmux not available or not a web project)");
 }
+
+// Export knowledge to vault Notes/ directory
+exportKnowledgeToVault(epic.id, overseerDir);
+log("Knowledge exported to .overseer/Notes/");
 
 // Final board update + cmux completion
 generateBoard(epic.id, PROJECT_ROOT);

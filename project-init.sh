@@ -85,6 +85,23 @@ EOF
   fi
 fi
 
+  # Detect and activate language-specific rules
+  if [ -d "$HOME/.claude/rules/lang" ]; then
+    source "${SCRIPT_DIR}/lib/lang-detect.sh"
+    detected_langs=$(detect_project_languages "$PROJECT_DIR")
+    if [ -n "$detected_langs" ]; then
+      for lang in $detected_langs; do
+        rule_file="$HOME/.claude/rules/lang/lang-${lang}.md"
+        if [ -f "$rule_file" ]; then
+          ln -sf "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md" 2>/dev/null || \
+            \cp -f "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md"
+        fi
+      done
+      ok "Language rules: activated for$detected_langs"
+    fi
+  fi
+fi
+
 # Gemini CLI
 if command -v gemini &>/dev/null; then
   step "Configuring Gemini CLI"

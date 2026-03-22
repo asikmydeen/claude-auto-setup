@@ -1050,5 +1050,15 @@ FLEET_EOF
     info "  Pipeline mode:  fleet --pipeline \"task\" --stages research,implement,test"
   fi
 
+  # Community integrations
+  echo ""
+  step "Community Integrations"
+  lang_count=$(ls "$SCRIPT_DIR/universal/rules/lang/"*.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$lang_count" -gt 0 ]; then
+    ok "Language rules: $lang_count language-specific rule sets available"
+    info "  Activated per-project via: ./project-init.sh (or /init in Claude Code)"
+    info "  Languages: TypeScript, Python, Go, Rust, Swift, PHP, Java, Kotlin, C++, Perl"
+  fi
+
   summary "install"
 fi

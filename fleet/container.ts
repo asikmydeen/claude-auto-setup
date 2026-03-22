@@ -642,6 +642,16 @@ export class ContainerManager {
     if (superpowersSkills) {
       mounts.push([superpowersSkills, join(fleetUser, ".claude", "skills")]);
     }
+    // Mount plugins directory (all installed plugins available in containers)
+    const pluginsDir = join(claudeDir, "plugins");
+    if (existsSync(pluginsDir)) {
+      mounts.push([pluginsDir, join(fleetUser, ".claude", "plugins")]);
+    }
+    // Mount settings.json (plugin activation, permissions carry into containers)
+    const settingsPath = join(claudeDir, "settings.json");
+    if (existsSync(settingsPath)) {
+      mounts.push([settingsPath, join(fleetUser, ".claude", "settings.json")]);
+    }
     return mounts;
   }
 

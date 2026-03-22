@@ -39,6 +39,11 @@ Check if `.claude/rules/codebase-patterns.md` exists:
 - **NO**: Run the pattern-analyzer agent to generate it. Print "No pattern spec. Extracting codebase patterns..." Do NOT skip this.
 - Include relevant pattern sections when prompting subagents and external providers during implementation.
 
+**Language rules:**
+Check if `.claude/rules/lang-*.md` files exist in the project:
+- **YES**: Language rules are active. Include relevant language standards when prompting implementation subagents.
+- **NO**: Check `~/.claude/rules/lang/` for available rules. If project languages detected but rules not linked, activate them now (symlink from staging).
+
 **Internal project detection:**
 Check: `[ -f packageInfo ] || [ -f .brazil.json ] || [[ "$PWD" == */workplace/* ]]`
 - **If internal**: Activate Kiro consultation per `internal-routing.md` rule. Before architecture/API/infra decisions, query: `kiro-cli -p "question" --allow-tool='shell(read)'`. Use `brazil-build release` (not npm), CRs (not PRs), pipeline deployment (not direct).

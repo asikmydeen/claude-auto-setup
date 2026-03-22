@@ -106,6 +106,19 @@ with open(claude_home + '/settings.json', 'w') as f:
   done
   echo "    Skills: $skill_count installed ($(ls -1 "$UNIVERSAL_DIR/skills/" 2>/dev/null | tr '\n' ', ' | sed 's/, $//'))"
 
+  # Install language-specific rules (staging area — activated per-project by project-init.sh)
+  local lang_rules_src="$UNIVERSAL_DIR/rules/lang"
+  if [ -d "$lang_rules_src" ]; then
+    mkdir -p "$CLAUDE_HOME/rules/lang"
+    local lang_count=0
+    for f in "$lang_rules_src"/*.md; do
+      [ -f "$f" ] || continue
+      \cp -f "$f" "$CLAUDE_HOME/rules/lang/"
+      lang_count=$((lang_count + 1))
+    done
+    echo "    Language rules: $lang_count languages staged (activate per-project via /init)"
+  fi
+
   # Install native agents
   if [ -d "$AGENT_DIR/agents" ]; then
     mkdir -p "$CLAUDE_HOME/agents"
@@ -138,6 +151,7 @@ with open(claude_home + '/settings.json', 'w') as f:
       typescript-lsp pyright-lsp context7 serena code-review code-simplifier
       pr-review-toolkit security-guidance commit-commands feature-dev
       claude-md-management hookify skill-creator github
+      ui-ux-pro-max
     )
     local installed=0
     for p in "${plugins[@]}"; do
@@ -146,6 +160,12 @@ with open(claude_home + '/settings.json', 'w') as f:
       fi
     done
     echo "    Plugins: $installed installed"
+
+    # Install marketplace plugins (community)
+    echo "    Installing marketplace plugins..."
+    if claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill 2>/dev/null; then
+      echo "    UI/UX Pro Max: installed"
+    fi
   else
     echo "    Plugins: skipped (claude CLI not found)"
   fi

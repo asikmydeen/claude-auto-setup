@@ -2,6 +2,8 @@
 // Shared brain for all agents — architecture decisions, API contracts, patterns, gotchas
 
 import { randomUUID } from "crypto";
+import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { join } from "path";
 import { getDb } from "./db";
 import type { Knowledge, KnowledgeCategory } from "./types";
 
@@ -115,4 +117,43 @@ export function findConflicts(epicId: string): Array<{ key: string; entries: Kno
   }
 
   return conflicts;
+}
+
+/**
+ * Export all knowledge entries for an epic to the vault Notes/ directory.
+ * Groups entries by category, one markdown file per category.
+ */
+export function exportKnowledgeToVault(epicId: string, overseerDir: string): void {
+  const entries = getKnowledge(epicId);
+  if (entries.length === 0) return;
+
+  const notesDir = join(overseerDir, "Notes");
+  if (!existsSync(notesDir)) mkdirSync(notesDir, { recursive: true });
+
+  // Group by category
+  const byCategory = new Map<KnowledgeCategory, Knowledge[]>();
+  for (const entry of entries) {
+    const existing = byCategory.get(entry.category) || [];
+    existing.push(entry);
+    byCategory.set(entry.category, existing);
+  }
+
+  // Write one file per category
+  for (const [category, items] of byCategory) {
+    const lines = [
+      `# Knowledge: ${category}`,
+      "",
+    ];
+
+    for (const item of items) {
+      lines.push(`## ${item.key}`);
+      lines.push("");
+      lines.push(item.value);
+      lines.push("");
+      lines.push(`> Source: *${item.source_agent}* — ${item.created_at.slice(0, 19).replace("T", " ")}`);
+      lines.push("");
+    }
+
+    writeFileSync(join(notesDir, `${category}.md`), lines.join("\n"));
+  }
 }
