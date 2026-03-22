@@ -329,6 +329,23 @@ update_agents() {
       ok "Rules: $rules_updated files synced"
     fi
 
+    # Always update language-specific rules (staging area)
+    local lang_rules_src="$rules_src/lang"
+    if [ -d "$lang_rules_src" ]; then
+      mkdir -p "$rules_dest/lang"
+      local lang_updated=0
+      for f in "$lang_rules_src"/*.md; do
+        [ -f "$f" ] || continue
+        if $DRY_RUN; then
+          info "[DRY RUN] Would update: rules/lang/$(basename "$f")"
+        else
+          cp "$f" "$rules_dest/lang/"
+        fi
+        lang_updated=$((lang_updated + 1))
+      done
+      ok "Language rules: $lang_updated languages staged"
+    fi
+
     # Always update native agents (these are ours, not user-modified)
     local native_agents_src="$SCRIPT_DIR/agents/claude-code/agents"
     if [ -d "$native_agents_src" ]; then
