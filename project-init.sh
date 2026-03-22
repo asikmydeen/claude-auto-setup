@@ -93,8 +93,7 @@ fi
       for lang in $detected_langs; do
         rule_file="$HOME/.claude/rules/lang/lang-${lang}.md"
         if [ -f "$rule_file" ]; then
-          ln -sf "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md" 2>/dev/null || \
-            \cp -f "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md"
+          \cp -f "$rule_file" "$PROJECT_DIR/.claude/rules/lang-${lang}.md"
         fi
       done
       ok "Language rules: activated for$detected_langs"

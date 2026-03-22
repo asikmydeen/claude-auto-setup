@@ -78,8 +78,7 @@ activate_language_rules() {
   for lang in $detected; do
     local rule_file="$rules_staging/lang-${lang}.md"
     if [ -f "$rule_file" ]; then
-      ln -sf "$rule_file" "$project_dir/.claude/rules/lang-${lang}.md" 2>/dev/null || \
-        \cp -f "$rule_file" "$project_dir/.claude/rules/lang-${lang}.md"
+      \cp -f "$rule_file" "$project_dir/.claude/rules/lang-${lang}.md"
     fi
   done
   echo "$detected"
