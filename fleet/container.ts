@@ -282,7 +282,15 @@ export class ContainerManager {
       [join(claudeDir, "rules"), join(fleetUser, ".claude", "rules")],
       [join(claudeDir, "commands"), join(fleetUser, ".claude", "commands")],
       [join(claudeDir, "agents"), join(fleetUser, ".claude", "agents")],
+      // settings.json gives containers plugin activation + permissions config
+      [join(claudeDir, "settings.json"), join(fleetUser, ".claude", "settings.json")],
     ];
+
+    // Mount ALL installed plugins so containers get the same plugin capabilities
+    const pluginsDir = join(claudeDir, "plugins");
+    if (existsSync(pluginsDir)) {
+      configMounts.push([pluginsDir, join(fleetUser, ".claude", "plugins")]);
+    }
 
     // Mount superpowers skills (if installed) — gives containers TDD, debugging,
     // brainstorming, subagent-driven-development, etc.
