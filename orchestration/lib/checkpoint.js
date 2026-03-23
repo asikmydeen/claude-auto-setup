@@ -1,4 +1,4 @@
-import { readState, readCheckpoint, writeCheckpoint } from './state.js';
+import { readState, readCheckpoint, writeCheckpoint, checkpointExists } from './state.js';
 import { execFileSync } from 'child_process';
 
 export function writeRichCheckpoint({ task, plan, decisions, progress, phase }) {
@@ -73,10 +73,14 @@ export function writeRichCheckpoint({ task, plan, decisions, progress, phase }) 
 
 export function getCurrentCheckpoint() {
   const content = readCheckpoint();
-  if (!content) {
-    return { exists: false, message: 'No checkpoint found' };
+  if (content) {
+    return { exists: true, content };
   }
-  return { exists: true, content };
+  const onDisk = checkpointExists();
+  if (onDisk) {
+    return { exists: false, message: 'Checkpoint file exists but could not be read (check server logs)' };
+  }
+  return { exists: false, message: 'No checkpoint found' };
 }
 
 export function getResumeInstructions() {

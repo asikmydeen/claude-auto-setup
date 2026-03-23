@@ -47,10 +47,17 @@ export function updateState(updates) {
 
 export function readCheckpoint() {
   try {
-    return readFileSync(CHECKPOINT_FILE, 'utf8');
-  } catch {
+    return readFileSync(CHECKPOINT_FILE, 'utf8') || null;
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error(`[orchestration] checkpoint read failed: ${err.message} (path: ${CHECKPOINT_FILE})`);
+    }
     return null;
   }
+}
+
+export function checkpointExists() {
+  return existsSync(CHECKPOINT_FILE);
 }
 
 export function writeCheckpoint(content) {
