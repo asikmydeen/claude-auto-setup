@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (Fleet multi-account orchestration, superpowers integration, orchestration MCP fix)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (checkpoint_read fix, fleet plugin parity, orchestration MCP fix)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -628,17 +628,12 @@ Four community GitHub repos integrated via hybrid approach (plugin where designe
 53. **Fleet intel truncation** — `project-intel.md` injected into planning prompts is truncated at the last `\n## ` boundary before 8KB (not mid-sentence). Falls back to hard 8KB if no section boundary found after 2KB.
 54. **Orchestration MCP must be in settings.json** — Server at `~/.claude/orchestration/server.js` only works if `mcpServers.orchestration` exists in `settings.json`. install.sh installs the server but doesn't wire settings — must be configured separately or via adapter.
 55. **Fleet full plugin parity** — containers mount `~/.claude/plugins/` + `settings.json` (all plugins available). 18 plugin caches, 292 skill files verified inside container.
-48. **Fleet warm container liveness** — `hasWarmContainer()` runs `docker inspect` before each `execInWarm()`. If container died externally, falls back to cold `run()`. Inspect uses `stdio: ["pipe","pipe","pipe"]` to suppress "No such object" stderr.
-49. **Fleet warm container SIGINT** — `stopAll()` matches `name=fleet-` which catches both `fleet-acct-*` (cold) and `fleet-warm-*` (warm). No separate SIGINT handler needed.
-50. **Fleet task budget vs micro-steps** — Old plans with micro-steps (write test, run test, implement, commit as separate tasks) still work via legacy batch detection. New plans with full TDD cycles get 1:1 batching. Heuristic: >50% tasks contain "TDD:" or "test+implement" = full-cycle format.
-51. **Fleet --decompose with --superpowers** — `--decompose` flag is only consumed when `--superpowers` is present. Standalone `--decompose "task"` still works as before (checks `!hasSuperpowers` before matching).
-52. **Fleet completion queue ordering** — Single-threaded JS event loop guarantees no race between `completionQueue.length` check and `active.size` check in `waitForAnyCompletion()`. Container `close` handlers only fire at `await` yield points.
-53. **Fleet intel truncation** — `project-intel.md` injected into planning prompts is truncated at the last `\n## ` boundary before 8KB (not mid-sentence). Falls back to hard 8KB if no section boundary found after 2KB.
-54. **Language rules must be COPIED not symlinked** — symlinks to `~/.claude/rules/lang/` use absolute host paths that break inside fleet containers (mount boundary). `lib/lang-detect.sh` uses `\cp -f` always.
-55. **`local` keyword in install.sh** — only works inside bash functions. Top-level code in the if/else blocks must use bare variable assignment (no `local`).
-56. **Language rules are project-scoped** — installed to `~/.claude/rules/lang/` (staging area) but only activated per-project via `project-init.sh` or `/init`. NOT loaded globally — avoids 10 extra rule files in every session.
-57. **Overseer vault backward compatible** — old `.overseer/` directories still work. Vault structure (Daily/, Stories/, Notes/, References/, Templates/) only generated on new epics.
-58. **UI/UX Pro Max install** — marketplace plugin via `claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`. Also added to adapter.sh official plugin install loop as `ui-ux-pro-max`.
+56. **Language rules must be COPIED not symlinked** — symlinks to `~/.claude/rules/lang/` use absolute host paths that break inside fleet containers (mount boundary). `lib/lang-detect.sh` uses `\cp -f` always.
+57. **`local` keyword in install.sh** — only works inside bash functions. Top-level code in the if/else blocks must use bare variable assignment (no `local`).
+58. **Language rules are project-scoped** — installed to `~/.claude/rules/lang/` (staging area) but only activated per-project via `project-init.sh` or `/init`. NOT loaded globally — avoids 10 extra rule files in every session.
+59. **Overseer vault backward compatible** — old `.overseer/` directories still work. Vault structure (Daily/, Stories/, Notes/, References/, Templates/) only generated on new epics.
+60. **UI/UX Pro Max install** — marketplace plugin via `claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`. Also added to adapter.sh official plugin install loop as `ui-ux-pro-max`.
+61. **MCP server readFileSync blocked** — Claude Code sandboxes MCP server processes; `readFileSync` intermittently fails to read files that exist on disk. `checkpoint.js` uses `execFileSync('cat', [path])` to bypass — child process reads succeed where parent process reads fail. `writeFileSync` is unaffected. Same pattern may apply to other MCP servers needing to read external files.
 
 ---
 
