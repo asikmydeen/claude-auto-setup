@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (checkpoint_read fix, fleet plugin parity, orchestration MCP fix)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (system cleanup, checkpoint_read fix, fleet plugin parity)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -634,6 +634,9 @@ Four community GitHub repos integrated via hybrid approach (plugin where designe
 59. **Overseer vault backward compatible** — old `.overseer/` directories still work. Vault structure (Daily/, Stories/, Notes/, References/, Templates/) only generated on new epics.
 60. **UI/UX Pro Max install** — marketplace plugin via `claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`. Also added to adapter.sh official plugin install loop as `ui-ux-pro-max`.
 61. **MCP server readFileSync blocked** — Claude Code sandboxes MCP server processes; `readFileSync` intermittently fails to read files that exist on disk. `checkpoint.js` uses `execFileSync('cat', [path])` to bypass — child process reads succeed where parent process reads fail. `writeFileSync` is unaffected. Same pattern may apply to other MCP servers needing to read external files.
+62. **Duplicate superpowers plugin** — `superpowers@claude-plugins-official` and `superpowers@superpowers-marketplace` are the same v5.0.5. Having both doubles every skill in the skill list, wasting context. Keep only `superpowers@claude-plugins-official`.
+63. **Plugin cache temp_git dirs** — Plugin install/update operations leave `temp_git_*` directories in `~/.claude/plugins/cache/`. Safe to periodically clean with `rm -rf ~/.claude/plugins/cache/temp_git_*`.
+64. **Agent filename typos** — Agent files must be `{name}.md` exactly. A file like `security-auditormd.md` (missing dot) creates a phantom agent with wrong name. install.sh copies all `*.md` from source — typos propagate on update.
 
 ---
 
@@ -644,7 +647,7 @@ Four community GitHub repos integrated via hybrid approach (plugin where designe
 - **13+** UI components (AIProviders, DevServerLogs, BrowserPanel, MemoryPanel, etc.)
 - **22** curated templates (6 design styles, all verified)
 - **11** LLM providers (29+ models)
-- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 10 native agents + 15 SDLC agents
+- **7** agent adapters (claude-code, gemini-cli, kiro-cli, codex-cli, cursor, ampcode, copilot) + 9 native agents + 15 SDLC agents
 - **2** skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
 - **12** server route modules (Elysia) + 5 lib modules (shared, database, cleanup, logger, lang-detect)
 - **14** universal rule files + 10 language-specific rules (`lang/`), 59 command definitions (including sdlc, mem-search, security-scan, discover)
