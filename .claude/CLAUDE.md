@@ -89,13 +89,14 @@ Run tasks across multiple API accounts in isolated Docker/Podman containers.
 - **Warm container pool**: pre-starts containers with `sleep infinity`, tasks via `docker exec` (saves ~2-3s/task)
 - **Event-driven dispatch**: completion notification queue replaces 3s polling (zero delay)
 - **Task budget**: auto-computed `workers×5`, injected into planning prompts, prevents over-decomposition
-- **Intel injection**: project-intel.md injected into planning prompts (skips exploration, saves 60-80% planning time)
+- **Intel + patterns injection**: project-intel.md + codebase-patterns.md injected into superpowers planning prompts
+- **Fleet-specific settings**: `prepareFleetConfig()` strips hooks/MCP/model from settings.json for containers
 - Account pool: round-robin, rate-limit cooldown (429 detection), event-driven waitForAvailable
 - Credentials: env-file injection (temp file, deleted after spawn), never baked into images
 - Database: `~/.claude/data/fleet.db` (fleet_runs, fleet_tasks, fleet_containers)
 - cmux bridge: sidebar progress, desktop notifications (all no-ops without cmux)
 - Docker + Podman support (auto-detect, configurable)
-- **Full plugin parity**: containers mount `~/.claude/plugins/` + `settings.json` (all plugins available)
+- **Full parity**: containers mount plugins/, skills/ (pua, sequential-thinking), scripts/, fleet-settings.json
 
 ## Pattern Conformance
 All new code must follow patterns documented in `.claude/rules/codebase-patterns.md`.

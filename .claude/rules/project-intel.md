@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (system cleanup, checkpoint_read fix, fleet plugin parity)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (fleet parity: settings-fleet.json, skills/scripts mounts, patterns injection, run→getConfigMounts dedup)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -411,7 +411,7 @@ Three optimizations reduce fleet run overhead by ~5-7 minutes (25-35% speedup):
 
 2. **Event-driven dispatch** — Completion notification queue (`notifyCompletion` → `waitForAnyCompletion`) replaces 3s `setTimeout` polling. Container close/error/timeout handlers push to queue. Dispatch loop processes one completed task per iteration with zero delay. Single-threaded event loop guarantees no race conditions.
 
-3. **Intel injection into planning** — Reads `project-intel.md` (up to 8KB, truncated at section boundaries) and injects into superpowers planning prompt. Planner skips exploration and uses pre-scanned intel directly. Saves 60-80% of planning time (1.5-4 min → 30s-1min).
+3. **Intel + patterns injection into planning** — Reads `project-intel.md` (up to 8KB) and `codebase-patterns.md` (up to 4KB), both truncated at section boundaries, and injects into all superpowers planning prompts (decompose, component, brainstorm). Planner skips exploration and follows project conventions. Saves 60-80% of planning time.
 
 ### Task Budget System
 
@@ -432,10 +432,21 @@ Each fleet container is mounted with the full local setup (all read-only except 
 - `~/.claude/commands/` — 59 commands (including /security-scan, /discover)
 - `~/.claude/agents/` — 10 native agents (including build-error-resolver)
 - `~/.claude/plugins/` — ALL installed plugins (ui-ux-pro-max, superpowers, claude-mem, etc.)
-- `~/.claude/settings.json` — plugin activation, permissions (read-only)
-- Superpowers skills (14 skills — TDD, debugging, brainstorming, etc.)
+- `~/.claude/skills/` — standalone skills (pua, sequential-thinking) + superpowers via plugins/
+- `~/.claude/scripts/` — enforce.sh, hook-handler.sh (hook infrastructure)
+- `settings-fleet.json` — fleet-specific settings (stripped hooks/MCP/model, keeps plugins+env+permissions)
 - Writable temp home dir (Claude Code session data)
 - Project directory (read-write, host UID/GID for permissions)
+
+### Fleet-Specific Settings (`settings-fleet.json`)
+
+Generated at fleet startup via `prepareFleetConfig()`. Reads host `settings.json`, strips:
+- **hooks** — reference host scripts/services unreachable from containers
+- **mcpServers** — hardcoded host paths that don't exist in containers
+- **model** — removed so workers use Claude Code default (Sonnet) instead of Opus
+
+Keeps: `enabledPlugins`, `env`, `permissions`, `extraKnownMarketplaces`, `effortLevel`.
+Cold + warm containers both use the same fleet settings. Falls back to host settings.json if generation fails.
 
 ### Account Setup
 
@@ -637,6 +648,10 @@ Four community GitHub repos integrated via hybrid approach (plugin where designe
 62. **Duplicate superpowers plugin** — `superpowers@claude-plugins-official` and `superpowers@superpowers-marketplace` are the same v5.0.5. Having both doubles every skill in the skill list, wasting context. Keep only `superpowers@claude-plugins-official`.
 63. **Plugin cache temp_git dirs** — Plugin install/update operations leave `temp_git_*` directories in `~/.claude/plugins/cache/`. Safe to periodically clean with `rm -rf ~/.claude/plugins/cache/temp_git_*`.
 64. **Agent filename typos** — Agent files must be `{name}.md` exactly. A file like `security-auditormd.md` (missing dot) creates a phantom agent with wrong name. install.sh copies all `*.md` from source — typos propagate on update.
+65. **Fleet `settings-fleet.json` generated per-run** — `prepareFleetConfig()` writes to the run's output dir. Each mode (pool, pipeline, superpowers, decompose) calls it after creating its ContainerManager. Cold + warm containers both use the same fleet settings via `getConfigMounts()`.
+66. **Fleet skills mount priority** — `~/.claude/skills/` (standalone: pua, sequential-thinking) takes priority over superpowers from plugin cache. Superpowers still available via `~/.claude/plugins/` mount. Only falls back to `findSuperpowersSkills()` if skills/ dir doesn't exist.
+67. **Fleet `run()` uses `getConfigMounts()`** — cold container config mounts deduplicated into `getConfigMounts()` (shared with warm containers). All mount changes go in one place now.
+68. **Fleet codebase-patterns.md injection** — truncated at 4KB (section boundary), injected into all 3 superpowers planning prompts (decompose, component, brainstorm) alongside intel. Not injected into pool/pipeline/scatter modes.
 
 ---
 

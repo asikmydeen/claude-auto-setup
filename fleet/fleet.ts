@@ -118,6 +118,7 @@ async function runPool(
   const outputBase = join(projectRoot, ".fleet", runId);
 
   mkdirSync(outputBase, { recursive: true });
+  containers.prepareFleetConfig(outputBase);
   createRun(runId, "pool", `Pool: ${tasksInput.length} tasks`, workers, projectRoot);
 
   // Pre-flight: ensure project has intel
@@ -406,6 +407,7 @@ Output the JSON array and nothing else.`;
 
   const decompOutputDir = join(projectRoot, ".fleet", "decompose-plan");
   mkdirSync(decompOutputDir, { recursive: true });
+  containers.prepareFleetConfig(decompOutputDir);
 
   info("Phase 1: Decomposing task...");
   containers.run({
@@ -464,6 +466,7 @@ async function runPipeline(
   const startedAt = new Date().toISOString();
   const outputBase = join(projectRoot, ".fleet", runId);
   mkdirSync(outputBase, { recursive: true });
+  containers.prepareFleetConfig(outputBase);
 
   // Pre-flight: ensure project has intel
   await ensureProjectIntel(config, projectRoot, containers);
@@ -637,6 +640,9 @@ async function runSuperpowers(
   const containers = new ContainerManager(config.settings);
 
   // Pre-flight
+  const fleetBase = join(projectRoot, ".fleet");
+  mkdirSync(fleetBase, { recursive: true });
+  containers.prepareFleetConfig(fleetBase);
   await ensureProjectIntel(config, projectRoot, containers);
 
   // Task budget: prevents over-decomposition (138 tasks for a calculator = bad)
@@ -663,7 +669,24 @@ async function runSuperpowers(
   }
   if (intelContext) ok("Loaded project intel for planning prompts");
 
+  // Load codebase patterns for planning prompts (ensures workers follow project conventions)
+  let patternsContext = "";
+  const patternsPath = join(projectRoot, ".claude", "rules", "codebase-patterns.md");
+  if (existsSync(patternsPath)) {
+    try {
+      const raw = readFileSync(patternsPath, "utf-8");
+      if (raw.length > 4000) {
+        const lastSection = raw.lastIndexOf("\n## ", 4000);
+        patternsContext = lastSection > 1000 ? raw.slice(0, lastSection) : raw.slice(0, 4000);
+      } else {
+        patternsContext = raw;
+      }
+    } catch { /* proceed without */ }
+  }
+  if (patternsContext) ok("Loaded codebase patterns for planning prompts");
+
   const intelBlock = intelContext ? `\n## Project Intelligence (pre-scanned — use this instead of exploring)\n${intelContext}\n` : "";
+  const patternsBlock = patternsContext ? `\n## Codebase Patterns (follow these conventions for all new code)\n${patternsContext}\n` : "";
   const exploreInstruction = intelContext
     ? "The project has already been scanned (see above). Use the intel directly — do NOT run ls or read files unless you need specific implementation details not covered above."
     : "1. Quickly explore the project (ls, read key files, check package.json)";
@@ -685,7 +708,7 @@ async function runSuperpowers(
     const tasksPerComponent = Math.max(3, Math.floor(taskBudget / componentsTarget));
 
     const decompPrompt = `You are a senior architect. Break this feature into independent components that can be built in parallel by separate teams. This is NON-INTERACTIVE — make all decisions yourself.
-${intelBlock}
+${intelBlock}${patternsBlock}
 ## Feature
 ${featureDescription}
 
@@ -762,7 +785,7 @@ Rules:
       }
 
       const componentPrompt = `You are a senior engineer creating a TDD implementation plan for ONE component. This is NON-INTERACTIVE — make all decisions yourself.
-${intelBlock}
+${intelBlock}${patternsBlock}
 ## Component: ${component.name}
 ${component.description}
 
@@ -848,7 +871,7 @@ BAD (too granular — DO NOT do this):
 
 ## Feature Request
 ${featureDescription}
-${intelBlock}
+${intelBlock}${patternsBlock}
 ## Your Task
 ${exploreInstruction}
 ${intelContext ? "1." : "2."} Design the solution (pick the simplest approach that works)
