@@ -794,6 +794,14 @@ doctor() {
     local fleet_db_size
     fleet_db_size=$(du -sh "$fleet_db" 2>/dev/null | cut -f1)
     check_pass "Fleet database: $fleet_db_size"
+    # Check intel cache
+    local intel_count
+    intel_count=$(sqlite3 "$fleet_db" "SELECT COUNT(*) FROM fleet_intel WHERE generation_status='success'" 2>/dev/null || echo "0")
+    if [ "$intel_count" -gt 0 ] 2>/dev/null; then
+      check_pass "Fleet intel cache: $intel_count project(s) cached"
+    else
+      check_warn "Fleet intel cache: empty (populates on first fleet run per project)"
+    fi
   else
     check_warn "Fleet database: not yet created (initializes on first run)"
   fi
@@ -1002,6 +1010,9 @@ with open(mcp_path, 'w') as f:
       info "Fleet will be configured but container commands won't work until a runtime is installed"
     fi
 
+    # Ensure data directory exists (fleet.db + intel cache live here)
+    mkdir -p "$HOME/.claude/data"
+
     # Create fleet config — interactive setup if bun available, otherwise template
     fleet_config="$HOME/.claude/fleet/accounts.json"
     if [ ! -f "$fleet_config" ]; then
@@ -1093,6 +1104,7 @@ FLEET_EOF
     info "  Scatter mode:   fleet --scatter \"review this code\" --workers 5"
     info "  Decompose mode: fleet --decompose \"build a REST API\" --workers 5"
     info "  Pipeline mode:  fleet --pipeline \"task\" --stages research,implement,test"
+    info "  Intel cache:    fleet --intel (list) | --intel --clear (reset)"
   fi
 
   # Community integrations

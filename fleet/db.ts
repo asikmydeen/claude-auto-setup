@@ -5,7 +5,7 @@
 import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
-import type { FleetRunRecord, FleetTaskRecord, FleetContainerRecord } from "./types";
+import type { FleetRunRecord, FleetTaskRecord, FleetContainerRecord, FleetIntelRecord } from "./types";
 
 const DB_DIR = join(process.env.HOME || "~", ".claude", "data");
 const DB_PATH = join(DB_DIR, "fleet.db");
@@ -72,6 +72,21 @@ function getDb(): Database {
     stopped_at TEXT
   )`);
 
+  // Intel cache — stores project intel with fingerprint-based dedup and TTL
+  db.run(`CREATE TABLE IF NOT EXISTS fleet_intel (
+    project_fingerprint TEXT PRIMARY KEY,
+    project_root TEXT NOT NULL,
+    git_remote TEXT,
+    intel_content TEXT,
+    patterns_content TEXT,
+    file_hash TEXT NOT NULL,
+    generated_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    generation_status TEXT NOT NULL DEFAULT 'success',
+    token_cost INTEGER DEFAULT 0
+  )`);
+  db.run("CREATE INDEX IF NOT EXISTS idx_fleet_intel_root ON fleet_intel(project_root)");
+
   // Indexes
   db.run("CREATE INDEX IF NOT EXISTS idx_fleet_tasks_run ON fleet_tasks(run_id)");
   db.run("CREATE INDEX IF NOT EXISTS idx_fleet_tasks_status ON fleet_tasks(status)");
@@ -115,6 +130,23 @@ function buildStmts(d: Database) {
     updateContainer: d.prepare(
       "UPDATE fleet_containers SET status = COALESCE($status, status), exit_code = COALESCE($exit_code, exit_code), stopped_at = COALESCE($stopped_at, stopped_at) WHERE id = $id"
     ),
+
+    // Intel cache
+    getIntel: d.prepare("SELECT * FROM fleet_intel WHERE project_fingerprint = $fingerprint"),
+    getIntelByRoot: d.prepare("SELECT * FROM fleet_intel WHERE project_root = $project_root ORDER BY generated_at DESC LIMIT 1"),
+    upsertIntel: d.prepare(
+      `INSERT INTO fleet_intel (project_fingerprint, project_root, git_remote, intel_content, patterns_content, file_hash, generated_at, expires_at, generation_status, token_cost)
+       VALUES ($fingerprint, $project_root, $git_remote, $intel_content, $patterns_content, $file_hash, $generated_at, $expires_at, $status, $token_cost)
+       ON CONFLICT(project_fingerprint) DO UPDATE SET
+         project_root = $project_root, git_remote = $git_remote,
+         intel_content = COALESCE($intel_content, intel_content),
+         patterns_content = COALESCE($patterns_content, patterns_content),
+         file_hash = $file_hash, generated_at = $generated_at,
+         expires_at = $expires_at, generation_status = $status,
+         token_cost = $token_cost`
+    ),
+    deleteIntel: d.prepare("DELETE FROM fleet_intel WHERE project_fingerprint = $fingerprint"),
+    listIntel: d.prepare("SELECT project_fingerprint, project_root, git_remote, generation_status, generated_at, expires_at FROM fleet_intel ORDER BY generated_at DESC LIMIT $limit"),
   };
 }
 
@@ -232,4 +264,84 @@ export function updateContainerRecord(id: string, status: string, exitCode?: num
     $exit_code: exitCode ?? null,
     $stopped_at: status === "stopped" || status === "failed" ? new Date().toISOString() : null,
   });
+}
+
+// --- Intel Cache CRUD ---
+
+const INTEL_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
+const INTEL_NEGATIVE_TTL_MS = 60 * 60 * 1000;   // 1 hour for failed/empty
+
+/** Get cached intel by project fingerprint. Returns null if not found or expired. */
+export function getCachedIntel(fingerprint: string, allowExpired = false): FleetIntelRecord | null {
+  const record = stmts().getIntel.get({ $fingerprint: fingerprint }) as FleetIntelRecord | null;
+  if (!record) return null;
+  if (!allowExpired && new Date(record.expires_at).getTime() < Date.now()) return null;
+  return record;
+}
+
+/** Get cached intel by project root path (fallback when fingerprint misses). */
+export function getCachedIntelByRoot(projectRoot: string): FleetIntelRecord | null {
+  const record = stmts().getIntelByRoot.get({ $project_root: projectRoot }) as FleetIntelRecord | null;
+  if (!record) return null;
+  if (new Date(record.expires_at).getTime() < Date.now()) return null;
+  return record;
+}
+
+/** Cache successful intel generation. */
+export function cacheIntel(opts: {
+  fingerprint: string;
+  projectRoot: string;
+  gitRemote: string | null;
+  intelContent: string;
+  patternsContent: string | null;
+  fileHash: string;
+}): void {
+  const now = new Date().toISOString();
+  const expires = new Date(Date.now() + INTEL_TTL_MS).toISOString();
+  stmts().upsertIntel.run({
+    $fingerprint: opts.fingerprint,
+    $project_root: opts.projectRoot,
+    $git_remote: opts.gitRemote,
+    $intel_content: opts.intelContent,
+    $patterns_content: opts.patternsContent,
+    $file_hash: opts.fileHash,
+    $generated_at: now,
+    $expires_at: expires,
+    $status: "success",
+    $token_cost: 0,
+  });
+}
+
+/** Cache a failed or empty-project intel attempt (negative cache). */
+export function cacheIntelFailure(opts: {
+  fingerprint: string;
+  projectRoot: string;
+  gitRemote: string | null;
+  fileHash: string;
+  status: "failed" | "empty_project";
+}): void {
+  const now = new Date().toISOString();
+  const expires = new Date(Date.now() + INTEL_NEGATIVE_TTL_MS).toISOString();
+  stmts().upsertIntel.run({
+    $fingerprint: opts.fingerprint,
+    $project_root: opts.projectRoot,
+    $git_remote: opts.gitRemote,
+    $intel_content: null,
+    $patterns_content: null,
+    $file_hash: opts.fileHash,
+    $generated_at: now,
+    $expires_at: expires,
+    $status: opts.status,
+    $token_cost: 0,
+  });
+}
+
+/** List all cached intel records (for diagnostics). */
+export function listCachedIntel(limit = 20): FleetIntelRecord[] {
+  return stmts().listIntel.all({ $limit: limit }) as FleetIntelRecord[];
+}
+
+/** Delete a cached intel record. */
+export function deleteCachedIntel(fingerprint: string): void {
+  stmts().deleteIntel.run({ $fingerprint: fingerprint });
 }

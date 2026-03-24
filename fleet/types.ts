@@ -166,3 +166,18 @@ export interface FleetContainerRecord {
   started_at: string;
   stopped_at: string | null;
 }
+
+// --- Intel Cache ---
+
+export interface FleetIntelRecord {
+  project_fingerprint: string;
+  project_root: string;
+  git_remote: string | null;
+  intel_content: string | null;
+  patterns_content: string | null;
+  file_hash: string;
+  generated_at: string;
+  expires_at: string;
+  generation_status: "success" | "failed" | "empty_project";
+  token_cost: number;
+}

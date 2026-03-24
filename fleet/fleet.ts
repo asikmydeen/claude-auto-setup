@@ -14,12 +14,15 @@
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
 import { join, resolve } from "path";
+import { createHash } from "crypto";
+import { execFileSync } from "child_process";
 import { AccountPool, loadFleetConfig, initFleetConfig } from "./pool";
 import { ContainerManager } from "./container";
 import {
   createRun, updateRunStatus, getRecentRuns, getRunsByProject, getTasksByRun,
   createFleetTask, updateFleetTask,
   createContainerRecord, updateContainerRecord,
+  getCachedIntel, getCachedIntelByRoot, cacheIntel, cacheIntelFailure, listCachedIntel,
 } from "./db";
 import type { FleetConfig, FleetTask, FleetRunResult, ScatterStrategy } from "./types";
 import { onFleetStart, onTaskComplete, onAccountCooldown, onFleetComplete } from "./bridge";
@@ -45,6 +48,73 @@ function generateId(): string {
 }
 
 // ============================================================================
+// PROJECT FINGERPRINTING — identify projects by content, not path
+// ============================================================================
+
+/** Track already-ensured projects within this process to prevent double-calls. */
+const _ensuredProjects = new Set<string>();
+
+/**
+ * Generate a stable fingerprint for a project directory.
+ * Priority: git remote URL > manifest file content > fallback to path.
+ * Same repo from different paths (symlinks, worktrees) → same fingerprint.
+ */
+function projectFingerprint(projectRoot: string): { fingerprint: string; gitRemote: string | null; fileHash: string } {
+  let gitRemote: string | null = null;
+
+  // 1. Try git remote URL (same repo = same intel regardless of checkout path)
+  try {
+    gitRemote = execFileSync("git", ["-C", projectRoot, "remote", "get-url", "origin"], {
+      encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (gitRemote) {
+      const hash = createHash("sha256").update(gitRemote).digest("hex").slice(0, 16);
+      return { fingerprint: hash, gitRemote, fileHash: hash };
+    }
+  } catch { /* not a git repo or no remote */ }
+
+  // 2. Hash key manifest file (package.json, Cargo.toml, etc.)
+  const markers = ["package.json", "Cargo.toml", "go.mod", "pyproject.toml", "pom.xml", "build.gradle", "Gemfile", "composer.json", "mix.exs"];
+  for (const m of markers) {
+    const p = join(projectRoot, m);
+    if (existsSync(p)) {
+      try {
+        const content = readFileSync(p, "utf-8").slice(0, 1000); // First 1KB — enough for name+version
+        const hash = createHash("sha256").update(content).digest("hex").slice(0, 16);
+        return { fingerprint: hash, gitRemote: null, fileHash: hash };
+      } catch { /* unreadable */ }
+    }
+  }
+
+  // 3. Fallback: resolve path (handles symlinks) and hash it
+  let resolved = projectRoot;
+  try {
+    resolved = execFileSync("realpath", [projectRoot], {
+      encoding: "utf-8", timeout: 2000, stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+  } catch { /* realpath not available — use raw path */ }
+  const hash = createHash("sha256").update(resolved).digest("hex").slice(0, 16);
+  return { fingerprint: hash, gitRemote: null, fileHash: hash };
+}
+
+/**
+ * Check if a project directory looks empty (no source files worth scanning).
+ * Prevents wasting an account on intel generation for /tmp test dirs.
+ */
+function isEmptyProject(projectRoot: string): boolean {
+  const indicators = [
+    "package.json", "Cargo.toml", "go.mod", "pyproject.toml", "pom.xml",
+    "Makefile", "CMakeLists.txt", "build.gradle", "Gemfile", "composer.json",
+    "mix.exs", "setup.py", "requirements.txt", "tsconfig.json", ".gitignore",
+    "src", "lib", "app", "cmd", "internal",
+  ];
+  for (const f of indicators) {
+    if (existsSync(join(projectRoot, f))) return false;
+  }
+  return true;
+}
+
+// ============================================================================
 // PRE-FLIGHT: Ensure project has intel before dispatching
 // ============================================================================
 
@@ -53,19 +123,87 @@ async function ensureProjectIntel(
   projectRoot: string,
   containers: ContainerManager,
 ): Promise<void> {
+  // Dedup: skip if already ensured this run (fixes superpowers double-call)
+  if (_ensuredProjects.has(projectRoot)) return;
+
   const intelPath = join(projectRoot, ".claude", "rules", "project-intel.md");
+  const patternsPath = join(projectRoot, ".claude", "rules", "codebase-patterns.md");
+
+  // 1. Check filesystem first (zero-cost if file exists)
   if (existsSync(intelPath)) {
-    ok("Project intel: found");
+    ok("Project intel: found on disk");
+    _ensuredProjects.add(projectRoot);
+
+    // Opportunistically cache to DB for future cross-path lookups
+    const { fingerprint, gitRemote, fileHash } = projectFingerprint(projectRoot);
+    const cached = getCachedIntel(fingerprint);
+    if (!cached) {
+      try {
+        cacheIntel({
+          fingerprint, projectRoot, gitRemote,
+          intelContent: readFileSync(intelPath, "utf-8"),
+          patternsContent: existsSync(patternsPath) ? readFileSync(patternsPath, "utf-8") : null,
+          fileHash,
+        });
+      } catch { /* non-critical — DB write failure shouldn't block fleet */ }
+    }
     return;
   }
 
+  // 2. Check DB cache by fingerprint (cross-path dedup)
+  const { fingerprint, gitRemote, fileHash } = projectFingerprint(projectRoot);
+  const cached = getCachedIntel(fingerprint);
+
+  if (cached) {
+    if (cached.generation_status === "success" && cached.intel_content) {
+      // Cache hit — write to disk and return
+      mkdirSync(join(projectRoot, ".claude", "rules"), { recursive: true });
+      writeFileSync(intelPath, cached.intel_content);
+      if (cached.patterns_content) {
+        writeFileSync(patternsPath, cached.patterns_content);
+      }
+      ok(`Project intel: restored from cache (fingerprint: ${fingerprint.slice(0, 8)})`);
+      _ensuredProjects.add(projectRoot);
+      return;
+    }
+
+    if (cached.generation_status === "failed" || cached.generation_status === "empty_project") {
+      // Negative cache hit — don't waste an account retrying
+      info(`Project intel: skipped (${cached.generation_status}, cached ${cached.generated_at.slice(0, 16)})`);
+      _ensuredProjects.add(projectRoot);
+      return;
+    }
+  }
+
+  // Also check by project root path (fallback if fingerprint changed)
+  const cachedByRoot = getCachedIntelByRoot(projectRoot);
+  if (cachedByRoot && cachedByRoot.generation_status === "success" && cachedByRoot.intel_content) {
+    mkdirSync(join(projectRoot, ".claude", "rules"), { recursive: true });
+    writeFileSync(intelPath, cachedByRoot.intel_content);
+    if (cachedByRoot.patterns_content) {
+      writeFileSync(patternsPath, cachedByRoot.patterns_content);
+    }
+    ok(`Project intel: restored from cache (path match)`);
+    _ensuredProjects.add(projectRoot);
+    return;
+  }
+
+  // 3. Empty project check — don't waste an account
+  if (isEmptyProject(projectRoot)) {
+    info("Project intel: empty project detected, skipping generation");
+    cacheIntelFailure({ fingerprint, projectRoot, gitRemote, fileHash, status: "empty_project" });
+    _ensuredProjects.add(projectRoot);
+    return;
+  }
+
+  // 4. Generate via container (no cache hit, non-empty project)
   info("No project-intel.md found — generating before dispatch...");
 
-  // Use first account to generate intel
   const pool = new AccountPool(config);
   const account = pool.allocate("fleet-init");
   if (!account) {
     warn("No accounts available for intel generation — proceeding without intel");
+    _ensuredProjects.add(projectRoot);
     return;
   }
 
@@ -81,7 +219,7 @@ Create the .claude/rules/ directory if it doesn't exist.`;
   const outputDir = join(projectRoot, ".fleet", "init");
   mkdirSync(outputDir, { recursive: true });
 
-  const container = containers.run({
+  containers.run({
     account: account.account,
     taskId: "fleet-init",
     prompt: initPrompt,
@@ -90,15 +228,27 @@ Create the .claude/rules/ directory if it doesn't exist.`;
     provider: "claude",
   });
 
-  info("Generating project intel (this runs once per project)...");
+  info("Generating project intel (this runs once per project, cached for 24 hours)...");
   const result = await containers.waitForContainer("fleet-init");
   pool.release(account.account.id, result?.exitCode === 0);
 
   if (result?.exitCode === 0 && existsSync(intelPath)) {
-    ok("Project intel: generated");
+    ok("Project intel: generated and cached");
+    // Cache the generated intel
+    try {
+      cacheIntel({
+        fingerprint, projectRoot, gitRemote,
+        intelContent: readFileSync(intelPath, "utf-8"),
+        patternsContent: existsSync(patternsPath) ? readFileSync(patternsPath, "utf-8") : null,
+        fileHash,
+      });
+    } catch { /* non-critical */ }
   } else {
     warn("Intel generation incomplete — fleet will proceed without it");
+    cacheIntelFailure({ fingerprint, projectRoot, gitRemote, fileHash, status: "failed" });
   }
+
+  _ensuredProjects.add(projectRoot);
 }
 
 // ============================================================================
@@ -1405,6 +1555,9 @@ ${BOLD}Options:${RESET}
 ${BOLD}Management:${RESET}
   --status                         Show fleet status + recent runs
   --live                           Live view: active containers, progress, tasks
+  --intel                          List cached project intel (fingerprints, TTL)
+  --intel --clear                  Clear all cached intel
+  --intel --clear <path>           Clear cached intel for a specific project
   --build-image                    Build the fleet container image
   --setup                          Interactive account setup wizard
   --from-csv <file>                Load accounts from CSV (one key per line or comma-separated)
@@ -1551,6 +1704,45 @@ ${BOLD}Management:${RESET}
       console.error(`  ${acct.id}: ${acct.label || "(no label)"}`);
       console.error(`    Credentials: ${masked.join(", ")}`);
       console.error(`    CLI agents:  ${providers.join(", ")}`);
+    }
+    return;
+  }
+
+  // --intel [--clear]
+  if (args.includes("--intel")) {
+    if (args.includes("--clear")) {
+      // Clear specific project or all
+      const clearIdx = args.indexOf("--clear");
+      const clearTarget = args[clearIdx + 1];
+      if (clearTarget && !clearTarget.startsWith("--")) {
+        const { fingerprint } = projectFingerprint(resolve(clearTarget));
+        const { deleteCachedIntel } = await import("./db");
+        deleteCachedIntel(fingerprint);
+        ok(`Cleared intel cache for: ${clearTarget} (fingerprint: ${fingerprint.slice(0, 8)})`);
+      } else {
+        // Clear all — drop and recreate
+        info("Clearing all cached intel...");
+        const records = listCachedIntel(1000);
+        const { deleteCachedIntel } = await import("./db");
+        for (const r of records) deleteCachedIntel(r.project_fingerprint);
+        ok(`Cleared ${records.length} cached intel record(s)`);
+      }
+      return;
+    }
+
+    // List cached intel
+    const records = listCachedIntel(50);
+    if (records.length === 0) {
+      info("No cached intel records. Intel will be cached on first fleet run per project.");
+      return;
+    }
+    console.error(`${BOLD}Cached Project Intel (${records.length})${RESET}`);
+    for (const r of records) {
+      const expired = new Date(r.expires_at).getTime() < Date.now();
+      const statusColor = r.generation_status === "success" ? GREEN : r.generation_status === "empty_project" ? DIM : YELLOW;
+      const expiryStr = expired ? `${RED}expired${RESET}` : `expires ${r.expires_at.slice(0, 10)}`;
+      console.error(`  ${statusColor}${r.generation_status}${RESET} | ${r.project_fingerprint.slice(0, 8)} | ${expiryStr}`);
+      console.error(`    ${DIM}${r.project_root}${RESET}${r.git_remote ? ` (${r.git_remote})` : ""}`);
     }
     return;
   }
