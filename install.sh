@@ -326,7 +326,35 @@ update_agents() {
         fi
         rules_updated=$((rules_updated + 1))
       done
+      # Clean up rules that were removed from source (merged/consolidated)
+      for installed in "$rules_dest"/*.md; do
+        [ -f "$installed" ] || continue
+        local iname
+        iname=$(basename "$installed")
+        # Skip generated files
+        if [ "$iname" = "project-intel.md" ] || [ "$iname" = "workspace-intel.md" ] || [ "$iname" = "codebase-patterns.md" ]; then
+          continue
+        fi
+        if [ ! -f "$rules_src/$iname" ]; then
+          if $DRY_RUN; then
+            info "[DRY RUN] Would remove obsolete rule: $iname"
+          else
+            rm -f "$installed"
+            info "Removed obsolete rule: $iname"
+          fi
+        fi
+      done
       ok "Rules: $rules_updated files synced"
+    fi
+
+    # Clean up old lang rules from rules/ (moved to lang-staging/)
+    if [ -d "$rules_dest/lang" ]; then
+      if $DRY_RUN; then
+        info "[DRY RUN] Would remove obsolete rules/lang/ (moved to lang-staging/)"
+      else
+        rm -rf "$rules_dest/lang"
+        info "Removed obsolete rules/lang/ (moved to lang-staging/)"
+      fi
     fi
 
     # Always update language-specific rules (staging area — outside rules/ to avoid auto-loading)
