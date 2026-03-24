@@ -42,7 +42,7 @@ Check if `.claude/rules/codebase-patterns.md` exists:
 **Language rules:**
 Check if `.claude/rules/lang-*.md` files exist in the project:
 - **YES**: Language rules are active. Include relevant language standards when prompting implementation subagents.
-- **NO**: Check `~/.claude/rules/lang/` for available rules. If project languages detected but rules not linked, activate them now (symlink from staging).
+- **NO**: Check `~/.claude/lang-staging/` for available rules. If project languages detected but rules not activated, copy them now.
 
 **Internal project detection:**
 Check: `[ -f packageInfo ] || [ -f .brazil.json ] || [[ "$PWD" == */workplace/* ]]`

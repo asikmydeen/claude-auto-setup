@@ -106,14 +106,14 @@ with open(claude_home + '/settings.json', 'w') as f:
   done
   echo "    Skills: $skill_count installed ($(ls -1 "$UNIVERSAL_DIR/skills/" 2>/dev/null | tr '\n' ', ' | sed 's/, $//'))"
 
-  # Install language-specific rules (staging area — activated per-project by project-init.sh)
+  # Install language-specific rules (staging area — NOT in rules/ to avoid auto-loading)
   local lang_rules_src="$UNIVERSAL_DIR/rules/lang"
   if [ -d "$lang_rules_src" ]; then
-    mkdir -p "$CLAUDE_HOME/rules/lang"
+    mkdir -p "$CLAUDE_HOME/lang-staging"
     local lang_count=0
     for f in "$lang_rules_src"/*.md; do
       [ -f "$f" ] || continue
-      \cp -f "$f" "$CLAUDE_HOME/rules/lang/"
+      \cp -f "$f" "$CLAUDE_HOME/lang-staging/"
       lang_count=$((lang_count + 1))
     done
     echo "    Language rules: $lang_count languages staged (activate per-project via /init)"

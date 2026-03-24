@@ -66,7 +66,7 @@ detect_project_languages() {
 # Returns: space-separated list of activated languages
 activate_language_rules() {
   local project_dir="${1:-.}"
-  local rules_staging="$HOME/.claude/rules/lang"
+  local rules_staging="$HOME/.claude/lang-staging"
   local detected
   detected=$(detect_project_languages "$project_dir")
 

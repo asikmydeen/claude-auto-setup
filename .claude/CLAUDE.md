@@ -46,7 +46,7 @@ Universal AI agent orchestration system with a native desktop app.
 - Static file serving uses `findDistDir()` to work in both dev and Electrobun bundle
 
 ## Multi-Agent Workflow (DEFAULT)
-Multi-agent is the default for this project. See `~/.claude/rules/multi-agent.md` for full protocol.
+Multi-agent is the default for this project. See `~/.claude/rules/orchestration.md` for full protocol.
 
 Dispatch chain (priority order):
 1. **Agent tool** — primary: subagents for research, review, focused work
@@ -76,7 +76,7 @@ Standalone coding agent with fresh-session-per-task architecture. Solves context
 - Headless: `gsd headless` (CI/scripts), `gsd headless query` (instant JSON state)
 - Use for: greenfield external projects, cost-conscious builds, crash recovery
 - Config: `~/.gsd/preferences.md` (global), `.gsd/preferences.md` (project)
-- See `universal/rules/gsd-integration.md` for when to use GSD 2 vs Overseer
+- See `~/.claude/rules/task-routing.md` for when to use GSD 2 vs Overseer
 
 ## Fleet — Multi-Account Container Orchestration (`fleet/`)
 Run tasks across multiple API accounts in isolated Docker/Podman containers.
@@ -139,7 +139,7 @@ claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 ## Community Integrations
 4 community repos integrated via hybrid approach (plugin where designed, vendor where selective).
 - **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — design system intelligence (161 industry rules, 67 UI styles). Auto-installed via adapter.sh. Available in fleet containers.
-- **Language Rules** (`affaan-m/everything-claude-code`): 10 language rule sets (TypeScript, Python, Go, Rust, Swift, PHP, Java, Kotlin, C++, Perl) in `universal/rules/lang/`. Auto-detected per project via `lib/lang-detect.sh`. Activated by `project-init.sh` or `/init` (copies to `.claude/rules/`, NOT symlinks — fleet compat).
+- **Language Rules** (`affaan-m/everything-claude-code`): 10 language rule sets in `universal/rules/lang/`. Staged to `~/.claude/lang-staging/` (NOT in `rules/` — avoids 36KB auto-load). Activated per-project by `project-init.sh` or `/init` (copies to `.claude/rules/`).
 - **Build-Error-Resolver Agent** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md` — categorizes build errors (dependency, type, import, config, bundler). Referenced in `orchestration.md` Step 7.
 - **/security-scan** (`affaan-m/everything-claude-code`): `universal/commands/security-scan.md` — dep audit + secret detection + OWASP code review + structured severity report.
 - **/discover** (`hesreallyhim/awesome-claude-code`): `universal/commands/discover.md` — fetches community tool catalog, diffs against installed, shows what's available.

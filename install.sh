@@ -329,17 +329,17 @@ update_agents() {
       ok "Rules: $rules_updated files synced"
     fi
 
-    # Always update language-specific rules (staging area)
+    # Always update language-specific rules (staging area — outside rules/ to avoid auto-loading)
     local lang_rules_src="$rules_src/lang"
     if [ -d "$lang_rules_src" ]; then
-      mkdir -p "$rules_dest/lang"
+      mkdir -p "$HOME/.claude/lang-staging"
       local lang_updated=0
       for f in "$lang_rules_src"/*.md; do
         [ -f "$f" ] || continue
         if $DRY_RUN; then
-          info "[DRY RUN] Would update: rules/lang/$(basename "$f")"
+          info "[DRY RUN] Would update: lang-staging/$(basename "$f")"
         else
-          cp "$f" "$rules_dest/lang/"
+          cp "$f" "$HOME/.claude/lang-staging/"
         fi
         lang_updated=$((lang_updated + 1))
       done

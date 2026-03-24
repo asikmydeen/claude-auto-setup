@@ -82,7 +82,7 @@ Read and analyze these signals (use parallel tool calls):
 
 Detect project languages and activate matching rule sets:
 1. Check for language markers: `tsconfig.json` (TypeScript), `pyproject.toml`/`requirements.txt` (Python), `go.mod` (Go), `Cargo.toml` (Rust), `Package.swift` (Swift), `composer.json` (PHP), `pom.xml`/`build.gradle` (Java), `build.gradle.kts` (Kotlin), `CMakeLists.txt` (C++), `Makefile.PL`/`cpanfile` (Perl)
-2. For each detected language, symlink `lang-{language}.md` from `~/.claude/rules/lang/` into `.claude/rules/`
+2. For each detected language, copy `lang-{language}.md` from `~/.claude/lang-staging/` into `.claude/rules/`
 3. Report activated languages: "Language rules: activated for TypeScript, Python"
 
 This gives all subsequent agents language-specific coding standards, testing patterns, and security guidelines.
