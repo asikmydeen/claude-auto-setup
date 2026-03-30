@@ -1,6 +1,6 @@
 # claude-code-setup - Project Intelligence
 
-> **Last updated**: 2026-03-16. Last incremental update: 2026-03-23 (fleet parity: settings-fleet.json, skills/scripts mounts, patterns injection, run→getConfigMounts dedup)
+> **Last updated**: 2026-03-16. Last incremental update: 2026-03-30 (plugin unification: superpowers+ui-ux-pro-max wired into commands, orchestration, fleet, overseer)
 > **Purpose**: Universal AI agent orchestration and configuration system + Electrobun desktop app (Sidekick)
 > **Auto-generated**: Via intel refresh
 
@@ -179,18 +179,21 @@ Run tasks across multiple API accounts in isolated containers. N× throughput vi
 
 14 composable skills via marketplace plugin. Categories: workflow (brainstorming, plans, subagent-dev), quality (TDD, verification), debugging (systematic 4-phase), collaboration (code review), git (worktrees, branch finish), parallel dispatch.
 
-**Install**: `claude plugin install superpowers@claude-plugins-official`
-**Fleet**: `fleet --superpowers` — autonomous pipeline: plan → extract tasks → execute → two-stage review. With `--decompose`: decompose → parallel plans → pool → review. Brainstorming skill skipped in fleet (HARD-GATE).
+**Install**: `claude plugin install superpowers@claude-plugins-official` (now in adapter.sh + enabledPlugins)
+**Fleet**: `fleet --superpowers` — autonomous pipeline: plan → extract tasks → execute → two-stage review. With `--decompose`: decompose → parallel plans → pool → review. Brainstorming skill skipped in fleet (HARD-GATE). Planning prompts now include plugin hints (TDD, verification, ui-ux-pro-max for frontend).
+**Commands**: Referenced by `/build` (TDD in Phase 3, verification in Phase 4), `/review` (code-review in Agent 1, verification in synthesis), `/debug` (systematic-debugging in Phase 1, TDD in Phase 3), `/deep-research` (brainstorming in Phase 0, verification in Phase 3), `/pua-en` (all skills as recovery tools).
+**Overseer**: `buildPluginHints()` in spawner.ts injects role-specific plugin guidance (TDD for engineers, ui-ux for frontend, brainstorming for tech-lead, code-review for QA).
 
 ---
 
 ## Community Integrations
 
-4 repos, hybrid approach (plugin where designed, vendor where selective):
+4 repos, hybrid approach (plugin where designed, vendor where selective). All plugins unified into commands, orchestration, fleet, and overseer:
 
-- **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — 161 industry rules, 67 UI styles. Wired into adapter.sh + fleet.
+- **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — 161 industry rules, 67 UI styles. In `enabledPlugins`, adapter.sh, fleet containers. Referenced by `/build` (frontend tasks), `/review` (UI compliance), fleet superpowers (frontend detection), overseer (frontend-engineer role).
+- **Superpowers** (`obra/superpowers`): Official plugin — 14 composable skills (TDD, verification, debugging, brainstorming, code-review, worktrees). In `enabledPlugins`, adapter.sh, fleet containers (skills/ + plugins/ mounts). Referenced by `/build` (TDD, verification), `/review` (code-review, verification), `/debug` (systematic debugging, TDD), `/deep-research` (brainstorming, verification), `/pua-en` (all skills), fleet superpowers mode, overseer (role-specific plugin hints).
 - **Language Rules** (`affaan-m/everything-claude-code`): 10 lang rule sets in `universal/rules/lang/`. Staged to `~/.claude/lang-staging/` (not in rules/ — avoids 36KB auto-load). Project-scoped via `lib/lang-detect.sh`.
-- **Build-Error-Resolver** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md`. Categorizes dependency/type/import/config/bundler errors. Referenced in orchestration.md Step 7.
+- **Build-Error-Resolver** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md`. Categorizes dependency/type/import/config/bundler errors. Referenced in orchestration.md Step 7, `/pua-en`.
 - **/security-scan** + **/discover** (`affaan-m/everything-claude-code` + `hesreallyhim/awesome-claude-code`): Security audit command + community tool catalog.
 - **Overseer Vault** (`kepano/kepano-obsidian`): `.overseer/` uses Obsidian-compatible layout (backward compatible).
 

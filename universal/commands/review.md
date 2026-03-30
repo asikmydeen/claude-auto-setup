@@ -34,6 +34,7 @@ If Amp is installed, this runs via Amp (see above). Otherwise, act as the `code-
 - DRY/SOLID compliance
 - Naming conventions
 - Unnecessary complexity
+- If **superpowers code-review** skill is available, use it for structured review methodology
 
 ### Agent 2: Security
 Act as the `security-auditor` agent:
@@ -60,10 +61,11 @@ Act as the `architect-reviewer` agent:
 - Abstraction appropriateness
 - Scalability concerns
 - Breaking change detection
+- For UI/frontend changes, check **ui-ux-pro-max** design system compliance if available (accessibility, responsive patterns, component conventions)
 
 ## Synthesis Phase
 
-After all parallel agents complete, use the **sequential-thinking skill** to integrate findings from all 4 review dimensions:
+After all parallel agents complete, use **superpowers verification** if available to confirm critical findings with evidence, then use the **sequential-thinking skill** to integrate findings from all 4 review dimensions:
 
 ```bash
 cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset

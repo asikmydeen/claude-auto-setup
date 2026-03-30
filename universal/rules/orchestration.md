@@ -194,6 +194,8 @@ Use when relevant:
 - **`security-guidance`** — automatic security warnings
 - **`code-review`** — after implementation
 - **`code-simplifier`** — after implementation
+- **`superpowers`** — composable skills (TDD, verification, debugging, brainstorming, code-review, worktree-parallel-development). Use TDD skill for test-driven implementation. Use verification skill to prove fixes work. Use debugging skill for systematic 4-phase debugging. Use brainstorming for complex architectural decisions.
+- **`ui-ux-pro-max`** — design system intelligence (161 industry rules, 67 UI styles). Activate for frontend/UI tasks — provides component patterns, accessibility rules, responsive design guidance.
 
 ## Step 3: Execute with Multi-Agent Pattern
 

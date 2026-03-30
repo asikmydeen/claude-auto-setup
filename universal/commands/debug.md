@@ -23,10 +23,13 @@ Before starting, check for an existing checkpoint: `cat .claude/scratch/task-sta
 
 ## Phase 1: Investigate (parallel agents)
 
+If the **superpowers systematic-debugging** skill is installed, activate it for structured 4-phase debugging methodology. Otherwise, proceed with the standard investigation below.
+
 ### Agent 1: Error Analysis
 - Parse the error message/stack trace
 - Identify the exact file, line, and function
 - Trace the call chain
+- Use **serena** for semantic code navigation if the call chain crosses unfamiliar modules
 
 ### Agent 2: Context Gathering
 - Read the failing code and its dependencies
@@ -62,7 +65,9 @@ Synthesize findings:
 
 ## Phase 3: Fix
 - Implement the fix with minimal changes
-- Add or update tests to cover the failure case
+- Use **superpowers TDD** skill if available: write a failing test that reproduces the bug first, then fix, then verify green. If unavailable, follow standard TDD approach.
+- Use **superpowers verification** if available to produce evidence the fix works
+- If stuck after 2+ attempts, activate **PUA persistence engine** (`/pua-en`) — escalate pressure level and leverage all available plugins
 - Run build + tests to verify
 
 ## Phase 4: Update Cached Intel

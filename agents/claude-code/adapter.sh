@@ -151,7 +151,7 @@ with open(claude_home + '/settings.json', 'w') as f:
       typescript-lsp pyright-lsp context7 serena code-review code-simplifier
       pr-review-toolkit security-guidance commit-commands feature-dev
       claude-md-management hookify skill-creator github
-      ui-ux-pro-max
+      ui-ux-pro-max superpowers
     )
     local installed=0
     for p in "${plugins[@]}"; do

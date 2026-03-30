@@ -32,6 +32,66 @@ interface SpawnOptions {
 }
 
 /**
+ * Build role-specific plugin hints so agents know which plugins to leverage.
+ * SECURITY: All strings are hardcoded literals. If this function is ever extended
+ * to accept user input or external config, sanitize inputs to prevent prompt injection.
+ */
+function buildPluginHints(role: AgentRole): string | null {
+  const hints: string[] = [];
+
+  // Universal plugins available to all roles
+  const universal = [
+    "- **context7**: Fetch library/SDK docs — use when unsure about an API",
+    "- **serena**: Semantic code navigation — find callers, references, symbols",
+    "- **sequential-thinking**: Structured reasoning with branching hypotheses",
+  ];
+
+  // Role-specific plugin activation
+  const rolePlugins: Record<string, string[]> = {
+    "senior-engineer": [
+      "- **superpowers TDD**: Write failing test first, then implement, then verify",
+      "- **superpowers verification**: Produce evidence that acceptance criteria are met",
+    ],
+    "engineer": [
+      "- **superpowers TDD**: Write failing test first, then implement, then verify",
+      "- **superpowers verification**: Produce evidence that acceptance criteria are met",
+    ],
+    "frontend-engineer": [
+      "- **superpowers TDD**: Write failing test first, then implement, then verify",
+      "- **ui-ux-pro-max**: Design system intelligence — component patterns, accessibility, responsive design",
+    ],
+    "backend-engineer": [
+      "- **superpowers TDD**: Write failing test first, then implement, then verify",
+      "- **superpowers verification**: Produce evidence that acceptance criteria are met",
+    ],
+    "qa-engineer": [
+      "- **superpowers TDD**: Comprehensive test coverage with red-green-refactor",
+      "- **superpowers verification**: Automated verification with evidence",
+    ],
+    "security-engineer": [
+      "- **security-guidance**: OWASP patterns and vulnerability detection",
+      "- **superpowers verification**: Verify security fixes with evidence",
+    ],
+    "tech-lead": [
+      "- **superpowers brainstorming**: Explore architectural approaches before committing",
+      "- **superpowers code-review**: Structured review methodology",
+    ],
+  };
+
+  const specific = rolePlugins[role] || [];
+  if (specific.length === 0 && universal.length === 0) return null;
+
+  hints.push("## Available Plugins");
+  hints.push("Use these plugins when they would help with your task:");
+  hints.push(...universal);
+  if (specific.length > 0) {
+    hints.push(...specific);
+  }
+
+  return hints.join("\n");
+}
+
+/**
  * Build the agent's context prompt including:
  * - Task description and acceptance criteria
  * - Codebase patterns (from codebase-patterns.md)
@@ -95,6 +155,13 @@ function buildAgentPrompt(opts: SpawnOptions): string {
   const memoryCtx = buildMemoryContext(opts.role, opts.task.title, opts.task.description);
   if (memoryCtx) {
     parts.push(memoryCtx);
+    parts.push("");
+  }
+
+  // Plugin guidance (role-specific)
+  const pluginHints = buildPluginHints(opts.role);
+  if (pluginHints) {
+    parts.push(pluginHints);
     parts.push("");
   }
 

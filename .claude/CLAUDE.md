@@ -65,9 +65,9 @@ Native agents: all set to `model: sonnet` (configurable in Settings → Agent Mo
 
 Orchestration MCP tools: `pipeline_*`, `checkpoint_*`, `queue_*`, `analytics_*`, `agent_*`
 
-Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`, `ui-ux-pro-max`
+Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`, `ui-ux-pro-max`, `superpowers`
 
-Skills: `pua` (persistence engine), `sequential-thinking` (structured reasoning)
+Skills: `pua` (persistence engine), `pua-en` (enhanced PUA with full plugin integration), `sequential-thinking` (structured reasoning)
 
 ## GSD 2 (Get Shit Done v2)
 Standalone coding agent with fresh-session-per-task architecture. Solves context rot at the engine level.
@@ -137,10 +137,11 @@ claude-mem provides automatic cross-session memory via 5 lifecycle hooks.
 - See `universal/rules/memory-system.md` for usage patterns
 
 ## Community Integrations
-4 community repos integrated via hybrid approach (plugin where designed, vendor where selective).
-- **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — design system intelligence (161 industry rules, 67 UI styles). Auto-installed via adapter.sh. Available in fleet containers.
+4 community repos integrated via hybrid approach (plugin where designed, vendor where selective). All plugins unified into commands, orchestration, fleet, and overseer.
+- **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — design system intelligence (161 industry rules, 67 UI styles). In `enabledPlugins`, adapter.sh, fleet containers. Referenced by `/build` (frontend tasks), `/review` (UI compliance), fleet superpowers (frontend detection), overseer (frontend-engineer role).
+- **Superpowers** (`obra/superpowers`): Official plugin — 14 composable skills (TDD, verification, debugging, brainstorming, code-review, worktrees). In `enabledPlugins`, adapter.sh, fleet containers. Referenced by `/build` (TDD + verification), `/review` (code-review + verification), `/debug` (systematic debugging + TDD), `/deep-research` (brainstorming + verification), `/pua-en` (all skills as recovery tools), fleet superpowers mode (plugin hints in planning prompts), overseer (role-specific hints via `buildPluginHints()`).
 - **Language Rules** (`affaan-m/everything-claude-code`): 10 language rule sets in `universal/rules/lang/`. Staged to `~/.claude/lang-staging/` (NOT in `rules/` — avoids 36KB auto-load). Activated per-project by `project-init.sh` or `/init` (copies to `.claude/rules/`).
-- **Build-Error-Resolver Agent** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md` — categorizes build errors (dependency, type, import, config, bundler). Referenced in `orchestration.md` Step 7.
+- **Build-Error-Resolver Agent** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md` — categorizes build errors (dependency, type, import, config, bundler). Referenced in `orchestration.md` Step 7, `/pua-en`.
 - **/security-scan** (`affaan-m/everything-claude-code`): `universal/commands/security-scan.md` — dep audit + secret detection + OWASP code review + structured severity report.
 - **/discover** (`hesreallyhim/awesome-claude-code`): `universal/commands/discover.md` — fetches community tool catalog, diffs against installed, shows what's available.
 - **Overseer Vault** (`kepano/kepano-obsidian`): `.overseer/` now uses Obsidian-compatible vault structure (Daily/, Stories/, Notes/, References/, Templates/).

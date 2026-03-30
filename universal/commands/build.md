@@ -63,11 +63,13 @@ Launch parallel exploration agents (scope down based on cached intel):
 - **Agent 2 (Docs Fetcher)**: If the task involves any library/SDK/framework, use context7 MCP to fetch up-to-date documentation for the specific APIs needed.
 - **Agent 3 (Dependency Mapper)**: If touching existing code, use serena or Grep to map dependencies — what calls this code, what does it import, what tests cover it. Check cached intel for critical paths first.
 
+**Frontend/UI tasks**: If the feature involves UI components, activate **ui-ux-pro-max** for design system intelligence — component patterns, accessibility rules, responsive design, industry-standard UI conventions.
+
 **CHECKPOINT**: Write exploration results and key discoveries to `.claude/scratch/task-state.md` (Phase: explore, include discoveries and files identified).
 
 ### 2. Plan Phase
 
-For complex features (3+ tasks, cross-cutting concerns, or architectural decisions), use the **sequential-thinking skill** to reason through the design before writing the spec:
+For complex features (3+ tasks, cross-cutting concerns, or architectural decisions), consider using the **superpowers brainstorming** skill for divergent exploration of approaches, then the **sequential-thinking skill** to converge on a design before writing the spec:
 
 ```bash
 cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
@@ -110,6 +112,8 @@ After approval, execute tasks using parallel agents AND external providers where
 - Each agent/provider gets a focused scope: only the files and context it needs
 - Use context7 for any API lookups during implementation
 - LSP will automatically catch type errors after edits
+- For test-driven tasks, use **superpowers TDD** skill if available: write failing test → implement → verify → commit. If unavailable, follow standard TDD (write test first, see red, implement, verify green).
+- For frontend/UI tasks, activate **ui-ux-pro-max** if available for component patterns and accessibility guidance
 - **Always validate external provider output** before integrating — read it, check quality, fix if needed
 - If an external provider fails or returns poor quality, fall back to Claude subagent silently
 - **CHECKPOINT after each task completes**: Update `.claude/scratch/task-state.md` — mark the task done, list files changed, move to next task
@@ -123,6 +127,7 @@ After implementation, launch review agents in parallel:
   - If a deviation is intentional: follow the Deviation Protocol from `pattern-conformance.md` (propose → get user confirmation → implement → update pattern spec → log in Deviation Log)
   - If a deviation is accidental: fix to match existing patterns before proceeding
 - Code simplification pass (code-simplifier patterns) → Claude subagent
+- Use **superpowers verification** skill if available to produce evidence that the implementation meets acceptance criteria
 - Fix any issues found before proceeding
 
 ### 5. Verify Phase

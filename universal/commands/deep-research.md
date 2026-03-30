@@ -15,9 +15,13 @@ $ARGUMENTS
 
 If no target specified, analyze the current working directory.
 
+## Phase 0: Brainstorm Focus Areas (optional, for unfamiliar codebases)
+
+For large or unfamiliar codebases, consider using the **superpowers brainstorming** skill to identify non-obvious areas of investigation before launching agents. This helps ensure the scan covers architectural patterns, hidden dependencies, and domain-specific conventions that a mechanical scan might miss. Skip this for codebases you already understand well.
+
 ## Phase 1: Parallel Deep Scan (Launch ALL agents simultaneously)
 
-Launch 7 parallel exploration agents. Each agent focuses on one dimension. Instruct each to be THOROUGH but OUTPUT CONCISE — bullet points, not essays.
+Launch 7 parallel exploration agents. Each agent focuses on one dimension. Instruct each to be THOROUGH but OUTPUT CONCISE — bullet points, not essays. Agents should use **serena** for semantic code navigation and **context7** for library doc lookups when encountering unfamiliar APIs.
 
 ### Agent 1: Architecture & Structure Map
 Explore subagent task:
@@ -187,13 +191,15 @@ Workspace intel: [path to workspace-intel.md if it exists]
    - Must stay under 250 lines — dense, example-heavy
    - Uses the structure from `universal/patterns-template.md`
 
-5. If `.claude/CLAUDE.md` exists, check if it already references project-intel and codebase-patterns. If not, suggest adding:
+5. Use **superpowers verification** to spot-check that the generated intel accurately reflects the codebase — verify 2-3 key claims (entry points, critical paths, dependency versions) against actual source.
+
+6. If `.claude/CLAUDE.md` exists, check if it already references project-intel and codebase-patterns. If not, suggest adding:
    ```
    See @.claude/rules/project-intel.md for complete codebase map.
    See @.claude/rules/codebase-patterns.md for coding patterns and conventions.
    ```
 
-6. Print summary:
+7. Print summary:
 ```
 ## Deep Research Complete
 

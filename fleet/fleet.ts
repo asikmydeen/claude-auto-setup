@@ -835,6 +835,13 @@ async function runSuperpowers(
   }
   if (patternsContext) ok("Loaded codebase patterns for planning prompts");
 
+  // Detect frontend/UI tasks for plugin hints
+  const featureLower = featureDescription.toLowerCase();
+  const isFrontendTask = /\b(ui|ux|frontend|component|react|vue|angular|css|design|layout|page|dashboard|form)\b/.test(featureLower);
+  const pluginHints = isFrontendTask
+    ? "\n## Plugin Guidance\n- **ui-ux-pro-max** is available — use it for design system intelligence, component patterns, accessibility, and responsive design.\n- **superpowers TDD** is available — write failing tests first, then implement.\n"
+    : "\n## Plugin Guidance\n- **superpowers TDD** is available — write failing tests first, then implement.\n- **superpowers verification** is available — verify each task produces correct output.\n";
+
   const intelBlock = intelContext ? `\n## Project Intelligence (pre-scanned — use this instead of exploring)\n${intelContext}\n` : "";
   const patternsBlock = patternsContext ? `\n## Codebase Patterns (follow these conventions for all new code)\n${patternsContext}\n` : "";
   const exploreInstruction = intelContext
@@ -858,7 +865,7 @@ async function runSuperpowers(
     const tasksPerComponent = Math.max(3, Math.floor(taskBudget / componentsTarget));
 
     const decompPrompt = `You are a senior architect. Break this feature into independent components that can be built in parallel by separate teams. This is NON-INTERACTIVE — make all decisions yourself.
-${intelBlock}${patternsBlock}
+${intelBlock}${patternsBlock}${pluginHints}
 ## Feature
 ${featureDescription}
 
@@ -935,7 +942,7 @@ Rules:
       }
 
       const componentPrompt = `You are a senior engineer creating a TDD implementation plan for ONE component. This is NON-INTERACTIVE — make all decisions yourself.
-${intelBlock}${patternsBlock}
+${intelBlock}${patternsBlock}${pluginHints}
 ## Component: ${component.name}
 ${component.description}
 
@@ -1021,7 +1028,7 @@ BAD (too granular — DO NOT do this):
 
 ## Feature Request
 ${featureDescription}
-${intelBlock}${patternsBlock}
+${intelBlock}${patternsBlock}${pluginHints}
 ## Your Task
 ${exploreInstruction}
 ${intelContext ? "1." : "2."} Design the solution (pick the simplest approach that works)

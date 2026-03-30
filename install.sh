@@ -393,6 +393,26 @@ update_agents() {
       ok "Native agents: $agents_updated files synced"
     fi
 
+    # Sync plugins (install any missing official + marketplace plugins)
+    if command -v claude &>/dev/null; then
+      local plugin_sync_count=0
+      for p in superpowers ui-ux-pro-max; do
+        if claude plugin install "${p}@claude-plugins-official" --scope user 2>/dev/null; then
+          plugin_sync_count=$((plugin_sync_count + 1))
+        fi
+      done
+      # Marketplace plugins
+      local mem_plugin_dir="$HOME/.claude/plugins/marketplaces/thedotmack/plugin"
+      if [ ! -d "$mem_plugin_dir" ]; then
+        claude plugin marketplace add thedotmack/claude-mem 2>/dev/null && plugin_sync_count=$((plugin_sync_count + 1))
+      fi
+      local uiux_plugin_dir="$HOME/.claude/plugins/marketplaces/ui-ux-pro-max-skill"
+      if [ ! -d "$uiux_plugin_dir" ]; then
+        claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill 2>/dev/null && plugin_sync_count=$((plugin_sync_count + 1))
+      fi
+      [ $plugin_sync_count -gt 0 ] && ok "Plugins: $plugin_sync_count synced" || ok "Plugins: up to date"
+    fi
+
     # PRESERVE these user-modified files (never overwrite in update mode):
     local preserved_files="settings.json CLAUDE.md"
     for pf in $preserved_files; do
