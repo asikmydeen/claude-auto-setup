@@ -24,6 +24,12 @@ Before launching review agents, detect installed providers: `which amp codex gem
 - **If not**: All agents run as Claude subagents (no degradation).
 - Always read and integrate external provider output into the final review summary.
 
+### Agent 0: Pattern Conformance (runs first, before parallel agents)
+
+Check if `.claude/rules/codebase-patterns.md` exists:
+- **YES**: Read it. Include relevant sections in every review agent's context below. Pattern conformance violations are reported in a separate section from bugs/security — they are Warnings, not Critical.
+- **NO**: Skip this step. Note in output: "Pattern conformance: skipped (no codebase-patterns.md)"
+
 ## Review Agents (launch in parallel)
 
 ### Agent 1: Code Quality
@@ -82,22 +88,39 @@ cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
 
 Activate for: reviews with 4+ files changed, conflicting agent recommendations, or architecturally significant changes. For small reviews (< 3 files), skip and go directly to output.
 
+**Rebuttal protocol** (after synthesis, mandatory for reviews with 4+ Critical findings):
+- For each Critical finding in the synthesized list:
+  - Generate: "Why might this NOT be a problem?" with evidence
+  - The original finding survives only if the reviewer can defend it with additional evidence
+  - Withdrawn findings are logged: "Withdrawn after rebuttal: {finding} — Reason: {counter-evidence}"
+- Skip this step for reviews with fewer than 4 Critical findings.
+
+**Evidence hierarchy tags** — tag each surviving finding:
+- **Confirmed**: Reproduced or demonstrated with a test/command
+- **Analysis**: Code path analysis shows the issue exists
+- **Pattern**: Heuristic pattern match (common vulnerability/bug pattern)
+- **Informational**: Suggestion based on best practices, not concrete evidence
+
 ## Output Format
 
 ```
 ## Review Summary
 
 ### Critical Issues (must fix)
-- [file:line] Description — Impact — Fix
+- [file:line] Description — Impact — Fix — Evidence: {confirmed|analysis|pattern|informational}
 
 ### Warnings (should fix)
-- [file:line] Description — Impact — Fix
+- [file:line] Description — Impact — Fix — Evidence: {confirmed|analysis|pattern|informational}
 
 ### Suggestions (nice to have)
-- [file:line] Description — Benefit
+- [file:line] Description — Benefit — Evidence: {confirmed|analysis|pattern|informational}
 
 ### Positive Notes
 - What was done well
+
+### Pattern Conformance
+- {PASS|FAIL}: {N deviations found}
+- [file:line] Deviation from {pattern section} — {description}
 
 ### Verdict: APPROVE / REQUEST CHANGES / NEEDS DISCUSSION
 ```

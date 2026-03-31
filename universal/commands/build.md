@@ -57,6 +57,27 @@ Walk up from the current directory to find a parent workspace:
 - If a workspace exists but `workspace-intel.md` doesn't, auto-generate it (see `/init` Phase 4b)
 - If standalone (no workspace), skip this — proceed with package intel only
 
+### 0.5. Vagueness Gate (auto — skip if anchored)
+
+Before planning, check if the request has concrete anchors. Scan `$ARGUMENTS` for ANY of:
+- File paths (e.g., `src/auth/middleware.ts`)
+- Function/class names in camelCase, PascalCase, or snake_case
+- Issue/PR numbers (e.g., `#42`, `issue 42`)
+- Error messages or stack traces
+- Numbered steps (e.g., `1. Add X 2. Test Y`)
+- Code blocks
+- Acceptance criteria or test specifications
+
+**If ANY anchor found**: Gate passes. Continue to Phase 1.
+
+**If NO anchors found AND prompt has 15 or fewer effective words**:
+- Print: "Your request needs more specificity before I can build effectively."
+- Show which anchor types would help (file paths, function names, acceptance criteria, etc.)
+- Redirect to `/deep-interview` (extremely vague — no code-related nouns) or `/consensus-planning` (moderately vague — has concept but no specifics)
+- User can bypass with `force:` prefix at the start of their request
+
+**If `$ARGUMENTS` starts with `force:`**: Strip the prefix and skip this gate entirely.
+
 ### 1. Explore Phase
 Launch parallel exploration agents (scope down based on cached intel):
 - **Agent 1 (Codebase Explorer)**: If cached intel exists, only explore areas directly related to the task that aren't covered in the intel. If no intel, do full exploration — find all relevant files, understand existing patterns, identify where changes need to go.
@@ -119,6 +140,21 @@ After approval, execute tasks using parallel agents AND external providers where
 - **CHECKPOINT after each task completes**: Update `.claude/scratch/task-state.md` — mark the task done, list files changed, move to next task
 - **Commit after each logical unit**: `git add [specific files]` + commit with descriptive message — persists work to git
 
+### 3.5. Deslop Pass (auto — skip for trivial changes)
+
+After implementation, before review, run a bounded cleanup pass on changed files:
+
+1. Get changed files: `git diff --name-only`
+2. If fewer than 30 lines changed total: skip this phase (trivial change)
+3. Run the `ai-slop-cleaner` skill scoped to ONLY the changed files:
+   - Dead code deletion (unused imports, unreachable branches)
+   - Duplicate removal (copy-paste from implementation)
+   - Naming cleanup (AI-generated generic names)
+4. Re-run build/test verification after cleanup
+5. Report: "Deslop: {N} cleanups applied to {M} files" or "Deslop: skipped (trivial change)"
+
+This phase is bounded — it ONLY touches files changed in this build, never expands scope.
+
 ### 4. Review Phase (auto-dispatch to best provider)
 After implementation, launch review agents in parallel:
 - **If Amp is installed**: Delegate primary code review to Amp (invoke: `echo "Review: $(git diff --staged)" | amp`)
@@ -128,6 +164,14 @@ After implementation, launch review agents in parallel:
   - If a deviation is accidental: fix to match existing patterns before proceeding
 - Code simplification pass (code-simplifier patterns) → Claude subagent
 - Use **superpowers verification** skill if available to produce evidence that the implementation meets acceptance criteria
+
+**Rebuttal round** (after review agents return):
+- Collect all Critical and High-severity findings from all review agents
+- For each Critical finding: generate the strongest counter-argument ("Why might this NOT be a problem?")
+- Finding survives only if the original evidence withstands the counter-argument
+- Report: "Rebuttal: {X}/{Y} critical findings survived challenge"
+- This reduces false positives and increases confidence in real issues
+
 - Fix any issues found before proceeding
 
 ### 5. Verify Phase

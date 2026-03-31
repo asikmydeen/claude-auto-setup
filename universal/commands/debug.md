@@ -58,6 +58,15 @@ cd ~/.claude/skills/sequential-thinking && bun scripts/think.ts --reset
 - **Extend** when the bug goes deeper than expected (`--needsMoreThoughts`)
 - Terminate only when root cause is confirmed with evidence — not speculation
 
+**Auto-escalation to trace skill** (after 2 failed hypotheses):
+If sequential-thinking produces 2 hypotheses that are disproven by evidence:
+1. Print: "Standard debugging failed after 2 hypotheses. Escalating to multi-hypothesis trace."
+2. Pass current investigation context (evidence gathered, hypotheses tried, what disproved them) to the `/trace` skill
+3. The trace skill takes over with: 3+ parallel hypotheses, 6-tier evidence ranking, rebuttal rounds, convergence detection
+4. Trace results feed back into Phase 3 (Fix) with a confirmed root cause
+
+This replaces spinning on more sequential hypotheses — the trace skill is designed for ambiguous bugs where standard approaches fail.
+
 Synthesize findings:
 - Root cause identification
 - Contributing factors
@@ -67,7 +76,10 @@ Synthesize findings:
 - Implement the fix with minimal changes
 - Use **superpowers TDD** skill if available: write a failing test that reproduces the bug first, then fix, then verify green. If unavailable, follow standard TDD approach.
 - Use **superpowers verification** if available to produce evidence the fix works
-- If stuck after 2+ attempts, activate **PUA persistence engine** (`/pua-en`) — escalate pressure level and leverage all available plugins
+**PUA escalation triggers** (formalized):
+- **2 failed fix attempts**: Invoke `/trace` skill if not already active — multi-hypothesis evidence-ranked debugging with 6-tier evidence hierarchy and rebuttal rounds
+- **3 failed fix attempts**: Mandatory 7-point checklist — read signals word by word, search the core problem, read 50 lines of context around failure, verify all assumptions with tools, try the opposite hypothesis, isolate/reproduce in minimal scope, switch tools/methods/angles entirely
+- **4 failed fix attempts**: Fundamentally different approach required — different tools, different abstraction level, different angle of attack. If still stuck after this, provide structured failure report: verified facts, eliminated possibilities, narrowed problem scope, recommended next directions for handoff
 - Run build + tests to verify
 
 ## Phase 4: Update Cached Intel
