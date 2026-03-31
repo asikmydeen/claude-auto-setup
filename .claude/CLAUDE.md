@@ -67,7 +67,7 @@ Orchestration MCP tools: `pipeline_*`, `checkpoint_*`, `queue_*`, `analytics_*`,
 
 Plugins: `serena`, `context7`, `code-review`, `security-guidance`, `claude-mem`, `ui-ux-pro-max`, `superpowers`
 
-Skills: `pua` (persistence engine), `pua-en` (enhanced PUA with full plugin integration), `sequential-thinking` (structured reasoning)
+Skills: `pua` (persistence engine), `pua-en` (enhanced PUA with full plugin integration), `sequential-thinking` (structured reasoning), `deep-interview` (Socratic requirements with ambiguity scoring), `ai-slop-cleaner` (regression-safe code cleanup), `consensus-planning` (Planner/Architect/Critic loop), `trace` (multi-hypothesis evidence-ranked debugging), `learner` (pattern extraction with quality gates)
 
 ## GSD 2 (Get Shit Done v2)
 Standalone coding agent with fresh-session-per-task architecture. Solves context rot at the engine level.

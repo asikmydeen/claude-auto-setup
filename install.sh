@@ -390,7 +390,46 @@ update_agents() {
         fi
         agents_updated=$((agents_updated + 1))
       done
+      # Clean up agents removed from source
+      for installed in "$HOME/.claude/agents"/*.md; do
+        [ -f "$installed" ] || continue
+        local iname
+        iname=$(basename "$installed")
+        if [ ! -f "$native_agents_src/$iname" ]; then
+          if $DRY_RUN; then
+            info "[DRY RUN] Would remove obsolete agent: $iname"
+          else
+            rm -f "$installed"
+            info "Removed obsolete agent: $iname"
+          fi
+        fi
+      done
       ok "Native agents: $agents_updated files synced"
+    fi
+
+    # Always update skills (these are ours, not user-modified)
+    local skills_src="$SCRIPT_DIR/universal/skills"
+    if [ -d "$skills_src" ]; then
+      mkdir -p "$HOME/.claude/skills"
+      local skills_updated=0
+      for skill_dir in "$skills_src"/*/; do
+        [ -d "$skill_dir" ] || continue
+        local skill_name
+        skill_name="$(basename "$skill_dir")"
+        mkdir -p "$HOME/.claude/skills/$skill_name"
+        for f in "$skill_dir"*.md "$skill_dir"scripts/*.ts; do
+          [ -f "$f" ] || continue
+          local rel_path="${f#$skill_dir}"
+          mkdir -p "$HOME/.claude/skills/$skill_name/$(dirname "$rel_path")"
+          if $DRY_RUN; then
+            info "[DRY RUN] Would update: skills/$skill_name/$rel_path"
+          else
+            cp "$f" "$HOME/.claude/skills/$skill_name/$rel_path"
+          fi
+        done
+        skills_updated=$((skills_updated + 1))
+      done
+      ok "Skills: $skills_updated installed"
     fi
 
     # Sync plugins (install any missing official + marketplace plugins)

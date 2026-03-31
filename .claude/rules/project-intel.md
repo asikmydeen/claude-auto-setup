@@ -233,7 +233,7 @@ Run tasks across multiple API accounts in isolated containers. N× throughput vi
 - **7** agent adapters + 9 native agents + 15 SDLC agents
 - **12** server route modules, **14** rule files + 10 language rules, **59** commands
 - **14** overseer modules, **9** fleet modules, **14** superpowers skills
-- **2** skills (pua, sequential-thinking), **3** container runtimes (Podman, Docker, Finch)
+- **7** skills (pua, sequential-thinking, deep-interview, ai-slop-cleaner, consensus-planning, trace, learner), **3** container runtimes (Podman, Docker, Finch)
 
 ### Runtimes on This Machine
 Podman 5.7.1 (preferred), Docker 5.7.1, Finch 1.15.1
