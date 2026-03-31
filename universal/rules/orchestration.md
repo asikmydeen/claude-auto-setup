@@ -264,7 +264,7 @@ After ANY code-changing task, update cached intel:
 ## Step 5: Error Recovery
 
 ### Build Failure
-1. Spawn `build-error-resolver` agent first
+1. Spawn `debugger` agent first (handles both runtime bugs and build errors via dual investigation protocol)
 2. If unresolved: read FULL error, check deps, check types, fix root cause
 3. After 2 same-error failures: step back — read surrounding code, check intel, use `context7`
 

@@ -55,7 +55,7 @@ When stuck, systematically check each available plugin:
 | **context7** | Library/SDK error | Fetch up-to-date docs — don't guess at APIs |
 | **serena** | Unfamiliar code path | Semantic navigation — find callers, references, types |
 | **sequential-thinking** | Multiple root cause candidates | Branch hypotheses, revise on disproof |
-| **build-error-resolver** | Build/compile failures | Spawn agent: categorizes and resolves systematically |
+| **debugger** | Build/compile failures | Spawn agent: dual protocol for runtime bugs + build errors |
 | **security-guidance** | Security-related failure | Check for OWASP patterns in the failing code |
 
 ## Anti-Rationalization

@@ -26,7 +26,7 @@
 - **Fleet** — Multi-account container orchestration (6 modes, warm pools, event-driven dispatch, task budgets)
 - **Language rules** — 10 language-specific rule sets, auto-detected per project
 - **Superpowers** — 14 composable skills plugin (TDD, debugging, brainstorming, etc.)
-- **Community plugins** — UI/UX Pro Max, /security-scan, /discover, build-error-resolver
+- **Community plugins** — UI/UX Pro Max, /security-scan, /discover
 
 ---
 
@@ -193,7 +193,7 @@ Run tasks across multiple API accounts in isolated containers. N× throughput vi
 - **UI/UX Pro Max** (`nextlevelbuilder/ui-ux-pro-max-skill`): Marketplace plugin — 161 industry rules, 67 UI styles. In `enabledPlugins`, adapter.sh, fleet containers. Referenced by `/build` (frontend tasks), `/review` (UI compliance), fleet superpowers (frontend detection), overseer (frontend-engineer role).
 - **Superpowers** (`obra/superpowers`): Official plugin — 14 composable skills (TDD, verification, debugging, brainstorming, code-review, worktrees). In `enabledPlugins`, adapter.sh, fleet containers (skills/ + plugins/ mounts). Referenced by `/build` (TDD, verification), `/review` (code-review, verification), `/debug` (systematic debugging, TDD), `/deep-research` (brainstorming, verification), `/pua-en` (all skills), fleet superpowers mode, overseer (role-specific plugin hints).
 - **Language Rules** (`affaan-m/everything-claude-code`): 10 lang rule sets in `universal/rules/lang/`. Staged to `~/.claude/lang-staging/` (not in rules/ — avoids 36KB auto-load). Project-scoped via `lib/lang-detect.sh`.
-- **Build-Error-Resolver** (`affaan-m/everything-claude-code`): `agents/claude-code/agents/build-error-resolver.md`. Categorizes dependency/type/import/config/bundler errors. Referenced in orchestration.md Step 7, `/pua-en`.
+- **Build-Error-Resolver** (merged into debugger agent): Build error categorization (dependency/type/import/config/bundler) now handled by debugger's dual investigation protocol.
 - **/security-scan** + **/discover** (`affaan-m/everything-claude-code` + `hesreallyhim/awesome-claude-code`): Security audit command + community tool catalog.
 - **Overseer Vault** (`kepano/kepano-obsidian`): `.overseer/` uses Obsidian-compatible layout (backward compatible).
 
