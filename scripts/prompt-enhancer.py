@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Prompt Enhancer Hook — context-aware prompt quality analysis.
+"""Subconscious — always-on session intelligence for Claude Code.
 
-Runs as a UserPromptSubmit hook. Reads conversation JSON from stdin,
-analyzes the latest user message WITH session context awareness.
+Runs as a UserPromptSubmit hook on EVERY user message. Two-tier output:
 
-KEY DESIGN PRINCIPLE: Vagueness is relative to available context.
-"Fix that" is vague at session start but perfectly clear mid-session
-after debugging a specific bug. The hook considers:
-- Conversation depth (how many messages deep are we?)
-- Git working state (are there recently modified files?)
-- Project intel (does project-intel.md exist?)
-- Implicit referents ("those files", "that bug", "the thing we discussed")
+TIER 1 (always, ~3 lines): Session state injection
+  - Git branch, modified files, checkpoint status, recent commits
+  - Gives Claude instant awareness of working state on every message
+  - Critical for compaction recovery (Claude loses context, subconscious restores it)
 
-Fast path: most prompts pass through with zero output (< 10ms).
-Mid-session prompts almost always pass through — enhancement is primarily
-for session-start prompts where there's no shared context yet.
+TIER 2 (conditional): Prompt enhancement
+  - Only fires when prompt is vague/emotional at session start
+  - Silent mid-session when conversation context exists
+  - Same logic as the original prompt-enhancer but layered on top of Tier 1
+
+Performance budget: < 100ms total (git commands are fast, no file reads).
 """
 import sys
 import json
@@ -22,7 +21,7 @@ import re
 import subprocess
 import os
 
-# --- Skip patterns (no enhancement needed) ---
+# --- Constants ---
 
 CONFIRMATIONS = {
     "yes", "no", "y", "n", "ok", "sure", "go ahead", "approved", "lgtm",
@@ -31,7 +30,6 @@ CONFIRMATIONS = {
     "correct", "right", "exactly", "b", "a", "1", "2", "3",
 }
 
-# Words that reference prior conversation context (not vague if mid-session)
 CONTEXT_REFERENTS = [
     "that", "those", "these", "the same", "like before", "as we discussed",
     "the ones we", "what we just", "the files", "those files", "that file",
@@ -40,8 +38,6 @@ CONTEXT_REFERENTS = [
     "the changes", "those changes", "that component", "the function",
     "that endpoint", "the page", "the test", "the issue",
 ]
-
-# --- Emotional / vague language patterns ---
 
 EMOTIONAL_PHRASES = [
     "make it work", "make it count", "make it perfect", "make it happen",
@@ -62,20 +58,18 @@ VAGUE_SCOPE = [
     "deep dive into everything",
 ]
 
-# --- Available capabilities for matching ---
-
 CAPABILITIES = {
     "build": {
         "triggers": ["build", "implement", "create", "add feature", "new feature"],
-        "desc": "/build — multi-agent implementation (vagueness gate, deslop, rebuttal rounds)",
+        "desc": "/build — multi-agent implementation (vagueness gate, deslop, rebuttal)",
     },
     "deep-interview": {
         "triggers": ["vague", "unclear", "not sure", "idea", "concept", "think about"],
-        "desc": "/deep-interview — Socratic Q&A with ambiguity scoring (USE FOR VAGUE REQUESTS)",
+        "desc": "/deep-interview — Socratic Q&A with ambiguity scoring",
     },
     "consensus-planning": {
         "triggers": ["plan", "architect", "design", "approach", "strategy"],
-        "desc": "/consensus-planning — Planner/Architect/Critic validation loop",
+        "desc": "/consensus-planning — Planner/Architect/Critic loop",
     },
     "deep-research": {
         "triggers": ["analyze", "research", "understand", "explore", "investigate codebase"],
@@ -87,7 +81,7 @@ CAPABILITIES = {
     },
     "debug": {
         "triggers": ["debug", "fix", "broken", "error", "failing", "crash", "bug"],
-        "desc": "/debug — debugging with trace escalation + formalized PUA",
+        "desc": "/debug — debugging with trace escalation + PUA",
     },
     "trace": {
         "triggers": ["complex bug", "intermittent", "race condition", "hard to reproduce"],
@@ -103,6 +97,17 @@ CAPABILITIES = {
     },
 }
 
+# Intent classification keywords
+INTENTS = {
+    "implementation": ["build", "implement", "create", "add", "write", "make", "develop"],
+    "debugging": ["fix", "debug", "broken", "error", "crash", "failing", "bug", "issue"],
+    "review": ["review", "check", "audit", "look at", "examine"],
+    "research": ["analyze", "research", "understand", "explore", "investigate", "how does"],
+    "cleanup": ["cleanup", "clean", "refactor", "simplify", "deslop", "tidy"],
+    "testing": ["test", "coverage", "spec", "assert"],
+    "continuation": [],  # Detected by checkpoint, not keywords
+}
+
 
 def main():
     try:
@@ -114,32 +119,39 @@ def main():
     if not prompt:
         return
 
-    # Gather session context
+    # Ultra-fast skip for tiny confirmations
+    stripped = prompt.strip().lower()
+    if len(stripped) < 5 or stripped in CONFIRMATIONS:
+        return
+
+    # Gather session context (Tier 1 — always needed)
     ctx = get_session_context(data)
 
-    # Fast-path skip
-    if should_skip(prompt, ctx):
-        return
+    output_parts = []
 
-    # Analyze with context awareness
-    analysis = analyze(prompt, ctx)
+    # === TIER 1: Session State (always, unless trivial confirmation) ===
+    state_line = format_session_state(ctx, prompt)
+    if state_line:
+        output_parts.append(state_line)
 
-    # Threshold depends on session depth
-    threshold = get_threshold(ctx)
-    if analysis["score"] < threshold:
-        return
+    # === TIER 2: Prompt Enhancement (conditional) ===
+    enhancement = get_enhancement(prompt, ctx)
+    if enhancement:
+        output_parts.append(enhancement)
 
-    guidance = format_guidance(prompt, analysis, ctx)
-    if guidance:
-        print(guidance)
+    if output_parts:
+        print("\n".join(output_parts))
 
+
+# ============================================================
+# Prompt extraction
+# ============================================================
 
 def extract_prompt(data):
     """Extract the user's latest message from hook input."""
     messages = data.get("messages", [])
     if not messages:
         return data.get("prompt", "")
-
     for msg in reversed(messages):
         if msg.get("role") == "user":
             content = msg.get("content", "")
@@ -155,196 +167,244 @@ def extract_prompt(data):
     return ""
 
 
-def get_session_context(data):
-    """Gather context about the current session state."""
-    messages = data.get("messages", [])
+# ============================================================
+# Session context gathering
+# ============================================================
 
-    # Count conversation depth (user messages only)
+def _run_git(args, timeout=2):
+    """Run a git command, return stdout or empty string."""
+    try:
+        r = subprocess.run(
+            ["git"] + args, capture_output=True, text=True, timeout=timeout
+        )
+        return r.stdout.strip() if r.returncode == 0 else ""
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return ""
+
+
+def get_session_context(data):
+    """Gather full session context — git state, checkpoints, intel."""
+    messages = data.get("messages", [])
     user_msg_count = sum(1 for m in messages if m.get("role") == "user")
 
-    # Check git working state (recently modified files)
-    modified_files = []
-    try:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "HEAD"],
-            capture_output=True, text=True, timeout=2
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            modified_files = result.stdout.strip().split("\n")
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+    # Git state (parallel-safe, fast)
+    branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"]) or "unknown"
 
-    # Also check staged files
-    try:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "--staged"],
-            capture_output=True, text=True, timeout=2
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            modified_files.extend(result.stdout.strip().split("\n"))
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+    # Modified files (unstaged + staged + untracked)
+    modified = set()
+    for diff_out in [
+        _run_git(["diff", "--name-only"]),
+        _run_git(["diff", "--name-only", "--staged"]),
+    ]:
+        if diff_out:
+            modified.update(diff_out.split("\n"))
 
-    # Check for untracked files too
-    try:
-        result = subprocess.run(
-            ["git", "status", "--short"],
-            capture_output=True, text=True, timeout=2
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            for line in result.stdout.strip().split("\n"):
-                if line.startswith("??"):
-                    modified_files.append(line[3:].strip())
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+    status_out = _run_git(["status", "--short"])
+    if status_out:
+        for line in status_out.split("\n"):
+            if line.startswith("??"):
+                modified.add(line[3:].strip())
 
-    modified_files = list(set(modified_files))
+    modified_files = sorted(modified)
 
-    # Check project intel existence
+    # Recent commits (last 3, one-line)
+    recent_commits = []
+    log_out = _run_git(["log", "--oneline", "-3"])
+    if log_out:
+        recent_commits = log_out.split("\n")
+
+    # Checkpoint
+    checkpoint_phase = None
+    checkpoint_path = ".claude/scratch/task-state.md"
+    if os.path.exists(checkpoint_path):
+        try:
+            with open(checkpoint_path, "r") as f:
+                for line in f:
+                    if line.startswith("## Phase") or line.startswith("## Current"):
+                        checkpoint_phase = line.strip().lstrip("#").strip()
+                        break
+                    if "Phase" in line and any(
+                        p in line.lower()
+                        for p in ["explore", "plan", "implement", "review", "verify"]
+                    ):
+                        checkpoint_phase = line.strip().lstrip("#- ").strip()
+                        break
+        except OSError:
+            pass
+
+    # Project intel/patterns existence
     has_intel = os.path.exists(".claude/rules/project-intel.md")
     has_patterns = os.path.exists(".claude/rules/codebase-patterns.md")
 
-    # Check for task checkpoint (mid-task)
-    has_checkpoint = os.path.exists(".claude/scratch/task-state.md")
-
     return {
         "user_msg_count": user_msg_count,
+        "branch": branch,
         "modified_files": modified_files,
         "modified_file_count": len(modified_files),
+        "recent_commits": recent_commits,
+        "checkpoint_phase": checkpoint_phase,
+        "has_checkpoint": checkpoint_phase is not None,
         "has_intel": has_intel,
         "has_patterns": has_patterns,
-        "has_checkpoint": has_checkpoint,
         "is_mid_session": user_msg_count > 2,
         "is_deep_session": user_msg_count > 8,
         "has_working_changes": len(modified_files) > 0,
     }
 
 
-def get_threshold(ctx):
-    """Dynamic threshold based on session context.
+# ============================================================
+# TIER 1: Session State (always output)
+# ============================================================
 
-    Session start (no context): threshold=3 (sensitive — catch vague prompts)
-    Mid-session (some context): threshold=4 (lenient — trust implicit context)
-    Deep session (lots of context): threshold=5 (very lenient — almost never trigger)
+def classify_intent(prompt):
+    """Classify the user's intent from keywords."""
+    lower = prompt.lower()
+    scores = {}
+    for intent, keywords in INTENTS.items():
+        scores[intent] = sum(1 for k in keywords if k in lower)
+    best = max(scores, key=lambda k: scores[k])
+    return best if scores[best] > 0 else "general"
 
-    Note: heavy emotional prompts (3+ phrases) bypass the deep-session skip
-    in should_skip(), so they still get analyzed. The threshold here just needs
-    to be reachable for genuinely bad prompts (emotional=2 + vague=1 + no-anchors=1 = 4).
-    """
-    threshold = 3  # Default: session start
 
-    if ctx["is_deep_session"]:
-        threshold = 4  # Deep session — trust context, but emotional rants (score 4+) still trigger
-    elif ctx["is_mid_session"]:
-        threshold = 4  # Mid session — mostly trust
+def format_session_state(ctx, prompt):
+    """Format lean session state block (~3-5 lines)."""
+    lines = []
 
+    # Line 1: Branch + modified files + checkpoint
+    parts = [f"Branch: {ctx['branch']}"]
+    if ctx["modified_file_count"] > 0:
+        parts.append(f"Modified: {ctx['modified_file_count']} files")
+    else:
+        parts.append("Modified: none")
     if ctx["has_checkpoint"]:
-        threshold += 1  # Active task = clear context exists
+        parts.append(f"Checkpoint: {ctx['checkpoint_phase']}")
+    lines.append("## Session State")
+    lines.append(" | ".join(parts))
 
-    return threshold
+    # Line 2: Recently modified files (if any, max 5)
+    if ctx["modified_files"]:
+        preview = ", ".join(ctx["modified_files"][:5])
+        if ctx["modified_file_count"] > 5:
+            preview += f" (+{ctx['modified_file_count'] - 5} more)"
+        lines.append(f"Files: {preview}")
+
+    # Line 3: Recent commits (if session start — helps after compaction)
+    if not ctx["is_mid_session"] and ctx["recent_commits"]:
+        lines.append(f"Recent: {ctx['recent_commits'][0]}")
+
+    # Line 4: Intent classification
+    intent = classify_intent(prompt)
+    if intent != "general":
+        lines.append(f"Intent: {intent}")
+
+    # Line 5: Checkpoint recovery hint (critical after compaction)
+    if ctx["has_checkpoint"] and not ctx["is_mid_session"]:
+        lines.append(
+            "**Checkpoint detected** — you may be resuming after compaction. "
+            "Read `.claude/scratch/task-state.md` to recover full task state."
+        )
+
+    # Line 6: Project context indicators
+    ctx_flags = []
+    if ctx["has_intel"]:
+        ctx_flags.append("intel")
+    if ctx["has_patterns"]:
+        ctx_flags.append("patterns")
+    if ctx_flags:
+        lines.append(f"Project: {', '.join(ctx_flags)} available")
+
+    return "\n".join(lines)
 
 
-def should_skip(prompt, ctx):
-    """Fast check — skip prompts that don't need enhancement."""
+# ============================================================
+# TIER 2: Prompt Enhancement (conditional)
+# ============================================================
+
+def get_enhancement(prompt, ctx):
+    """Return enhancement guidance if needed, or None."""
     stripped = prompt.strip().lower()
 
-    # Too short (follow-up or confirmation)
-    if len(stripped) < 15:
-        return True
-
-    # Exact confirmations
-    if stripped in CONFIRMATIONS:
-        return True
-
-    # Already a slash command
+    # Skip conditions (no enhancement)
     if stripped.startswith("/"):
-        return True
-
-    # Explicit bypass with force: prefix
+        return None
     if stripped.startswith("force:") or stripped.startswith("force :"):
-        return True
+        return None
 
-    # Already has concrete anchors (file paths + specific identifiers)
+    # Well-anchored prompts don't need enhancement
     has_file = bool(re.search(r"[\w./]+\.\w{1,5}", prompt))
     has_func = bool(re.search(r"[a-z][a-zA-Z]{2,}\(|[a-z_]{3,}\(", prompt))
     has_issue = bool(re.search(r"#\d+|CR-\d+|issue\s+\d+", prompt, re.I))
     has_code = "```" in prompt
-    anchor_count = sum([has_file, has_func, has_issue, has_code])
-    if anchor_count >= 2:
-        return True
+    if sum([has_file, has_func, has_issue, has_code]) >= 2:
+        return None
 
-    # Pure question (starts with question word)
+    # Questions don't need enhancement
     if re.match(
         r"^(what|how|why|where|when|which|can|could|should|is|are|do|does|did)\b",
         stripped,
     ):
-        return True
+        return None
 
-    # Mid-session with context referents ("fix that", "clean up those files")
-    # These are NOT vague — they reference prior conversation context
+    # Mid-session with referents — trust context
     if ctx["is_mid_session"]:
-        has_referent = any(ref in stripped for ref in CONTEXT_REFERENTS)
-        if has_referent:
-            return True
+        if any(ref in stripped for ref in CONTEXT_REFERENTS):
+            return None
 
-    # Deep session — almost everything has implicit context, skip unless
-    # it's heavily emotional (3+ emotional phrases = session-start-style rant)
+    # Deep session — only trigger on heavy emotional rants (3+)
     if ctx["is_deep_session"]:
         emotional_count = sum(1 for e in EMOTIONAL_PHRASES if e in stripped)
         if emotional_count < 3:
-            return True  # Normal mid-session prompt, trust context
+            return None
 
-    return False
+    # Score the prompt
+    analysis = _analyze(prompt, ctx)
+    threshold = _get_threshold(ctx)
+    if analysis["score"] < threshold:
+        return None
+
+    return _format_enhancement(analysis, ctx)
 
 
-def analyze(prompt, ctx):
-    """Score the prompt for vagueness/emotion, adjusted for session context."""
+def _analyze(prompt, ctx):
+    """Score prompt for vagueness/emotion."""
     score = 0
     issues = []
     lower = prompt.lower()
 
-    # Check for anchors
     has_file = bool(re.search(r"[\w./]+\.\w{1,5}", prompt))
     has_func = bool(re.search(r"[a-z][a-zA-Z]{2,}\(|[a-z_]{3,}\(", prompt))
     has_issue = bool(re.search(r"#\d+|CR-\d+|issue\s+\d+", prompt, re.I))
     has_code = "```" in prompt
 
     if not any([has_file, has_func, has_issue, has_code]):
-        # Mid-session: modified files ARE implicit anchors
         if ctx["has_working_changes"]:
-            score += 1  # Minor concern, not major
+            score += 1
             issues.append("implicit-anchors-only")
         else:
             score += 2
             issues.append("no-anchors")
 
-    # Emotional language
     found_emotional = [e for e in EMOTIONAL_PHRASES if e in lower]
     if found_emotional:
         score += 2
         issues.append("emotional")
 
-    # Vague scope
     found_vague = [v for v in VAGUE_SCOPE if v in lower]
     if found_vague:
         score += 1
         issues.append("vague-scope")
 
-    # No acceptance criteria (less important mid-session)
-    has_criteria = bool(
-        re.search(
-            r"criteria|accept|verify|test|check that|confirm|should\s+\w+|must\s+\w+|expect",
-            lower,
+    if not ctx["is_mid_session"]:
+        has_criteria = bool(
+            re.search(
+                r"criteria|accept|verify|test|check that|confirm|should\s+\w+|must\s+\w+|expect",
+                lower,
+            )
         )
-    )
-    if not has_criteria:
-        if ctx["is_mid_session"]:
-            score += 0  # Criteria less important mid-session
-        else:
+        if not has_criteria:
             score += 1
             issues.append("no-criteria")
 
-    # Match capabilities
     matched = []
     for _name, cap in CAPABILITIES.items():
         if any(t in lower for t in cap["triggers"]):
@@ -353,127 +413,70 @@ def analyze(prompt, ctx):
     return {
         "score": score,
         "issues": issues,
-        "has_anchors": any([has_file, has_func, has_issue, has_code]),
         "emotional": found_emotional,
         "vague": found_vague,
         "matched_capabilities": matched,
     }
 
 
-def format_guidance(prompt, analysis, ctx):
-    """Format enhancement guidance as a system reminder."""
-    lines = []
-    lines.append("## Prompt Enhancement (auto-detected)")
-    lines.append("")
-
-    # Show context awareness
-    ctx_desc = []
-    if ctx["is_deep_session"]:
-        ctx_desc.append(f"deep session ({ctx['user_msg_count']} messages)")
-    elif ctx["is_mid_session"]:
-        ctx_desc.append(f"mid-session ({ctx['user_msg_count']} messages)")
-    else:
-        ctx_desc.append("session start")
-    if ctx["has_working_changes"]:
-        ctx_desc.append(f"{ctx['modified_file_count']} modified files")
+def _get_threshold(ctx):
+    """Dynamic threshold: session start=3, mid=4, deep=4, checkpoint=+1."""
+    threshold = 3
+    if ctx["is_deep_session"] or ctx["is_mid_session"]:
+        threshold = 4
     if ctx["has_checkpoint"]:
-        ctx_desc.append("active task checkpoint")
+        threshold += 1
+    return threshold
 
-    lines.append(
-        f"**Context**: {', '.join(ctx_desc)} | "
-        f"Issues: **{', '.join(analysis['issues'])}**"
-    )
+
+def _format_enhancement(analysis, ctx):
+    """Format Tier 2 enhancement guidance."""
+    lines = []
+    lines.append("")
+    lines.append("## Prompt Enhancement")
+    lines.append(f"Issues: **{', '.join(analysis['issues'])}**")
     lines.append("")
 
-    # If mid-session, softer guidance — don't demand rewrites
     if ctx["is_mid_session"]:
         lines.append(
-            "The user's prompt could benefit from more specificity. "
-            "Since this is mid-session, you likely have context from the conversation. "
-            "Use that context to fill gaps — only ask the user to clarify if you "
-            "genuinely don't know what they're referring to."
+            "Prompt could be more specific. You have conversation context — "
+            "use it to fill gaps. Only ask for clarification if genuinely unclear."
         )
-        lines.append("")
-        if ctx["has_working_changes"]:
-            files_preview = ", ".join(ctx["modified_files"][:5])
-            if len(ctx["modified_files"]) > 5:
-                files_preview += f" (+{len(ctx['modified_files'])-5} more)"
-            lines.append(
-                f"> **Recently modified files** (likely targets): {files_preview}"
-            )
-            lines.append("")
         if analysis["matched_capabilities"]:
-            lines.append("**Suggested capabilities:**")
-            for cap in analysis["matched_capabilities"]:
-                lines.append(f"   - {cap}")
-            lines.append("")
+            lines.append("Suggested: " + ", ".join(
+                c.split(" — ")[0] for c in analysis["matched_capabilities"]
+            ))
     else:
-        # Session start — full rewrite guidance
-        lines.append("**REQUIRED — before executing the user's request:**")
-        lines.append("")
-        lines.append(
-            "1. **Extract concrete intent** from the emotional/vague language"
-        )
-        lines.append("2. **Map to available capabilities:**")
-
+        lines.append("Before executing:")
+        lines.append("1. Extract concrete intent from emotional language")
+        lines.append("2. Map to capabilities:")
         if analysis["matched_capabilities"]:
             for cap in analysis["matched_capabilities"]:
                 lines.append(f"   - {cap}")
         else:
-            lines.append("   - `/build` — multi-agent implementation")
-            lines.append(
-                "   - `/deep-interview` — Socratic requirements (BEST FOR VAGUE)"
-            )
-            lines.append(
-                "   - `/consensus-planning` — Planner/Architect/Critic loop"
-            )
-            lines.append(
-                "   - `/deep-research` — codebase analysis (7 parallel agents)"
-            )
-            lines.append("   - `/review` — multi-agent code review")
-            lines.append("   - `/debug` — debugging with trace escalation")
-            lines.append("   - `/deslop` — regression-safe code cleanup")
+            lines.append("   - /build, /deep-interview, /consensus-planning, /review, /debug, /deslop")
+        lines.append("3. Add anchors (file paths, function names, table names)")
+        lines.append("4. Add acceptance criteria")
+        lines.append("5. Present enhanced prompt to user for approval")
 
-        lines.append(
-            "3. **Add concrete anchors**: file paths, function names, table names"
-        )
-        lines.append("4. **Add acceptance criteria**: how do we know it's done?")
-        lines.append(
-            "5. **Present the enhanced prompt** to the user for approval "
-            "before executing"
-        )
-        lines.append("")
-
-    if "no-anchors" in analysis["issues"]:
-        lines.append(
-            "> **Missing anchors**: No file paths, function names, or issue "
-            "numbers detected. Ask the user to specify targets, or explore "
-            "to find them."
-        )
-        lines.append("")
+    lines.append("")
 
     if "emotional" in analysis["issues"]:
         lines.append(
-            "> **Emotional language**: "
+            "> Emotional: "
             + ", ".join(f'"{e}"' for e in analysis["emotional"][:3])
-            + ". Strip and replace with concrete requirements."
+            + " — replace with concrete requirements"
         )
-        lines.append("")
-
     if "vague-scope" in analysis["issues"]:
         lines.append(
-            "> **Vague scope**: "
+            "> Vague: "
             + ", ".join(f'"{v}"' for v in analysis["vague"][:3])
-            + ". Define explicit IN/OUT scope boundaries."
+            + " — define IN/OUT scope"
         )
-        lines.append("")
-
+    if "no-anchors" in analysis["issues"]:
+        lines.append("> No anchors — ask for file paths/function names or explore to find them")
     if "no-criteria" in analysis["issues"]:
-        lines.append(
-            "> **No acceptance criteria**: Add verifiable done conditions "
-            "(tests pass, build succeeds, specific output format)."
-        )
-        lines.append("")
+        lines.append("> No acceptance criteria — add verifiable done conditions")
 
     return "\n".join(lines)
 
