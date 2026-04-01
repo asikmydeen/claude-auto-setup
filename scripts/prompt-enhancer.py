@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
-"""Prompt Enhancer Hook — detects vague/emotional prompts and injects rewrite guidance.
+"""Prompt Enhancer Hook — context-aware prompt quality analysis.
 
 Runs as a UserPromptSubmit hook. Reads conversation JSON from stdin,
-analyzes the latest user message, outputs enhancement guidance to stdout.
-Output becomes a <user-prompt-submit-hook> system reminder that Claude sees
-before processing the prompt.
+analyzes the latest user message WITH session context awareness.
 
-Fast path: most prompts pass through with zero output (< 5ms).
+KEY DESIGN PRINCIPLE: Vagueness is relative to available context.
+"Fix that" is vague at session start but perfectly clear mid-session
+after debugging a specific bug. The hook considers:
+- Conversation depth (how many messages deep are we?)
+- Git working state (are there recently modified files?)
+- Project intel (does project-intel.md exist?)
+- Implicit referents ("those files", "that bug", "the thing we discussed")
+
+Fast path: most prompts pass through with zero output (< 10ms).
+Mid-session prompts almost always pass through — enhancement is primarily
+for session-start prompts where there's no shared context yet.
 """
 import sys
 import json
 import re
+import subprocess
+import os
 
 # --- Skip patterns (no enhancement needed) ---
 
@@ -20,6 +30,16 @@ CONFIRMATIONS = {
     "sounds good", "perfect", "great", "fine", "yep", "nope", "yeah",
     "correct", "right", "exactly", "b", "a", "1", "2", "3",
 }
+
+# Words that reference prior conversation context (not vague if mid-session)
+CONTEXT_REFERENTS = [
+    "that", "those", "these", "the same", "like before", "as we discussed",
+    "the ones we", "what we just", "the files", "those files", "that file",
+    "that bug", "that error", "the fix", "that feature", "this module",
+    "same thing", "like earlier", "what i said", "we were working on",
+    "the changes", "those changes", "that component", "the function",
+    "that endpoint", "the page", "the test", "the issue",
+]
 
 # --- Emotional / vague language patterns ---
 
@@ -51,7 +71,7 @@ CAPABILITIES = {
     },
     "deep-interview": {
         "triggers": ["vague", "unclear", "not sure", "idea", "concept", "think about"],
-        "desc": "/deep-interview — Socratic Q&A with ambiguity scoring (USE THIS FOR VAGUE REQUESTS)",
+        "desc": "/deep-interview — Socratic Q&A with ambiguity scoring (USE FOR VAGUE REQUESTS)",
     },
     "consensus-planning": {
         "triggers": ["plan", "architect", "design", "approach", "strategy"],
@@ -88,39 +108,38 @@ def main():
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
-        return  # Silent exit — no valid input
+        return
 
-    # Extract the latest user message
     prompt = extract_prompt(data)
     if not prompt:
         return
 
-    # Fast-path: skip if no enhancement needed
-    if should_skip(prompt):
+    # Gather session context
+    ctx = get_session_context(data)
+
+    # Fast-path skip
+    if should_skip(prompt, ctx):
         return
 
-    # Analyze
-    analysis = analyze(prompt)
+    # Analyze with context awareness
+    analysis = analyze(prompt, ctx)
 
-    # Only enhance if score is high enough (3+ issues detected)
-    if analysis["score"] < 3:
+    # Threshold depends on session depth
+    threshold = get_threshold(ctx)
+    if analysis["score"] < threshold:
         return
 
-    # Output guidance
-    guidance = format_guidance(prompt, analysis)
+    guidance = format_guidance(prompt, analysis, ctx)
     if guidance:
         print(guidance)
 
 
 def extract_prompt(data):
     """Extract the user's latest message from hook input."""
-    # Claude Code sends conversation as messages array
     messages = data.get("messages", [])
     if not messages:
-        # Try direct prompt field
         return data.get("prompt", "")
 
-    # Find last user message
     for msg in reversed(messages):
         if msg.get("role") == "user":
             content = msg.get("content", "")
@@ -136,7 +155,96 @@ def extract_prompt(data):
     return ""
 
 
-def should_skip(prompt):
+def get_session_context(data):
+    """Gather context about the current session state."""
+    messages = data.get("messages", [])
+
+    # Count conversation depth (user messages only)
+    user_msg_count = sum(1 for m in messages if m.get("role") == "user")
+
+    # Check git working state (recently modified files)
+    modified_files = []
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"],
+            capture_output=True, text=True, timeout=2
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            modified_files = result.stdout.strip().split("\n")
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+
+    # Also check staged files
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "--staged"],
+            capture_output=True, text=True, timeout=2
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            modified_files.extend(result.stdout.strip().split("\n"))
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+
+    # Check for untracked files too
+    try:
+        result = subprocess.run(
+            ["git", "status", "--short"],
+            capture_output=True, text=True, timeout=2
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            for line in result.stdout.strip().split("\n"):
+                if line.startswith("??"):
+                    modified_files.append(line[3:].strip())
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+
+    modified_files = list(set(modified_files))
+
+    # Check project intel existence
+    has_intel = os.path.exists(".claude/rules/project-intel.md")
+    has_patterns = os.path.exists(".claude/rules/codebase-patterns.md")
+
+    # Check for task checkpoint (mid-task)
+    has_checkpoint = os.path.exists(".claude/scratch/task-state.md")
+
+    return {
+        "user_msg_count": user_msg_count,
+        "modified_files": modified_files,
+        "modified_file_count": len(modified_files),
+        "has_intel": has_intel,
+        "has_patterns": has_patterns,
+        "has_checkpoint": has_checkpoint,
+        "is_mid_session": user_msg_count > 2,
+        "is_deep_session": user_msg_count > 8,
+        "has_working_changes": len(modified_files) > 0,
+    }
+
+
+def get_threshold(ctx):
+    """Dynamic threshold based on session context.
+
+    Session start (no context): threshold=3 (sensitive — catch vague prompts)
+    Mid-session (some context): threshold=4 (lenient — trust implicit context)
+    Deep session (lots of context): threshold=5 (very lenient — almost never trigger)
+
+    Note: heavy emotional prompts (3+ phrases) bypass the deep-session skip
+    in should_skip(), so they still get analyzed. The threshold here just needs
+    to be reachable for genuinely bad prompts (emotional=2 + vague=1 + no-anchors=1 = 4).
+    """
+    threshold = 3  # Default: session start
+
+    if ctx["is_deep_session"]:
+        threshold = 4  # Deep session — trust context, but emotional rants (score 4+) still trigger
+    elif ctx["is_mid_session"]:
+        threshold = 4  # Mid session — mostly trust
+
+    if ctx["has_checkpoint"]:
+        threshold += 1  # Active task = clear context exists
+
+    return threshold
+
+
+def should_skip(prompt, ctx):
     """Fast check — skip prompts that don't need enhancement."""
     stripped = prompt.strip().lower()
 
@@ -159,17 +267,34 @@ def should_skip(prompt):
     has_code = "```" in prompt
     anchor_count = sum([has_file, has_func, has_issue, has_code])
     if anchor_count >= 2:
-        return True  # Well-anchored prompt
+        return True
 
     # Pure question (starts with question word)
-    if re.match(r"^(what|how|why|where|when|which|can|could|should|is|are|do|does|did)\b", stripped):
+    if re.match(
+        r"^(what|how|why|where|when|which|can|could|should|is|are|do|does|did)\b",
+        stripped,
+    ):
         return True
+
+    # Mid-session with context referents ("fix that", "clean up those files")
+    # These are NOT vague — they reference prior conversation context
+    if ctx["is_mid_session"]:
+        has_referent = any(ref in stripped for ref in CONTEXT_REFERENTS)
+        if has_referent:
+            return True
+
+    # Deep session — almost everything has implicit context, skip unless
+    # it's heavily emotional (3+ emotional phrases = session-start-style rant)
+    if ctx["is_deep_session"]:
+        emotional_count = sum(1 for e in EMOTIONAL_PHRASES if e in stripped)
+        if emotional_count < 3:
+            return True  # Normal mid-session prompt, trust context
 
     return False
 
 
-def analyze(prompt):
-    """Score the prompt for vagueness/emotion. Higher = needs more enhancement."""
+def analyze(prompt, ctx):
+    """Score the prompt for vagueness/emotion, adjusted for session context."""
     score = 0
     issues = []
     lower = prompt.lower()
@@ -181,8 +306,13 @@ def analyze(prompt):
     has_code = "```" in prompt
 
     if not any([has_file, has_func, has_issue, has_code]):
-        score += 2
-        issues.append("no-anchors")
+        # Mid-session: modified files ARE implicit anchors
+        if ctx["has_working_changes"]:
+            score += 1  # Minor concern, not major
+            issues.append("implicit-anchors-only")
+        else:
+            score += 2
+            issues.append("no-anchors")
 
     # Emotional language
     found_emotional = [e for e in EMOTIONAL_PHRASES if e in lower]
@@ -196,7 +326,7 @@ def analyze(prompt):
         score += 1
         issues.append("vague-scope")
 
-    # No acceptance criteria
+    # No acceptance criteria (less important mid-session)
     has_criteria = bool(
         re.search(
             r"criteria|accept|verify|test|check that|confirm|should\s+\w+|must\s+\w+|expect",
@@ -204,12 +334,15 @@ def analyze(prompt):
         )
     )
     if not has_criteria:
-        score += 1
-        issues.append("no-criteria")
+        if ctx["is_mid_session"]:
+            score += 0  # Criteria less important mid-session
+        else:
+            score += 1
+            issues.append("no-criteria")
 
     # Match capabilities
     matched = []
-    for name, cap in CAPABILITIES.items():
+    for _name, cap in CAPABILITIES.items():
         if any(t in lower for t in cap["triggers"]):
             matched.append(cap["desc"])
 
@@ -223,46 +356,95 @@ def analyze(prompt):
     }
 
 
-def format_guidance(prompt, analysis):
+def format_guidance(prompt, analysis, ctx):
     """Format enhancement guidance as a system reminder."""
     lines = []
     lines.append("## Prompt Enhancement (auto-detected)")
     lines.append("")
-    lines.append(
-        "The user's prompt has been flagged for enhancement. "
-        "Issues: **" + ", ".join(analysis["issues"]) + "**"
-    )
-    lines.append("")
-    lines.append("**REQUIRED — before executing the user's request:**")
-    lines.append("")
-    lines.append("1. **Extract concrete intent** from the emotional/vague language")
-    lines.append("2. **Map to available capabilities:**")
 
-    if analysis["matched_capabilities"]:
-        for cap in analysis["matched_capabilities"]:
-            lines.append(f"   - {cap}")
+    # Show context awareness
+    ctx_desc = []
+    if ctx["is_deep_session"]:
+        ctx_desc.append(f"deep session ({ctx['user_msg_count']} messages)")
+    elif ctx["is_mid_session"]:
+        ctx_desc.append(f"mid-session ({ctx['user_msg_count']} messages)")
     else:
-        lines.append("   - `/build` — multi-agent implementation")
-        lines.append(
-            "   - `/deep-interview` — Socratic requirements gathering (BEST FOR VAGUE REQUESTS)"
-        )
-        lines.append("   - `/consensus-planning` — Planner/Architect/Critic loop")
-        lines.append("   - `/deep-research` — codebase analysis (7 parallel agents)")
-        lines.append("   - `/review` — multi-agent code review")
-        lines.append("   - `/debug` — debugging with trace escalation")
-        lines.append("   - `/deslop` — regression-safe code cleanup")
+        ctx_desc.append("session start")
+    if ctx["has_working_changes"]:
+        ctx_desc.append(f"{ctx['modified_file_count']} modified files")
+    if ctx["has_checkpoint"]:
+        ctx_desc.append("active task checkpoint")
 
-    lines.append("3. **Add concrete anchors**: file paths, function names, table names")
-    lines.append("4. **Add acceptance criteria**: how do we know it's done?")
     lines.append(
-        "5. **Present the enhanced prompt** to the user for approval before executing"
+        f"**Context**: {', '.join(ctx_desc)} | "
+        f"Issues: **{', '.join(analysis['issues'])}**"
     )
     lines.append("")
+
+    # If mid-session, softer guidance — don't demand rewrites
+    if ctx["is_mid_session"]:
+        lines.append(
+            "The user's prompt could benefit from more specificity. "
+            "Since this is mid-session, you likely have context from the conversation. "
+            "Use that context to fill gaps — only ask the user to clarify if you "
+            "genuinely don't know what they're referring to."
+        )
+        lines.append("")
+        if ctx["has_working_changes"]:
+            files_preview = ", ".join(ctx["modified_files"][:5])
+            if len(ctx["modified_files"]) > 5:
+                files_preview += f" (+{len(ctx['modified_files'])-5} more)"
+            lines.append(
+                f"> **Recently modified files** (likely targets): {files_preview}"
+            )
+            lines.append("")
+        if analysis["matched_capabilities"]:
+            lines.append("**Suggested capabilities:**")
+            for cap in analysis["matched_capabilities"]:
+                lines.append(f"   - {cap}")
+            lines.append("")
+    else:
+        # Session start — full rewrite guidance
+        lines.append("**REQUIRED — before executing the user's request:**")
+        lines.append("")
+        lines.append(
+            "1. **Extract concrete intent** from the emotional/vague language"
+        )
+        lines.append("2. **Map to available capabilities:**")
+
+        if analysis["matched_capabilities"]:
+            for cap in analysis["matched_capabilities"]:
+                lines.append(f"   - {cap}")
+        else:
+            lines.append("   - `/build` — multi-agent implementation")
+            lines.append(
+                "   - `/deep-interview` — Socratic requirements (BEST FOR VAGUE)"
+            )
+            lines.append(
+                "   - `/consensus-planning` — Planner/Architect/Critic loop"
+            )
+            lines.append(
+                "   - `/deep-research` — codebase analysis (7 parallel agents)"
+            )
+            lines.append("   - `/review` — multi-agent code review")
+            lines.append("   - `/debug` — debugging with trace escalation")
+            lines.append("   - `/deslop` — regression-safe code cleanup")
+
+        lines.append(
+            "3. **Add concrete anchors**: file paths, function names, table names"
+        )
+        lines.append("4. **Add acceptance criteria**: how do we know it's done?")
+        lines.append(
+            "5. **Present the enhanced prompt** to the user for approval "
+            "before executing"
+        )
+        lines.append("")
 
     if "no-anchors" in analysis["issues"]:
         lines.append(
-            "> **Missing anchors**: No file paths, function names, or issue numbers detected. "
-            "Ask the user to specify targets, or explore to find them."
+            "> **Missing anchors**: No file paths, function names, or issue "
+            "numbers detected. Ask the user to specify targets, or explore "
+            "to find them."
         )
         lines.append("")
 
