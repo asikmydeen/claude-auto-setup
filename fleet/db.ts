@@ -1,11 +1,11 @@
 // Fleet — SQLite Database
-// Tracks runs, tasks, and container history.
+// Tracks runs, tasks, and worker history (containerless).
 // Separate from overseer.db and sidekick.db.
 
 import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
-import type { FleetRunRecord, FleetTaskRecord, FleetContainerRecord, FleetIntelRecord } from "./types";
+import type { FleetRunRecord, FleetTaskRecord, FleetWorkerRecord, FleetIntelRecord } from "./types";
 
 const DB_DIR = join(process.env.HOME || "~", ".claude", "data");
 const DB_PATH = join(DB_DIR, "fleet.db");
@@ -50,7 +50,7 @@ function getDb(): Database {
     mode TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     account_id TEXT,
-    container_id TEXT,
+    worker_id TEXT,
     parent_task_id TEXT,
     stage INTEGER,
     result TEXT,
@@ -60,17 +60,26 @@ function getDb(): Database {
     created_at TEXT NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS fleet_containers (
+  // Migration: rename container_id → worker_id if old schema exists
+  try {
+    db.run("ALTER TABLE fleet_tasks RENAME COLUMN container_id TO worker_id");
+  } catch { /* column already renamed or doesn't exist */ }
+
+  // Workers table (replaces fleet_containers)
+  db.run(`CREATE TABLE IF NOT EXISTS fleet_workers (
     id TEXT PRIMARY KEY,
     task_id TEXT NOT NULL,
     account_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    runtime TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'creating',
+    pid INTEGER,
+    worktree_path TEXT,
+    status TEXT NOT NULL DEFAULT 'starting',
     exit_code INTEGER,
     started_at TEXT NOT NULL,
     stopped_at TEXT
   )`);
+
+  // Drop old containers table if it exists (one-time migration)
+  db.run("DROP TABLE IF EXISTS fleet_containers");
 
   // Intel cache — stores project intel with fingerprint-based dedup and TTL
   db.run(`CREATE TABLE IF NOT EXISTS fleet_intel (
@@ -90,7 +99,7 @@ function getDb(): Database {
   // Indexes
   db.run("CREATE INDEX IF NOT EXISTS idx_fleet_tasks_run ON fleet_tasks(run_id)");
   db.run("CREATE INDEX IF NOT EXISTS idx_fleet_tasks_status ON fleet_tasks(status)");
-  db.run("CREATE INDEX IF NOT EXISTS idx_fleet_containers_task ON fleet_containers(task_id)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_fleet_workers_task ON fleet_workers(task_id)");
 
   return db;
 }
@@ -117,18 +126,18 @@ function buildStmts(d: Database) {
       "INSERT INTO fleet_tasks (id, run_id, prompt, task_type, mode, status, parent_task_id, stage, created_at) VALUES ($id, $run_id, $prompt, $task_type, $mode, $status, $parent_task_id, $stage, $created_at)"
     ),
     updateTask: d.prepare(
-      "UPDATE fleet_tasks SET status = COALESCE($status, status), account_id = COALESCE($account_id, account_id), container_id = COALESCE($container_id, container_id), result = COALESCE($result, result), error = COALESCE($error, error), started_at = COALESCE($started_at, started_at), completed_at = COALESCE($completed_at, completed_at) WHERE id = $id"
+      "UPDATE fleet_tasks SET status = COALESCE($status, status), account_id = COALESCE($account_id, account_id), worker_id = COALESCE($worker_id, worker_id), result = COALESCE($result, result), error = COALESCE($error, error), started_at = COALESCE($started_at, started_at), completed_at = COALESCE($completed_at, completed_at) WHERE id = $id"
     ),
     getTask: d.prepare("SELECT * FROM fleet_tasks WHERE id = $id"),
     getTasksByRun: d.prepare("SELECT * FROM fleet_tasks WHERE run_id = $run_id ORDER BY created_at"),
     getPendingTasks: d.prepare("SELECT * FROM fleet_tasks WHERE run_id = $run_id AND status = 'pending' ORDER BY created_at"),
 
-    // Containers
-    insertContainer: d.prepare(
-      "INSERT INTO fleet_containers (id, task_id, account_id, name, runtime, status, started_at) VALUES ($id, $task_id, $account_id, $name, $runtime, $status, $started_at)"
+    // Workers
+    insertWorker: d.prepare(
+      "INSERT INTO fleet_workers (id, task_id, account_id, pid, worktree_path, status, started_at) VALUES ($id, $task_id, $account_id, $pid, $worktree_path, $status, $started_at)"
     ),
-    updateContainer: d.prepare(
-      "UPDATE fleet_containers SET status = COALESCE($status, status), exit_code = COALESCE($exit_code, exit_code), stopped_at = COALESCE($stopped_at, stopped_at) WHERE id = $id"
+    updateWorker: d.prepare(
+      "UPDATE fleet_workers SET status = COALESCE($status, status), exit_code = COALESCE($exit_code, exit_code), stopped_at = COALESCE($stopped_at, stopped_at) WHERE id = $id"
     ),
 
     // Intel cache
@@ -205,7 +214,7 @@ export function createFleetTask(
 ): FleetTaskRecord {
   const record: FleetTaskRecord = {
     id, run_id: runId, prompt: prompt.slice(0, 5000), task_type: taskType, mode,
-    status: "pending", account_id: null, container_id: null,
+    status: "pending", account_id: null, worker_id: null,
     parent_task_id: parentTaskId ?? null, stage: stage ?? null,
     result: null, error: null, started_at: null, completed_at: null,
     created_at: new Date().toISOString(),
@@ -220,13 +229,13 @@ export function createFleetTask(
 }
 
 export function updateFleetTask(id: string, updates: Partial<Pick<FleetTaskRecord,
-  "status" | "account_id" | "container_id" | "result" | "error" | "started_at" | "completed_at"
+  "status" | "account_id" | "worker_id" | "result" | "error" | "started_at" | "completed_at"
 >>): void {
   stmts().updateTask.run({
     $id: id,
     $status: updates.status ?? null,
     $account_id: updates.account_id ?? null,
-    $container_id: updates.container_id ?? null,
+    $worker_id: updates.worker_id ?? null,
     $result: updates.result ? updates.result.slice(0, 50_000) : null,
     $error: updates.error ? updates.error.slice(0, 10_000) : null,
     $started_at: updates.started_at ?? null,
@@ -246,20 +255,20 @@ export function getPendingTasks(runId: string): FleetTaskRecord[] {
   return stmts().getPendingTasks.all({ $run_id: runId }) as FleetTaskRecord[];
 }
 
-// --- Container CRUD ---
+// --- Worker CRUD ---
 
-export function createContainerRecord(
-  id: string, taskId: string, accountId: string, name: string, runtime: string,
+export function createWorkerRecord(
+  id: string, taskId: string, accountId: string, pid: number | null, worktreePath: string | null,
 ): void {
-  stmts().insertContainer.run({
+  stmts().insertWorker.run({
     $id: id, $task_id: taskId, $account_id: accountId,
-    $name: name, $runtime: runtime, $status: "running",
+    $pid: pid, $worktree_path: worktreePath, $status: "running",
     $started_at: new Date().toISOString(),
   });
 }
 
-export function updateContainerRecord(id: string, status: string, exitCode?: number | null): void {
-  stmts().updateContainer.run({
+export function updateWorkerRecord(id: string, status: string, exitCode?: number | null): void {
+  stmts().updateWorker.run({
     $id: id, $status: status,
     $exit_code: exitCode ?? null,
     $stopped_at: status === "stopped" || status === "failed" ? new Date().toISOString() : null,
@@ -271,7 +280,6 @@ export function updateContainerRecord(id: string, status: string, exitCode?: num
 const INTEL_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 const INTEL_NEGATIVE_TTL_MS = 60 * 60 * 1000;   // 1 hour for failed/empty
 
-/** Get cached intel by project fingerprint. Returns null if not found or expired. */
 export function getCachedIntel(fingerprint: string, allowExpired = false): FleetIntelRecord | null {
   const record = stmts().getIntel.get({ $fingerprint: fingerprint }) as FleetIntelRecord | null;
   if (!record) return null;
@@ -279,7 +287,6 @@ export function getCachedIntel(fingerprint: string, allowExpired = false): Fleet
   return record;
 }
 
-/** Get cached intel by project root path (fallback when fingerprint misses). */
 export function getCachedIntelByRoot(projectRoot: string): FleetIntelRecord | null {
   const record = stmts().getIntelByRoot.get({ $project_root: projectRoot }) as FleetIntelRecord | null;
   if (!record) return null;
@@ -287,7 +294,6 @@ export function getCachedIntelByRoot(projectRoot: string): FleetIntelRecord | nu
   return record;
 }
 
-/** Cache successful intel generation. */
 export function cacheIntel(opts: {
   fingerprint: string;
   projectRoot: string;
@@ -312,7 +318,6 @@ export function cacheIntel(opts: {
   });
 }
 
-/** Cache a failed or empty-project intel attempt (negative cache). */
 export function cacheIntelFailure(opts: {
   fingerprint: string;
   projectRoot: string;
@@ -336,12 +341,10 @@ export function cacheIntelFailure(opts: {
   });
 }
 
-/** List all cached intel records (for diagnostics). */
 export function listCachedIntel(limit = 20): FleetIntelRecord[] {
   return stmts().listIntel.all({ $limit: limit }) as FleetIntelRecord[];
 }
 
-/** Delete a cached intel record. */
 export function deleteCachedIntel(fingerprint: string): void {
   stmts().deleteIntel.run({ $fingerprint: fingerprint });
 }

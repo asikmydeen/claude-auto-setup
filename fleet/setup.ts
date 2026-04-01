@@ -291,23 +291,14 @@ export async function runSetup(): Promise<void> {
     10,
   ) || 4;
 
-  const runtimeChoice = await ask(rl, "Container runtime (docker/podman)", "docker");
-  const runtime = runtimeChoice === "podman" ? "podman" : "docker";
-
-  const memoryChoice = await ask(rl, "Container memory limit", "4g");
-  const cpuChoice = await ask(rl, "Container CPU limit", "2");
-
-  // Build config
+  // Build config (Fleet v2 — containerless)
   const config: FleetConfig = {
     accounts,
     settings: {
       maxConcurrent,
       cooldownMs: 60_000,
-      containerImage: "claude-fleet:latest",
-      runtime: runtime as "docker" | "podman",
       taskTimeoutMs: 600_000,
-      containerMemory: memoryChoice,
-      containerCpus: cpuChoice,
+      worktreeDir: ".fleet/worktrees",
       maxTotalSpawns: 500,
     },
   };
@@ -326,7 +317,7 @@ export async function runSetup(): Promise<void> {
   }
   console.error("");
   console.error(`  ${BOLD}Settings:${RESET}`);
-  console.error(`    Workers: ${maxConcurrent} | Runtime: ${runtime} | Memory: ${memoryChoice} | CPUs: ${cpuChoice}`);
+  console.error(`    Workers: ${maxConcurrent} | Mode: containerless (worktree-based)`);
   console.error("");
 
   const confirm = await askYesNo(rl, `${BOLD}Save this configuration?${RESET}`, true);
@@ -348,10 +339,9 @@ export async function runSetup(): Promise<void> {
   console.error(`  ${DIM}Config saved to: ${ACCOUNTS_PATH}${RESET}`);
   console.error("");
   console.error(`  ${BOLD}Next steps:${RESET}`);
-  console.error(`    1. Build the container image:  ${CYAN}bun fleet/fleet.ts --build-image${RESET}`);
-  console.error(`    2. Run a task:                 ${CYAN}bun fleet/fleet.ts --pool tasks.json${RESET}`);
-  console.error(`    3. Check status:               ${CYAN}bun fleet/fleet.ts --status${RESET}`);
-  console.error(`    4. Edit config later:          ${CYAN}bun fleet/fleet.ts --setup${RESET}`);
+  console.error(`    1. Run a task:     ${CYAN}bun fleet/fleet.ts --pool tasks.json${RESET}`);
+  console.error(`    2. Check status:   ${CYAN}bun fleet/fleet.ts --status${RESET}`);
+  console.error(`    3. Edit config:    ${CYAN}bun fleet/fleet.ts --setup${RESET}`);
   console.error("");
 
   rl.close();
@@ -371,11 +361,8 @@ export function addAccount(label: string, credentials: Record<string, string>): 
       settings: {
         maxConcurrent: 4,
         cooldownMs: 60_000,
-        containerImage: "claude-fleet:latest",
-        runtime: "docker",
         taskTimeoutMs: 600_000,
-        containerMemory: "4g",
-        containerCpus: "2",
+        worktreeDir: ".fleet/worktrees",
         maxTotalSpawns: 500,
       },
     };
@@ -466,14 +453,11 @@ export function loadFromCsv(csvPath: string, region = "us-east-1"): string {
   }));
 
   // Build config (preserve existing settings if config exists)
-  let settings = {
+  let settings: FleetSettings = {
     maxConcurrent: Math.min(accounts.length, 10),
     cooldownMs: 60_000,
-    containerImage: "claude-fleet:latest",
-    runtime: "docker" as const,
     taskTimeoutMs: 600_000,
-    containerMemory: "4g",
-    containerCpus: "2",
+    worktreeDir: ".fleet/worktrees",
     maxTotalSpawns: 500,
   };
 

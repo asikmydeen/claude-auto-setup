@@ -24,7 +24,7 @@ export class AccountPool {
       this.statuses.set(account.id, {
         account,
         state: "idle",
-        containerId: null,
+        workerId: null,
         currentTaskId: null,
         cooldownUntil: null,
         tasksCompleted: 0,
@@ -114,7 +114,7 @@ export class AccountPool {
     }
     status.state = "idle";
     status.currentTaskId = null;
-    status.containerId = null;
+    status.workerId = null;
 
     // Notify anyone waiting for an available account
     this.notifyAvailable();
@@ -136,7 +136,7 @@ export class AccountPool {
     status.state = "cooldown";
     status.cooldownUntil = new Date(Date.now() + this.cooldownMs).toISOString();
     status.currentTaskId = null;
-    status.containerId = null;
+    status.workerId = null;
   }
 
   /** Mark an account as errored (manual intervention needed). */
@@ -145,7 +145,7 @@ export class AccountPool {
     if (!status) return;
     status.state = "error";
     status.currentTaskId = null;
-    status.containerId = null;
+    status.workerId = null;
   }
 
   /** Get a specific account status. */
@@ -220,9 +220,9 @@ export class AccountPool {
   }
 
   /** Set the container ID for a busy account. */
-  setContainer(accountId: string, containerId: string): void {
+  setWorker(accountId: string, workerId: string): void {
     const status = this.statuses.get(accountId);
-    if (status) status.containerId = containerId;
+    if (status) status.workerId = workerId;
   }
 }
 
@@ -256,11 +256,8 @@ export function loadFleetConfig(configPath?: string): FleetConfig {
   const settings: FleetSettings = {
     maxConcurrent: raw.settings?.maxConcurrent ?? 4,
     cooldownMs: raw.settings?.cooldownMs ?? 60_000,
-    containerImage: raw.settings?.containerImage ?? "claude-fleet:latest",
-    runtime: raw.settings?.runtime ?? detectRuntime(),
     taskTimeoutMs: raw.settings?.taskTimeoutMs ?? 600_000,
-    containerMemory: raw.settings?.containerMemory ?? "4g",
-    containerCpus: raw.settings?.containerCpus ?? "2",
+    worktreeDir: raw.settings?.worktreeDir ?? ".fleet/worktrees",
     maxTotalSpawns: raw.settings?.maxTotalSpawns ?? 500,
   };
 
@@ -297,11 +294,8 @@ export function initFleetConfig(): string {
     settings: {
       maxConcurrent: 4,
       cooldownMs: 60_000,
-      containerImage: "claude-fleet:latest",
-      runtime: detectRuntime(),
       taskTimeoutMs: 600_000,
-      containerMemory: "4g",
-      containerCpus: "2",
+      worktreeDir: ".fleet/worktrees",
       maxTotalSpawns: 500,
     },
   };
@@ -310,17 +304,4 @@ export function initFleetConfig(): string {
   return `Created fleet config at ${ACCOUNTS_PATH}\nEdit it to add your account credentials.`;
 }
 
-/** Detect available container runtime. */
-function detectRuntime(): "docker" | "podman" {
-  try {
-    Bun.spawnSync(["docker", "--version"]);
-    return "docker";
-  } catch {
-    try {
-      Bun.spawnSync(["podman", "--version"]);
-      return "podman";
-    } catch {
-      return "docker"; // Default — will fail later with a clear error
-    }
-  }
-}
+// Fleet v2 is containerless — no runtime detection needed

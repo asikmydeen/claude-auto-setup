@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Fleet — Multi-Account Container Orchestration
+// Fleet — Multi-Account Worker Orchestration
 //
 // Usage:
 //   bun fleet/fleet.ts --pool tasks.json [--workers 4]
@@ -7,9 +7,8 @@
 //   bun fleet/fleet.ts --decompose "complex task" [--workers 4]
 //   bun fleet/fleet.ts --pipeline "task" --stages research,implement,test,review
 //   bun fleet/fleet.ts --status
-//   bun fleet/fleet.ts --build-image
 //   bun fleet/fleet.ts --init
-//   bun fleet/fleet.ts --stop
+//   bun fleet/fleet.ts --kill
 //   bun fleet/fleet.ts --accounts
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
@@ -17,17 +16,16 @@ import { join, resolve } from "path";
 import { createHash } from "crypto";
 import { execFileSync } from "child_process";
 import { AccountPool, loadFleetConfig, initFleetConfig } from "./pool";
-import { ContainerManager } from "./container";
+import { WorkerManager, selectProviderForTask, isLocalProvider, findSuperpowersSkills, getAccountProviders } from "./worker";
 import {
   createRun, updateRunStatus, getRecentRuns, getRunsByProject, getTasksByRun,
   createFleetTask, updateFleetTask,
-  createContainerRecord, updateContainerRecord,
+  createWorkerRecord, updateWorkerRecord,
   getCachedIntel, getCachedIntelByRoot, cacheIntel, cacheIntelFailure, listCachedIntel,
 } from "./db";
-import type { FleetConfig, FleetTask, FleetRunResult, ScatterStrategy } from "./types";
+import type { FleetConfig, FleetTask, FleetRunResult, ScatterStrategy, FleetWorker } from "./types";
 import { onFleetStart, onTaskComplete, onAccountCooldown, onFleetComplete } from "./bridge";
 import { runSetup, addAccount, loadFromCsv } from "./setup";
-import { selectProviderForTask, getAccountProviders, isLocalProvider } from "./container";
 
 // --- Logging ---
 const DIM = "\x1b[2m";
@@ -121,7 +119,7 @@ function isEmptyProject(projectRoot: string): boolean {
 async function ensureProjectIntel(
   config: FleetConfig,
   projectRoot: string,
-  containers: ContainerManager,
+  workers: WorkerManager,
 ): Promise<void> {
   // Dedup: skip if already ensured this run (fixes superpowers double-call)
   if (_ensuredProjects.has(projectRoot)) return;
@@ -196,7 +194,7 @@ async function ensureProjectIntel(
     return;
   }
 
-  // 4. Generate via container (no cache hit, non-empty project)
+  // 4. Generate via worker (no cache hit, non-empty project)
   info("No project-intel.md found — generating before dispatch...");
 
   const pool = new AccountPool(config);
@@ -219,7 +217,7 @@ Create the .claude/rules/ directory if it doesn't exist.`;
   const outputDir = join(projectRoot, ".fleet", "init");
   mkdirSync(outputDir, { recursive: true });
 
-  containers.run({
+  workers.run({
     account: account.account,
     taskId: "fleet-init",
     prompt: initPrompt,
@@ -229,7 +227,7 @@ Create the .claude/rules/ directory if it doesn't exist.`;
   });
 
   info("Generating project intel (this runs once per project, cached for 24 hours)...");
-  const result = await containers.waitForContainer("fleet-init");
+  const result = await workers.waitForContainer("fleet-init");
   pool.release(account.account.id, result?.exitCode === 0);
 
   if (result?.exitCode === 0 && existsSync(intelPath)) {
@@ -262,27 +260,27 @@ async function runPool(
   projectRoot: string,
 ): Promise<FleetRunResult> {
   const pool = new AccountPool(config);
-  const containers = new ContainerManager(config.settings);
+  const workerMgr = new WorkerManager(config.settings);
   const runId = generateId();
   const startedAt = new Date().toISOString();
   const outputBase = join(projectRoot, ".fleet", runId);
 
   mkdirSync(outputBase, { recursive: true });
-  containers.prepareFleetConfig(outputBase);
+  workerMgr.prepareFleetConfig(outputBase);
   createRun(runId, "pool", `Pool: ${tasksInput.length} tasks`, workers, projectRoot);
 
   // Pre-flight: ensure project has intel
-  await ensureProjectIntel(config, projectRoot, containers);
+  await ensureProjectIntel(config, projectRoot, workerMgr);
 
   console.error(`\n${BOLD}Run: ${CYAN}${runId}${RESET}  ${DIM}(fleet --live to monitor from another terminal)${RESET}`);
   info(`Pool mode: ${tasksInput.length} tasks, ${workers} workers, ${pool.size} accounts`);
   info(`Output: ${outputBase}`);
   onFleetStart("pool", tasksInput.length, workers);
 
-  // Graceful shutdown on Ctrl+C — stop all containers
+  // Graceful shutdown on Ctrl+C — kill all workers
   const cleanup = () => {
-    console.error(`\n${YELLOW}[fleet]${RESET} Ctrl+C — stopping containers...`);
-    containers.stopAll();
+    console.error(`\n${YELLOW}[fleet]${RESET} Ctrl+C — killing workers...`);
+    workerMgr.killAll();
     updateRunStatus(runId, "failed", { total: tasks.length, completed: 0, failed: 0, requeued: 0 });
     process.exit(130);
   };
@@ -295,7 +293,7 @@ async function runPool(
     createFleetTask(id, runId, t.prompt, t.taskType || "general", "pool");
     return {
       id, prompt: t.prompt, taskType: t.taskType || "general", mode: "pool" as const,
-      status: "pending" as const, accountId: null, containerId: null,
+      status: "pending" as const, accountId: null, workerId: null,
       parentTaskId: null, stage: null, result: null, error: null,
       startedAt: null, completedAt: null, attemptedAccounts: [],
     };
@@ -307,11 +305,6 @@ async function runPool(
   const completed: FleetTask[] = [];
   const failed: FleetTask[] = [];
   let requeued = 0;
-
-  // Warm up containers for all accounts (saves ~2-3s per task)
-  const accountsToWarm = config.accounts.slice(0, workers);
-  const warmedUp = await containers.warmUp(accountsToWarm, projectRoot, outputBase);
-  if (warmedUp > 0) ok(`Warmed up ${warmedUp} container(s) — tasks will use docker exec`);
 
   try {
   while (pending.length > 0 || running.size > 0) {
@@ -341,14 +334,11 @@ async function runPool(
       const local = isLocalProvider(provider);
       info(`[${task.id}] → ${account.account.label} (${provider}${local ? ", local" : ""}) | ${task.prompt.slice(0, 60)}...`);
 
-      // Use warm container (docker exec) if available, else cold start
-      let container;
+      let worker: FleetWorker;
       if (local) {
-        container = containers.runLocal({ taskId: task.id, prompt: task.prompt, projectRoot, provider });
-      } else if (containers.hasWarmContainer(account.account.id)) {
-        container = containers.execInWarm({ accountId: account.account.id, taskId: task.id, prompt: task.prompt, provider });
+        worker = workerMgr.runLocal({ taskId: task.id, prompt: task.prompt, projectRoot, provider });
       } else {
-        container = containers.run({
+        worker = workerMgr.run({
           account: account.account,
           taskId: task.id,
           prompt: task.prompt,
@@ -358,11 +348,11 @@ async function runPool(
         });
       }
 
-      task.containerId = container.name;
-      pool.setContainer(account.account.id, container.name);
+      task.workerId = worker.id;
+      pool.setWorker(account.account.id, worker.id);
 
-      createContainerRecord(`${container.name}-${Date.now()}`, task.id, account.account.id, container.name, config.settings.runtime);
-      updateFleetTask(task.id, { status: "running", container_id: container.name });
+      createWorkerRecord(`${worker.id}-${Date.now()}`, task.id, account.account.id, worker.pid, worker.worktreePath);
+      updateFleetTask(task.id, { status: "running", worker_id: worker.id });
       task.status = "running";
 
       running.set(task.id, { task, accountId: account.account.id });
@@ -377,17 +367,17 @@ async function runPool(
 
     if (running.size === 0) break; // All done
 
-    // Event-driven: wait for ANY container to complete (no polling delay)
-    const result = await containers.waitForAnyCompletion();
+    // Event-driven: wait for ANY worker to complete (no polling delay)
+    const result = await workerMgr.waitForAnyCompletion();
     if (!result) continue;
 
-    // Find the running entry for this completed container
+    // Find the running entry for this completed worker
     const taskId = result.taskId;
     const entry = running.get(taskId);
     if (!entry) continue; // Shouldn't happen, but safety
 
     const success = result.exitCode === 0;
-    const isRateLimited = ContainerManager.isRateLimited(result.output || "", result.error || "");
+    const isRateLimited = WorkerManager.isRateLimited(result.output || "", result.error || "");
 
     entry.task.completedAt = new Date().toISOString();
 
@@ -398,7 +388,7 @@ async function runPool(
       entry.task.attemptedAccounts.push(entry.accountId);
       entry.task.status = "pending";
       entry.task.accountId = null;
-      entry.task.containerId = null;
+      entry.task.workerId = null;
       pending.push(entry.task);
       requeued++;
       updateFleetTask(taskId, { status: "pending" });
@@ -433,13 +423,11 @@ async function runPool(
       });
     }
 
-    updateContainerRecord(result.name, result.status, result.exitCode);
+    updateWorkerRecord(result.id, result.status, result.exitCode);
     running.delete(taskId);
   }
   } finally {
-    // Always shut down warm containers, even on error
-    const warmStopped = containers.shutdownWarm();
-    if (warmStopped > 0) info(`Stopped ${warmStopped} warm container(s)`);
+    // Cleanup handled by WorkerManager
   }
 
   const summary = { total: tasks.length, completed: completed.length, failed: failed.length, requeued };
@@ -543,7 +531,7 @@ Example:
 Output the JSON array and nothing else.`;
 
   const pool = new AccountPool(config);
-  const containers = new ContainerManager(config.settings);
+  const workerMgr = new WorkerManager(config.settings);
 
   // Allocate one account for decomposition
   const decompAccount = pool.allocate("decompose-planning");
@@ -557,10 +545,10 @@ Output the JSON array and nothing else.`;
 
   const decompOutputDir = join(projectRoot, ".fleet", "decompose-plan");
   mkdirSync(decompOutputDir, { recursive: true });
-  containers.prepareFleetConfig(decompOutputDir);
+  workerMgr.prepareFleetConfig(decompOutputDir);
 
   info("Phase 1: Decomposing task...");
-  containers.run({
+  workerMgr.run({
     account: decompAccount.account,
     taskId: "decompose-planning",
     prompt: decomposePrompt,
@@ -568,7 +556,7 @@ Output the JSON array and nothing else.`;
     outputDir: decompOutputDir,
   });
 
-  const decompResult = await containers.waitForContainer("decompose-planning");
+  const decompResult = await workerMgr.waitForContainer("decompose-planning");
   pool.release(decompAccount.account.id, decompResult?.exitCode === 0);
 
   // Parse subtasks from output
@@ -611,15 +599,15 @@ async function runPipeline(
   projectRoot: string,
 ): Promise<FleetRunResult> {
   const pool = new AccountPool(config);
-  const containers = new ContainerManager(config.settings);
+  const workerMgr = new WorkerManager(config.settings);
   const runId = generateId();
   const startedAt = new Date().toISOString();
   const outputBase = join(projectRoot, ".fleet", runId);
   mkdirSync(outputBase, { recursive: true });
-  containers.prepareFleetConfig(outputBase);
+  workerMgr.prepareFleetConfig(outputBase);
 
   // Pre-flight: ensure project has intel
-  await ensureProjectIntel(config, projectRoot, containers);
+  await ensureProjectIntel(config, projectRoot, workerMgr);
 
   createRun(runId, "pipeline", `Pipeline: ${stages.join(" → ")}`, stages.length, projectRoot);
   info(`Pipeline mode: ${stages.join(" → ")} (${stages.length} stages)`);
@@ -651,7 +639,7 @@ async function runPipeline(
 
     const task: FleetTask = {
       id: taskId, prompt: stagePrompt, taskType, mode: "pipeline",
-      status: "pending", accountId: null, containerId: null,
+      status: "pending", accountId: null, workerId: null,
       parentTaskId: null, stage: stageIdx, result: null, error: null,
       startedAt: null, completedAt: null, attemptedAccounts: [],
     };
@@ -682,9 +670,9 @@ async function runPipeline(
     const outputDir = join(outputBase, taskId);
     const pipelineProvider = selectProviderForTask(allocated.account, taskType);
     const pipelineLocal = isLocalProvider(pipelineProvider);
-    const container = pipelineLocal
-      ? containers.runLocal({ taskId, prompt: stagePrompt, projectRoot, provider: pipelineProvider })
-      : containers.run({
+    const worker = pipelineLocal
+      ? workerMgr.runLocal({ taskId, prompt: stagePrompt, projectRoot, provider: pipelineProvider })
+      : workerMgr.run({
           account: allocated.account,
           taskId,
           prompt: stagePrompt,
@@ -693,17 +681,17 @@ async function runPipeline(
           provider: pipelineProvider,
     });
 
-    task.containerId = container.name;
-    pool.setContainer(allocated.account.id, container.name);
+    task.workerId = worker.id;
+    pool.setWorker(allocated.account.id, worker.id);
 
-    createContainerRecord(container.name, taskId, allocated.account.id, container.name, config.settings.runtime);
+    createWorkerRecord(worker.id, taskId, allocated.account.id, worker.pid, worker.worktreePath);
     updateFleetTask(taskId, {
       status: "running", account_id: allocated.account.id,
-      container_id: container.name, started_at: task.startedAt,
+      worker_id: worker.id, started_at: task.startedAt,
     });
 
     // Wait for stage to complete (pipeline is sequential)
-    const result = await containers.waitForContainer(taskId);
+    const result = await workerMgr.waitForContainer(taskId);
     task.completedAt = new Date().toISOString();
 
     if (result && result.exitCode === 0) {
@@ -743,7 +731,7 @@ async function runPipeline(
       break;
     }
 
-    updateContainerRecord(container.name, result?.status || "failed", result?.exitCode);
+    updateWorkerRecord(worker.id, result?.status || "failed", result?.exitCode);
   }
 
   const summary = { total: stages.length, completed: completedCount, failed: failedCount, requeued: 0 };
@@ -787,13 +775,13 @@ async function runSuperpowers(
   maxTasks = 0, // 0 = auto (workers * 5)
 ): Promise<FleetRunResult> {
   const pool = new AccountPool(config);
-  const containers = new ContainerManager(config.settings);
+  const workerMgr = new WorkerManager(config.settings);
 
   // Pre-flight
   const fleetBase = join(projectRoot, ".fleet");
   mkdirSync(fleetBase, { recursive: true });
-  containers.prepareFleetConfig(fleetBase);
-  await ensureProjectIntel(config, projectRoot, containers);
+  workerMgr.prepareFleetConfig(fleetBase);
+  await ensureProjectIntel(config, projectRoot, workerMgr);
 
   // Task budget: prevents over-decomposition (138 tasks for a calculator = bad)
   const taskBudget = maxTasks > 0 ? maxTasks : workers * 5;
@@ -893,7 +881,7 @@ Rules:
     const decompOutputDir = join(projectRoot, ".fleet", "superpowers-decompose");
     mkdirSync(decompOutputDir, { recursive: true });
 
-    containers.run({
+    workerMgr.run({
       account: decompAccount.account,
       taskId: "sp-decompose",
       prompt: decompPrompt,
@@ -903,7 +891,7 @@ Rules:
     });
 
     info("Decomposing feature into components...");
-    const decompResult = await containers.waitForContainer("sp-decompose");
+    const decompResult = await workerMgr.waitForContainer("sp-decompose");
     pool.release(decompAccount.account.id, decompResult?.exitCode === 0);
 
     let components: Array<{ name: string; description: string }>;
@@ -929,7 +917,7 @@ Rules:
     const planOutputDir = join(projectRoot, ".fleet", "superpowers-plans");
     mkdirSync(planOutputDir, { recursive: true });
 
-    // Launch planning containers in parallel (one per component)
+    // Launch planning workers in parallel (one per component)
     const planningTasks: Array<{ taskId: string; accountId: string; componentName: string }> = [];
 
     for (const [i, component] of components.entries()) {
@@ -981,7 +969,7 @@ BAD (too granular — DO NOT do this):
 - Do NOT implement anything — ONLY write the plan`;
 
       const taskId = `sp-plan-${i}`;
-      containers.run({
+      workerMgr.run({
         account: planAccount.account,
         taskId,
         prompt: componentPrompt,
@@ -994,11 +982,11 @@ BAD (too granular — DO NOT do this):
       info(`  Planning: ${component.name} → ${planAccount.account.label}`);
     }
 
-    // Wait for all planning containers to complete
+    // Wait for all planning workers to complete
     if (planningTasks.length > 0) {
-      info(`Waiting for ${planningTasks.length} planning containers...`);
+      info(`Waiting for ${planningTasks.length} planning workers...`);
       for (const pt of planningTasks) {
-        const planResult = await containers.waitForContainer(pt.taskId);
+        const planResult = await workerMgr.waitForContainer(pt.taskId);
         pool.release(pt.accountId, planResult?.exitCode === 0);
 
         if (planResult?.exitCode === 0 && planResult.output) {
@@ -1064,7 +1052,7 @@ BAD (too granular — DO NOT do this):
     const brainstormOutputDir = join(projectRoot, ".fleet", "superpowers-brainstorm");
     mkdirSync(brainstormOutputDir, { recursive: true });
 
-    containers.run({
+    workerMgr.run({
       account: brainstormAccount.account,
       taskId: "sp-plan",
       prompt: brainstormPrompt,
@@ -1074,7 +1062,7 @@ BAD (too granular — DO NOT do this):
     });
 
     info("Planning (creating task plan)...");
-    const brainstormResult = await containers.waitForContainer("sp-plan");
+    const brainstormResult = await workerMgr.waitForContainer("sp-plan");
     pool.release(brainstormAccount.account.id, brainstormResult?.exitCode === 0);
 
     if (brainstormResult?.exitCode !== 0) {
@@ -1184,7 +1172,7 @@ Output format:
 
 ### Verdict: PASS / FAIL (with summary)`;
 
-      containers.run({
+      workerMgr.run({
         account: specAccount.account,
         taskId: "sp-spec-review",
         prompt: specPrompt,
@@ -1193,7 +1181,7 @@ Output format:
         provider: "claude",
       });
 
-      specReviewDone = containers.waitForContainer("sp-spec-review").then((r) => {
+      specReviewDone = workerMgr.waitForContainer("sp-spec-review").then((r) => {
         pool.release(specAccount.account.id, r?.exitCode === 0);
         if (r?.exitCode === 0) {
           writeFileSync(join(reviewDir, "spec-review.txt"), r?.output || "");
@@ -1237,7 +1225,7 @@ Output format:
 
 ### Verdict: APPROVE / REQUEST CHANGES (with summary)`;
 
-      containers.run({
+      workerMgr.run({
         account: qualityAccount.account,
         taskId: "sp-quality-review",
         prompt: qualityPrompt,
@@ -1246,7 +1234,7 @@ Output format:
         provider: "claude",
       });
 
-      qualityReviewDone = containers.waitForContainer("sp-quality-review").then((r) => {
+      qualityReviewDone = workerMgr.waitForContainer("sp-quality-review").then((r) => {
         pool.release(qualityAccount.account.id, r?.exitCode === 0);
         if (r?.exitCode === 0) {
           writeFileSync(join(reviewDir, "quality-review.txt"), r?.output || "");
@@ -1437,22 +1425,22 @@ function printStatus(showAll = false): void {
 }
 
 function printLive(config: FleetConfig, showAll = false): void {
-  const containers = new ContainerManager(config.settings);
-  const running = containers.listRunning();
+  const workerMgr = new WorkerManager(config.settings);
+  const running = workerMgr.listRunning();
   const cwd = process.cwd();
   const runs = showAll ? getRecentRuns(5) : getRunsByProject(cwd, 5);
 
   console.error(`${BOLD}Fleet Live Status${RESET}`);
   console.error("");
 
-  // Running containers
+  // Running workers
   if (running.length > 0) {
-    console.error(`  ${BOLD}Active Containers (${running.length}):${RESET}`);
-    for (const c of running) {
-      console.error(`    ${GREEN}●${RESET} ${c.name}  ${DIM}${c.status}${RESET}`);
+    console.error(`  ${BOLD}Active Workers (${running.length}):${RESET}`);
+    for (const w of running) {
+      console.error(`    ${GREEN}●${RESET} ${w.id}  ${DIM}pid=${w.pid || "?"}${RESET}`);
     }
   } else {
-    console.error(`  ${DIM}No active fleet containers${RESET}`);
+    console.error(`  ${DIM}No active fleet workers${RESET}`);
   }
   console.error("");
 
@@ -1540,7 +1528,7 @@ async function main(): Promise<void> {
 
   if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
     console.log(`
-${BOLD}Fleet — Multi-Account Container Orchestration${RESET}
+${BOLD}Fleet — Multi-Account Worker Orchestration${RESET}
 
 ${BOLD}Modes:${RESET}
   --pool <tasks.json>              Worker pool processes a queue of tasks
@@ -1561,16 +1549,15 @@ ${BOLD}Options:${RESET}
 
 ${BOLD}Management:${RESET}
   --status                         Show fleet status + recent runs
-  --live                           Live view: active containers, progress, tasks
+  --live                           Live view: active workers, progress, tasks
   --intel                          List cached project intel (fingerprints, TTL)
   --intel --clear                  Clear all cached intel
   --intel --clear <path>           Clear cached intel for a specific project
-  --build-image                    Build the fleet container image
   --setup                          Interactive account setup wizard
   --from-csv <file>                Load accounts from CSV (one key per line or comma-separated)
   --init                           Create default config at ~/.claude/fleet/accounts.json
   --add-account                    Quick-add: --add-account "Label" KEY=val KEY2=val2
-  --stop                           Stop all running fleet containers
+  --kill                           Kill all running fleet workers
   --accounts                       List configured accounts
 `);
     return;
@@ -1665,36 +1652,11 @@ ${BOLD}Management:${RESET}
     return; // unreachable, but satisfies TS flow analysis
   }
 
-  const containers = new ContainerManager(config.settings);
-
-  // Check runtime
-  if (!containers.runtimeAvailable()) {
-    error(`Container runtime '${config.settings.runtime}' not available. Install Docker or Podman.`);
-    process.exit(1);
-  }
-
-  // --build-image
-  if (args.includes("--build-image")) {
-    const dockerfilePath = join(import.meta.dir, "Dockerfile");
-    if (!existsSync(dockerfilePath)) {
-      error(`Dockerfile not found at ${dockerfilePath}`);
-      process.exit(1);
-    }
-    info(`Building fleet image: ${config.settings.containerImage}...`);
-    const result = containers.buildImage(dockerfilePath);
-    if (result.success) {
-      ok(`Image built: ${config.settings.containerImage}`);
-    } else {
-      error(`Build failed: ${result.output}`);
-      process.exit(1);
-    }
-    return;
-  }
-
-  // --stop
-  if (args.includes("--stop")) {
-    const stopped = containers.stopAll();
-    ok(`Stopped ${stopped} fleet container(s)`);
+  // --kill
+  if (args.includes("--kill")) {
+    const workerMgr = new WorkerManager(config.settings);
+    const killed = workerMgr.killAll();
+    ok(`Killed ${killed} fleet worker(s)`);
     return;
   }
 
@@ -1752,18 +1714,6 @@ ${BOLD}Management:${RESET}
       console.error(`    ${DIM}${r.project_root}${RESET}${r.git_remote ? ` (${r.git_remote})` : ""}`);
     }
     return;
-  }
-
-  // Check image exists
-  if (!containers.imageExists()) {
-    warn(`Fleet image '${config.settings.containerImage}' not found. Building...`);
-    const dockerfilePath = join(import.meta.dir, "Dockerfile");
-    const result = containers.buildImage(dockerfilePath);
-    if (!result.success) {
-      error(`Image build failed. Run: bun fleet/fleet.ts --build-image`);
-      process.exit(1);
-    }
-    ok("Image built successfully");
   }
 
   // --- Parse common options ---

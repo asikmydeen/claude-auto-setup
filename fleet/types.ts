@@ -1,4 +1,4 @@
-// Fleet — Multi-Account Container Orchestration Types
+// Fleet — Multi-Account Orchestration Types (containerless)
 
 // --- Account ---
 
@@ -15,7 +15,7 @@ export type AccountState = "idle" | "busy" | "cooldown" | "error" | "disabled";
 export interface AccountStatus {
   account: Account;
   state: AccountState;
-  containerId: string | null;
+  workerId: string | null;
   currentTaskId: string | null;
   cooldownUntil: string | null;
   tasksCompleted: number;
@@ -23,17 +23,17 @@ export interface AccountStatus {
   lastUsed: string | null;
 }
 
-// --- Container ---
+// --- Worker (replaces Container) ---
 
-export type ContainerStatus = "creating" | "running" | "stopped" | "failed" | "removed";
+export type WorkerStatus = "starting" | "running" | "stopped" | "failed";
 
-export interface FleetContainer {
-  id: string; // docker/podman container ID
+export interface FleetWorker {
+  id: string;
   accountId: string;
-  name: string; // fleet-{accountId}-{shortTaskId}
-  status: ContainerStatus;
   taskId: string;
   pid: number | null;
+  worktreePath: string | null;
+  status: WorkerStatus;
   startedAt: string;
   stoppedAt: string | null;
   exitCode: number | null;
@@ -53,7 +53,7 @@ export interface FleetTask {
   mode: FleetMode;
   status: FleetTaskStatus;
   accountId: string | null;
-  containerId: string | null;
+  workerId: string | null;
   parentTaskId: string | null; // for decompose/pipeline subtasks
   stage: number | null; // for pipeline mode (0-indexed)
   result: string | null;
@@ -95,16 +95,11 @@ export interface FleetRunResult {
 
 // --- Fleet Config ---
 
-export type ContainerRuntime = "docker" | "podman";
-
 export interface FleetSettings {
   maxConcurrent: number;
   cooldownMs: number;
-  containerImage: string;
-  runtime: ContainerRuntime;
   taskTimeoutMs: number;
-  containerMemory: string; // docker --memory flag (default: "4g")
-  containerCpus: string; // docker --cpus flag (default: "2")
+  worktreeDir: string; // relative to project root (default: ".fleet/worktrees")
   maxTotalSpawns: number; // safety limit per run (default: 500)
 }
 
@@ -116,11 +111,8 @@ export interface FleetConfig {
 export const DEFAULT_SETTINGS: FleetSettings = {
   maxConcurrent: 4,
   cooldownMs: 60_000,
-  containerImage: "claude-fleet:latest",
-  runtime: "docker",
   taskTimeoutMs: 600_000, // 10 minutes
-  containerMemory: "4g",
-  containerCpus: "2",
+  worktreeDir: ".fleet/worktrees",
   maxTotalSpawns: 500,
 };
 
@@ -134,7 +126,7 @@ export interface FleetTaskRecord {
   mode: string;
   status: string;
   account_id: string | null;
-  container_id: string | null;
+  worker_id: string | null;
   parent_task_id: string | null;
   stage: number | null;
   result: string | null;
@@ -155,12 +147,12 @@ export interface FleetRunRecord {
   summary: string | null; // JSON
 }
 
-export interface FleetContainerRecord {
+export interface FleetWorkerRecord {
   id: string;
   task_id: string;
   account_id: string;
-  name: string;
-  runtime: string;
+  pid: number | null;
+  worktree_path: string | null;
   status: string;
   exit_code: number | null;
   started_at: string;
