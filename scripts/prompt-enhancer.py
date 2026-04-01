@@ -370,6 +370,8 @@ def get_session_context(data):
 
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"]) or "unknown"
 
+    # Only use diff (fast: ~30ms each). Skip `git status` (slow: 1s+ on large repos).
+    # We miss untracked files but that's OK — modified/staged is what matters.
     modified = set()
     for diff_out in [
         _run_git(["diff", "--name-only"]),
@@ -377,12 +379,6 @@ def get_session_context(data):
     ]:
         if diff_out:
             modified.update(diff_out.split("\n"))
-
-    status_out = _run_git(["status", "--short"])
-    if status_out:
-        for line in status_out.split("\n"):
-            if line.startswith("??"):
-                modified.add(line[3:].strip())
 
     modified_files = sorted(modified)
 
