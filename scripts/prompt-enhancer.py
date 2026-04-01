@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Subconscious — always-on session intelligence for Claude Code.
 
-Runs as a UserPromptSubmit hook on EVERY user message. Two-tier output:
+Runs as a UserPromptSubmit hook on EVERY user message. Three-tier output:
 
 TIER 1 (always, ~3 lines): Session state injection
-  - Git branch, modified files, checkpoint status, recent commits
-  - Gives Claude instant awareness of working state on every message
-  - Critical for compaction recovery (Claude loses context, subconscious restores it)
+  - Git branch, modified files, checkpoint status, intent classification
+  - Critical for compaction recovery
+
+TIER 1.5 (always for non-trivial, ~3 lines): Agent protocol prescription
+  - Based on intent + complexity, prescribes exactly which agents to spawn
+  - Enforces multi-agent workflow without relying on static CLAUDE.md rules
 
 TIER 2 (conditional): Prompt enhancement
   - Only fires when prompt is vague/emotional at session start
-  - Silent mid-session when conversation context exists
-  - Same logic as the original prompt-enhancer but layered on top of Tier 1
 
-Performance budget: < 100ms total (git commands are fast, no file reads).
+Performance budget: < 100ms total.
 """
 import sys
 import json
@@ -97,7 +98,6 @@ CAPABILITIES = {
     },
 }
 
-# Intent classification keywords
 INTENTS = {
     "implementation": ["build", "implement", "create", "add", "write", "make", "develop"],
     "debugging": ["fix", "debug", "broken", "error", "crash", "failing", "bug", "issue"],
@@ -105,7 +105,184 @@ INTENTS = {
     "research": ["analyze", "research", "understand", "explore", "investigate", "how does"],
     "cleanup": ["cleanup", "clean", "refactor", "simplify", "deslop", "tidy"],
     "testing": ["test", "coverage", "spec", "assert"],
-    "continuation": [],  # Detected by checkpoint, not keywords
+    "continuation": [],
+}
+
+# --- Agent protocol prescriptions per intent x complexity ---
+
+AGENT_PROTOCOLS = {
+    "implementation": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Solo OK — single file, small change",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Multi-agent required",
+            "agents": [
+                ("BEFORE first edit", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) — map relevant files + patterns'),
+                ("AFTER implementation", 'Agent(subagent_type="code-reviewer") + Agent(subagent_type="security-auditor") — parallel review'),
+                ("AFTER implementation", 'Agent(subagent_type="test-writer", run_in_background=true) — test coverage'),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Full pipeline: explore -> plan -> implement (parallel) -> review (parallel) -> verify",
+            "agents": [
+                ("BEFORE planning", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) x2-3 — parallel exploration'),
+                ("BEFORE implementation", "Present plan and WAIT for user approval"),
+                ("DURING implementation", "Launch independent agents in parallel (one per concern/layer)"),
+                ("AFTER implementation", 'Agent(subagent_type="code-reviewer") + Agent(subagent_type="security-auditor") — parallel'),
+                ("AFTER implementation", 'Agent(subagent_type="test-writer", run_in_background=true)'),
+            ],
+        },
+    },
+    "debugging": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Obvious fix — solo OK",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Multi-agent investigation",
+            "agents": [
+                ("BEFORE fixing", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) — gather error context'),
+                ("IF 2 hypotheses fail", "Escalate to /trace skill — multi-hypothesis evidence-ranked"),
+                ("AFTER fix", 'Agent(subagent_type="test-writer", run_in_background=true) — regression test'),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Full debug pipeline",
+            "agents": [
+                ("IMMEDIATELY", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) x3 — error context, git blame, dependency map'),
+                ("AFTER initial analysis", "Use /trace skill — 3+ parallel hypotheses, evidence ranking, rebuttal rounds"),
+                ("AFTER fix", 'Agent(subagent_type="code-reviewer") — verify fix quality'),
+                ("AFTER fix", 'Agent(subagent_type="test-writer", run_in_background=true) — regression test'),
+            ],
+        },
+    },
+    "review": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Quick review — solo OK for < 3 files",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Multi-agent review",
+            "agents": [
+                ("LAUNCH parallel", 'Agent(subagent_type="code-reviewer") — quality, patterns, bugs'),
+                ("LAUNCH parallel", 'Agent(subagent_type="security-auditor") — OWASP, secrets, CVEs'),
+                ("AFTER reviews", "Synthesize findings + rebuttal round on Critical findings"),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Full review pipeline",
+            "agents": [
+                ("FIRST", "Check codebase-patterns.md for pattern conformance"),
+                ("LAUNCH parallel", 'Agent(subagent_type="code-reviewer") — quality'),
+                ("LAUNCH parallel", 'Agent(subagent_type="security-auditor") — security'),
+                ("LAUNCH parallel", "Performance analysis agent"),
+                ("LAUNCH parallel", "Architecture review agent"),
+                ("AFTER all", "Synthesize + rebuttal round + evidence hierarchy tagging"),
+            ],
+        },
+    },
+    "research": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Quick lookup — solo",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Multi-agent research",
+            "agents": [
+                ("LAUNCH parallel", 'Agent(subagent_type="explorer", model="haiku") x3 — different areas of codebase'),
+                ("AFTER exploration", "Synthesize findings into structured report"),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Deep research (7 parallel agents)",
+            "agents": [
+                ("USE", "/deep-research command — 7 parallel agents, generates project-intel.md + codebase-patterns.md"),
+            ],
+        },
+    },
+    "cleanup": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Quick cleanup — solo",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Regression-safe cleanup",
+            "agents": [
+                ("FIRST", 'Agent(subagent_type="test-writer", run_in_background=true) — lock behavior with tests BEFORE editing'),
+                ("THEN", "Use /deslop skill — 4-pass cleanup (dead code, duplicates, naming, tests)"),
+                ("AFTER cleanup", 'Agent(subagent_type="code-reviewer") — verify no behavior change'),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Large refactor — plan first",
+            "agents": [
+                ("FIRST", 'Agent(subagent_type="explorer", model="haiku") — map all affected files'),
+                ("THEN", "Use /consensus-planning — Planner/Architect/Critic validation"),
+                ("BEFORE editing", 'Agent(subagent_type="test-writer") — lock ALL behavior with tests'),
+                ("DURING", "Implement incrementally, verify after each step"),
+                ("AFTER", 'Agent(subagent_type="code-reviewer") + Agent(subagent_type="security-auditor")'),
+            ],
+        },
+    },
+    "testing": {
+        "trivial": {
+            "complexity": "trivial",
+            "note": "Single test — solo",
+            "agents": [],
+        },
+        "medium": {
+            "complexity": "medium",
+            "note": "Test suite work",
+            "agents": [
+                ("FIRST", 'Agent(subagent_type="explorer", model="haiku") — find existing test patterns'),
+                ("THEN", "Match discovered patterns exactly (framework, assertion style, mock approach)"),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Test infrastructure",
+            "agents": [
+                ("FIRST", 'Agent(subagent_type="explorer", model="haiku") — map test infrastructure'),
+                ("THEN", "Plan test strategy (unit/integration/e2e split)"),
+                ("LAUNCH parallel", "One agent per test category"),
+            ],
+        },
+    },
+    "general": {
+        "trivial": {"complexity": "trivial", "note": "Solo OK", "agents": []},
+        "medium": {
+            "complexity": "medium",
+            "note": "Consider multi-agent",
+            "agents": [
+                ("BEFORE starting", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) — gather context'),
+            ],
+        },
+        "complex": {
+            "complexity": "complex",
+            "note": "Multi-agent required",
+            "agents": [
+                ("BEFORE starting", 'Agent(subagent_type="explorer", model="haiku", run_in_background=true) — gather context'),
+                ("AFTER work", 'Agent(subagent_type="code-reviewer") — review changes'),
+            ],
+        },
+    },
 }
 
 
@@ -119,20 +296,24 @@ def main():
     if not prompt:
         return
 
-    # Ultra-fast skip for tiny confirmations
     stripped = prompt.strip().lower()
     if len(stripped) < 5 or stripped in CONFIRMATIONS:
         return
 
-    # Gather session context (Tier 1 — always needed)
     ctx = get_session_context(data)
+    intent = classify_intent(prompt)
 
     output_parts = []
 
-    # === TIER 1: Session State (always, unless trivial confirmation) ===
-    state_line = format_session_state(ctx, prompt)
+    # === TIER 1: Session State (always) ===
+    state_line = format_session_state(ctx, prompt, intent)
     if state_line:
         output_parts.append(state_line)
+
+    # === TIER 1.5: Agent Protocol (always for non-trivial) ===
+    protocol = get_agent_protocol(prompt, intent, ctx)
+    if protocol:
+        output_parts.append(protocol)
 
     # === TIER 2: Prompt Enhancement (conditional) ===
     enhancement = get_enhancement(prompt, ctx)
@@ -183,14 +364,12 @@ def _run_git(args, timeout=2):
 
 
 def get_session_context(data):
-    """Gather full session context — git state, checkpoints, intel."""
+    """Gather full session context."""
     messages = data.get("messages", [])
     user_msg_count = sum(1 for m in messages if m.get("role") == "user")
 
-    # Git state (parallel-safe, fast)
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"]) or "unknown"
 
-    # Modified files (unstaged + staged + untracked)
     modified = set()
     for diff_out in [
         _run_git(["diff", "--name-only"]),
@@ -207,13 +386,11 @@ def get_session_context(data):
 
     modified_files = sorted(modified)
 
-    # Recent commits (last 3, one-line)
     recent_commits = []
     log_out = _run_git(["log", "--oneline", "-3"])
     if log_out:
         recent_commits = log_out.split("\n")
 
-    # Checkpoint
     checkpoint_phase = None
     checkpoint_path = ".claude/scratch/task-state.md"
     if os.path.exists(checkpoint_path):
@@ -232,7 +409,6 @@ def get_session_context(data):
         except OSError:
             pass
 
-    # Project intel/patterns existence
     has_intel = os.path.exists(".claude/rules/project-intel.md")
     has_patterns = os.path.exists(".claude/rules/codebase-patterns.md")
 
@@ -253,7 +429,7 @@ def get_session_context(data):
 
 
 # ============================================================
-# TIER 1: Session State (always output)
+# Intent + complexity classification
 # ============================================================
 
 def classify_intent(prompt):
@@ -266,11 +442,72 @@ def classify_intent(prompt):
     return best if scores[best] > 0 else "general"
 
 
-def format_session_state(ctx, prompt):
-    """Format lean session state block (~3-5 lines)."""
+def classify_complexity(prompt, ctx):
+    """Classify task complexity from prompt signals.
+
+    trivial: very short (<8 words) with no action verbs, OR only touches config/docs
+    medium: standard implementation/debug/review task (DEFAULT for non-trivial prompts)
+    complex: 3+ files, cross-cutting, architectural, or explicit multi-step
+    """
+    lower = prompt.lower()
+    words = lower.split()
+    word_count = len(words)
+
+    # Count complexity signals
+    file_refs = len(re.findall(r"[\w./]+\.\w{1,5}", prompt))
+    has_multi_step = bool(re.search(r"\b(and then|then|after that|also|plus)\b", lower))
+    has_cross_cutting = bool(re.search(
+        r"\b(frontend|backend|api|database|infra|test|deploy|ci|cd)\b.*\b(frontend|backend|api|database|infra|test|deploy|ci|cd)\b",
+        lower,
+    ))
+    has_architectural = bool(re.search(
+        r"\b(architect|design|refactor|restructure|migrate|overhaul|rewrite)\b", lower
+    ))
+    has_multiple_concerns = bool(re.search(
+        r"\b(and|plus|also|with|including)\b", lower
+    )) and word_count > 15
+    has_action_verb = bool(re.search(
+        r"\b(add|create|build|implement|fix|debug|update|change|modify|write|remove|delete|refactor|review|analyze|test)\b",
+        lower,
+    ))
+
+    # Only truly trivial: very short, no action verb, or only docs/config
+    is_docs_only = bool(re.search(r"\b(readme|changelog|doc|comment|typo|spelling)\b", lower))
+    if (word_count < 8 and not has_action_verb) or (is_docs_only and word_count < 15):
+        return "trivial"
+
+    # Complex: multiple strong signals
+    complexity_score = 0
+    if file_refs >= 3:
+        complexity_score += 2
+    elif file_refs >= 1:
+        complexity_score += 1
+    if has_multi_step:
+        complexity_score += 1
+    if has_cross_cutting:
+        complexity_score += 2
+    if has_architectural:
+        complexity_score += 2
+    if has_multiple_concerns:
+        complexity_score += 1
+    if word_count > 50:
+        complexity_score += 1
+
+    if complexity_score >= 3:
+        return "complex"
+
+    # Default: medium (most prompts with action verbs are at least medium)
+    return "medium"
+
+
+# ============================================================
+# TIER 1: Session State (always output)
+# ============================================================
+
+def format_session_state(ctx, prompt, intent):
+    """Format lean session state block."""
     lines = []
 
-    # Line 1: Branch + modified files + checkpoint
     parts = [f"Branch: {ctx['branch']}"]
     if ctx["modified_file_count"] > 0:
         parts.append(f"Modified: {ctx['modified_file_count']} files")
@@ -281,30 +518,24 @@ def format_session_state(ctx, prompt):
     lines.append("## Session State")
     lines.append(" | ".join(parts))
 
-    # Line 2: Recently modified files (if any, max 5)
     if ctx["modified_files"]:
         preview = ", ".join(ctx["modified_files"][:5])
         if ctx["modified_file_count"] > 5:
             preview += f" (+{ctx['modified_file_count'] - 5} more)"
         lines.append(f"Files: {preview}")
 
-    # Line 3: Recent commits (if session start — helps after compaction)
     if not ctx["is_mid_session"] and ctx["recent_commits"]:
         lines.append(f"Recent: {ctx['recent_commits'][0]}")
 
-    # Line 4: Intent classification
-    intent = classify_intent(prompt)
     if intent != "general":
         lines.append(f"Intent: {intent}")
 
-    # Line 5: Checkpoint recovery hint (critical after compaction)
     if ctx["has_checkpoint"] and not ctx["is_mid_session"]:
         lines.append(
             "**Checkpoint detected** — you may be resuming after compaction. "
             "Read `.claude/scratch/task-state.md` to recover full task state."
         )
 
-    # Line 6: Project context indicators
     ctx_flags = []
     if ctx["has_intel"]:
         ctx_flags.append("intel")
@@ -317,6 +548,53 @@ def format_session_state(ctx, prompt):
 
 
 # ============================================================
+# TIER 1.5: Agent Protocol (prescriptive multi-agent guidance)
+# ============================================================
+
+def get_agent_protocol(prompt, intent, ctx):
+    """Prescribe agent protocol based on intent + complexity."""
+    stripped = prompt.strip().lower()
+
+    # Skip for slash commands (they handle their own agents)
+    if stripped.startswith("/"):
+        return None
+
+    # Skip for confirmations and questions
+    if stripped.startswith("force:") or stripped.startswith("force "):
+        return None
+    if re.match(
+        r"^(what|how|why|where|when|which|can|could|should|is|are|do|does|did)\b",
+        stripped,
+    ):
+        return None
+
+    complexity = classify_complexity(prompt, ctx)
+
+    # Get protocol for this intent + complexity
+    intent_protocols = AGENT_PROTOCOLS.get(intent, AGENT_PROTOCOLS["general"])
+    protocol = intent_protocols.get(complexity, intent_protocols.get("medium"))
+
+    if not protocol or not protocol["agents"]:
+        return None  # Trivial — no agents needed
+
+    lines = []
+    lines.append("")
+    lines.append(f"## Agent Protocol — {complexity} {intent}")
+    lines.append(f"{protocol['note']}")
+
+    for phase, instruction in protocol["agents"]:
+        lines.append(f"- **{phase}**: {instruction}")
+
+    # Add context-specific reminders
+    if ctx["has_patterns"] and intent in ("implementation", "cleanup"):
+        lines.append("- **PATTERN CHECK**: codebase-patterns.md exists — match existing conventions")
+    if ctx["has_checkpoint"]:
+        lines.append("- **RESUME**: Active checkpoint — continue from where you left off, don't restart")
+
+    return "\n".join(lines)
+
+
+# ============================================================
 # TIER 2: Prompt Enhancement (conditional)
 # ============================================================
 
@@ -324,13 +602,11 @@ def get_enhancement(prompt, ctx):
     """Return enhancement guidance if needed, or None."""
     stripped = prompt.strip().lower()
 
-    # Skip conditions (no enhancement)
     if stripped.startswith("/"):
         return None
     if stripped.startswith("force:") or stripped.startswith("force :"):
         return None
 
-    # Well-anchored prompts don't need enhancement
     has_file = bool(re.search(r"[\w./]+\.\w{1,5}", prompt))
     has_func = bool(re.search(r"[a-z][a-zA-Z]{2,}\(|[a-z_]{3,}\(", prompt))
     has_issue = bool(re.search(r"#\d+|CR-\d+|issue\s+\d+", prompt, re.I))
@@ -338,25 +614,21 @@ def get_enhancement(prompt, ctx):
     if sum([has_file, has_func, has_issue, has_code]) >= 2:
         return None
 
-    # Questions don't need enhancement
     if re.match(
         r"^(what|how|why|where|when|which|can|could|should|is|are|do|does|did)\b",
         stripped,
     ):
         return None
 
-    # Mid-session with referents — trust context
     if ctx["is_mid_session"]:
         if any(ref in stripped for ref in CONTEXT_REFERENTS):
             return None
 
-    # Deep session — only trigger on heavy emotional rants (3+)
     if ctx["is_deep_session"]:
         emotional_count = sum(1 for e in EMOTIONAL_PHRASES if e in stripped)
         if emotional_count < 3:
             return None
 
-    # Score the prompt
     analysis = _analyze(prompt, ctx)
     threshold = _get_threshold(ctx)
     if analysis["score"] < threshold:
@@ -420,7 +692,7 @@ def _analyze(prompt, ctx):
 
 
 def _get_threshold(ctx):
-    """Dynamic threshold: session start=3, mid=4, deep=4, checkpoint=+1."""
+    """Dynamic threshold."""
     threshold = 3
     if ctx["is_deep_session"] or ctx["is_mid_session"]:
         threshold = 4

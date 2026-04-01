@@ -130,6 +130,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 $HOME/.claude/scripts/pre-edit-guard.py 2>/dev/null || true",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "$HOME/.claude/scripts/hook-handler.sh pre-edit 2>/dev/null || true"
           }
         ]
@@ -150,6 +155,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 $HOME/.claude/scripts/post-commit-review.py 2>/dev/null || true",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "$HOME/.claude/scripts/hook-handler.sh bash 2>/dev/null || true"
           }
         ]
@@ -157,6 +167,11 @@
       {
         "matcher": "Agent",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/scripts/post-commit-review.py 2>/dev/null || true",
+            "timeout": 5
+          },
           {
             "type": "command",
             "command": "$HOME/.claude/scripts/hook-handler.sh agent 2>/dev/null || true"
