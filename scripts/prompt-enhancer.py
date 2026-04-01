@@ -260,6 +260,10 @@ def should_skip(prompt, ctx):
     if stripped.startswith("/"):
         return True
 
+    # Explicit bypass with force: prefix
+    if stripped.startswith("force:") or stripped.startswith("force :"):
+        return True
+
     # Already has concrete anchors (file paths + specific identifiers)
     has_file = bool(re.search(r"[\w./]+\.\w{1,5}", prompt))
     has_func = bool(re.search(r"[a-z][a-zA-Z]{2,}\(|[a-z_]{3,}\(", prompt))
