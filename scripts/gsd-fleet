@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# gsd-fleet — Run GSD with fleet credential rotation.
+#
+# Creates a temporary "claude" shim in PATH that round-robins across
+# fleet accounts (from ~/.claude/fleet/accounts.json). Each parallel
+# GSD worker gets a different Bedrock account = N× rate limit headroom.
+#
+# Usage:
+#   gsd-fleet                     # Interactive GSD with credential rotation
+#   gsd-fleet auto                # Autonomous mode
+#   gsd-fleet headless            # Headless CI mode
+#   gsd-fleet -p "task"           # Single-shot task
+#   gsd-fleet headless --timeout 600000  # With timeout
+#
+# All arguments are passed through to gsd.
+#
+# Requires:
+#   - gsd (gsd-pi) installed: npm install -g gsd-pi
+#   - claude CLI in PATH
+#   - ~/.claude/fleet/accounts.json with 2+ accounts
+#   - python3 (for JSON parsing)
+#   - flock (for atomic counter — available on Linux, macOS via brew)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ACCOUNTS_FILE="${FLEET_ACCOUNTS_FILE:-$HOME/.claude/fleet/accounts.json}"
+SHIM_DIR="/tmp/fleet-shim-$$"
+COUNTER_FILE="/tmp/fleet-rotation-counter"
+
+# --- Colors ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# --- Preflight checks ---
+if ! command -v gsd &>/dev/null; then
+  echo -e "${RED}ERROR:${RESET} gsd not found. Install: ${CYAN}npm install -g gsd-pi${RESET}" >&2
+  exit 1
+fi
+
+if ! command -v claude &>/dev/null; then
+  echo -e "${RED}ERROR:${RESET} claude not found. Install Claude Code first." >&2
+  exit 1
+fi
+
+if [ ! -f "$ACCOUNTS_FILE" ]; then
+  echo -e "${YELLOW}WARNING:${RESET} No fleet accounts at ${ACCOUNTS_FILE}" >&2
+  echo -e "  Running GSD without credential rotation (single account)." >&2
+  echo -e "  To set up: ${CYAN}bun fleet/fleet.ts --setup${RESET} or ${CYAN}fleet --from-csv keys.csv${RESET}" >&2
+  echo ""
+  exec gsd "$@"
+fi
+
+if ! command -v python3 &>/dev/null; then
+  echo -e "${RED}ERROR:${RESET} python3 required for credential rotation." >&2
+  exit 1
+fi
+
+# --- Count accounts ---
+account_count=$(python3 -c "
+import json
+with open('$ACCOUNTS_FILE') as f:
+    print(len(json.load(f).get('accounts', [])))
+" 2>/dev/null || echo "0")
+
+if [ "$account_count" -lt 2 ]; then
+  echo -e "${YELLOW}WARNING:${RESET} Only $account_count account(s) in fleet config." >&2
+  echo -e "  Credential rotation needs 2+ accounts. Running GSD normally." >&2
+  exec gsd "$@"
+fi
+
+# --- Find real claude binary path ---
+REAL_CLAUDE=$(command -v claude)
+
+# --- Create shim directory ---
+mkdir -p "$SHIM_DIR"
+
+# --- Create the claude shim (symlink to our credential-rotating script) ---
+SHIM_SOURCE="$SCRIPT_DIR/fleet-credential-shim"
+if [ ! -f "$SHIM_SOURCE" ]; then
+  # Fallback: check installed location
+  SHIM_SOURCE="$HOME/.claude/scripts/fleet-credential-shim"
+fi
+
+if [ ! -f "$SHIM_SOURCE" ]; then
+  echo -e "${RED}ERROR:${RESET} fleet-credential-shim not found at ${SHIM_SOURCE}" >&2
+  exit 1
+fi
+
+cp "$SHIM_SOURCE" "$SHIM_DIR/claude"
+chmod +x "$SHIM_DIR/claude"
+
+# --- Reset rotation counter for this run ---
+echo "0" > "$COUNTER_FILE"
+
+# --- Cleanup on exit ---
+cleanup() {
+  rm -rf "$SHIM_DIR"
+  rm -f "$COUNTER_FILE" "/tmp/fleet-rotation.lock"
+}
+trap cleanup EXIT
+
+# --- Report ---
+echo -e "${GREEN}${BOLD}gsd-fleet${RESET} — GSD with fleet credential rotation"
+echo -e "  Accounts: ${CYAN}$account_count${RESET}"
+echo -e "  Shim:     ${CYAN}$SHIM_DIR/claude${RESET}"
+echo -e "  Real:     ${CYAN}$REAL_CLAUDE${RESET}"
+echo -e "  Config:   ${CYAN}$ACCOUNTS_FILE${RESET}"
+echo ""
+
+# --- Launch GSD with shim in PATH ---
+export PATH="$SHIM_DIR:$PATH"
+export FLEET_REAL_CLAUDE="$REAL_CLAUDE"
+export FLEET_ACCOUNTS_FILE="$ACCOUNTS_FILE"
+export FLEET_COUNTER_FILE="$COUNTER_FILE"
+
+exec gsd "$@"
