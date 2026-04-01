@@ -113,6 +113,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 $HOME/.claude/scripts/prompt-enhancer.py 2>/dev/null || true",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "_R=\"$HOME/.claude/plugins/marketplaces/thedotmack/plugin\"; [ -d \"$_R\" ] && node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code session-init 2>/dev/null || true",
             "timeout": 60
           }

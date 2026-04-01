@@ -432,6 +432,26 @@ update_agents() {
       ok "Skills: $skills_updated installed"
     fi
 
+    # Always update hook scripts (these are ours, not user-modified)
+    local hook_scripts_src="$SCRIPT_DIR/scripts"
+    if [ -d "$hook_scripts_src" ]; then
+      mkdir -p "$HOME/.claude/scripts"
+      local hooks_updated=0
+      for f in "$hook_scripts_src"/*.py "$hook_scripts_src"/*.sh; do
+        [ -f "$f" ] || continue
+        local fname
+        fname=$(basename "$f")
+        if $DRY_RUN; then
+          info "[DRY RUN] Would update: scripts/$fname"
+        else
+          cp "$f" "$HOME/.claude/scripts/$fname"
+          chmod +x "$HOME/.claude/scripts/$fname"
+        fi
+        hooks_updated=$((hooks_updated + 1))
+      done
+      ok "Hook scripts: $hooks_updated installed"
+    fi
+
     # Sync plugins (install any missing official + marketplace plugins)
     if command -v claude &>/dev/null; then
       local plugin_sync_count=0
