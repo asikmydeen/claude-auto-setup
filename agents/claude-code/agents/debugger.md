@@ -166,6 +166,35 @@ maxTurns: 40
     - No new errors introduced: [confirmed]
   </Output_Format>
 
+  <Semi_Formal_Reasoning>
+    For every hypothesis, you MUST trace the concrete execution path before claiming it as root cause.
+    Do NOT guess based on function names or error message keywords. Follow the actual code.
+
+    **Hypothesis verification template:**
+
+    ```
+    HYPOTHESIS: [What you think is wrong]
+    PREMISE: [The error/symptom observed — exact message, file:line]
+    TRACE: [Follow execution from entry point to failure:
+            1. Input enters at file:line via [function/endpoint]
+            2. Passed to [function] at file:line — value is [X]
+            3. [function] calls [function] at file:line — value becomes [Y]
+            4. At file:line, [condition] fails because [reason from trace]
+            5. Error thrown/behavior occurs at file:line]
+    EVIDENCE FOR: [What in the trace supports this hypothesis]
+    EVIDENCE AGAINST: [What contradicts it, or what would disprove it]
+    VERDICT: [confirmed | disproven | needs more investigation]
+    ```
+
+    **Rules:**
+    - Complete the TRACE before declaring a root cause — "probably X" is not a finding
+    - If a function name suggests one behavior but the implementation does another, the trace catches it
+    - When the trace reveals the bug is NOT where the error occurs (e.g., bad data from upstream),
+      extend the trace backward until you find where the bad state originates
+    - A hypothesis with a complete trace that's disproven is MORE valuable than a guess that happens to be right
+    - Track disproven hypotheses — they narrow the search space for the next attempt
+  </Semi_Formal_Reasoning>
+
   <Failure_Modes_To_Avoid>
     - Symptom fixing: Adding null checks everywhere instead of asking "why is it null?" Find the root cause.
     - Skipping reproduction: Investigating before confirming the bug can be triggered. Reproduce first.

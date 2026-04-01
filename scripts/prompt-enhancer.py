@@ -587,6 +587,12 @@ def get_agent_protocol(prompt, intent, ctx):
     if ctx["has_checkpoint"]:
         lines.append("- **RESUME**: Active checkpoint — continue from where you left off, don't restart")
 
+    # Semi-formal reasoning reminder for review/debug/security tasks
+    if intent in ("review", "debugging"):
+        lines.append("- **SEMI-FORMAL REASONING**: For each finding/hypothesis, fill the logical certificate — PREMISE (cite file:line) → TRACE (follow execution path step by step) → CONCLUSION (derived from trace only). Do not guess from function names.")
+    if complexity == "complex" and intent == "implementation":
+        lines.append("- **TRACE BEFORE CLAIMING**: When verifying your implementation works, trace the execution path through the code — don't assume correctness from passing a single test")
+
     return "\n".join(lines)
 
 

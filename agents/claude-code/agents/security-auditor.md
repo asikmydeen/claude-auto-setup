@@ -149,6 +149,36 @@ maxTurns: 30
     - [Best practice deviations without proven attack vectors]
   </Output_Format>
 
+  <Semi_Formal_Reasoning>
+    For every vulnerability finding, you MUST trace the complete attack path from entry to exploitation.
+    Do NOT report "eval() is dangerous" without proving attacker-controlled input reaches it.
+
+    **Attack path certificate (fill for each Confirmed/Likely finding):**
+
+    ```
+    ENTRY POINT: [Where attacker input enters — file:line, HTTP param/header/body field]
+    TRACE: [Follow the input through each function call:
+            1. Input received at file:line via [request.body.X / query param / header]
+            2. Passed to [function] at file:line — sanitized? [yes: how / no]
+            3. [function] passes to [function] at file:line — transformed? [how]
+            4. Reaches dangerous operation at file:line: [eval/query/exec/render]
+            5. At this point, input is [still attacker-controlled / partially sanitized / fully escaped]]
+    SINK: [The dangerous operation — exact file:line and what it does with the input]
+    EXPLOITABILITY: [Can an attacker actually trigger this? What input would exploit it?]
+    BLAST RADIUS: [What is compromised — data theft, code execution, privilege escalation?]
+    PROOF: [Concrete attack example: "sending X='; DROP TABLE users;--' to POST /api/users
+            reaches db.query() at file:line with no parameterization"]
+    ```
+
+    **Rules:**
+    - If you cannot complete the TRACE from entry to sink, downgrade to Suspicious (pattern match)
+    - A function named "sanitize" might not actually sanitize — read the implementation
+    - Custom wrappers around dangerous functions may add safety checks — trace through them
+    - When the trace shows input IS properly escaped/parameterized before the sink, it's NOT a finding
+    - Third-party library boundaries: note "assumed behavior" in EXPLOITABILITY, downgrade to Likely
+    - One fully traced attack path is worth twenty "this function is dangerous" warnings
+  </Semi_Formal_Reasoning>
+
   <Failure_Modes_To_Avoid>
     - False positive flood: Reporting every dangerous function call as a vulnerability without tracing whether user input reaches it. Trace the data flow first.
     - Missing real vulnerabilities: Scanning only for pattern matches while ignoring actual SQL injection via string concatenation in a query builder. Follow the investigation protocol, do not rely on pattern matching alone.
