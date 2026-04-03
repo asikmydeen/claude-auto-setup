@@ -41,9 +41,106 @@ ok()    { echo "${GREEN}[dispatch]${RESET} $*" >&2; }
 warn()  { echo "${YELLOW}[dispatch]${RESET} $*" >&2; }
 error() { echo "${RED}[dispatch]${RESET} $*" >&2; }
 
-# Valid task types and providers (for input validation)
-VALID_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|simple-edit|refactoring|migration|amazon-internal|general"
-VALID_PROVIDERS="claude|codex|gemini|amp|kiro|copilot"
+# Valid task types/providers (fallbacks if providers.json can't be read)
+DEFAULT_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|amazon-internal|brazil-build|aws-debugging|aws-sdk|aws-lambda|aws-dynamodb|aws-s3|aws-api-gateway|aws-sqs-sns|aws-iam|internal-code-search|integration-test|internal-docs|cr-review|pipeline-debug|simple-edit|refactoring|migration|github-pr|github-issues|git-operations|ci-cd|general"
+DEFAULT_PROVIDERS="claude|codex|gemini|amp|kiro|copilot"
+
+PROVIDER_CLI_MAP=""
+
+load_provider_cli_map() {
+  if [ -n "$PROVIDER_CLI_MAP" ]; then
+    return
+  fi
+
+  if command -v python3 &>/dev/null && [ -f "$PROVIDERS_FILE" ]; then
+    PROVIDER_CLI_MAP=$(PROVIDERS_FILE="$PROVIDERS_FILE" python3 -c "
+import json, os
+with open(os.environ['PROVIDERS_FILE']) as f:
+    data = json.load(f)
+providers = data.get('providers', {})
+pairs = []
+for name, info in providers.items():
+    cli = info.get('cli', name)
+    pairs.append(f'{name}={cli}')
+print(' '.join(pairs))
+" 2>/dev/null) || true
+  fi
+
+  if [ -z "$PROVIDER_CLI_MAP" ]; then
+    PROVIDER_CLI_MAP="claude=claude codex=codex gemini=gemini amp=amp kiro=kiro-cli copilot=copilot"
+  fi
+}
+
+provider_cli() {
+  local name="$1"
+  load_provider_cli_map
+  for pair in $PROVIDER_CLI_MAP; do
+    local key="${pair%%=*}"
+    local val="${pair#*=}"
+    if [ "$key" = "$name" ]; then
+      echo "$val"
+      return
+    fi
+  done
+  echo "$name"
+}
+
+provider_is_available() {
+  local name="$1"
+  local cli
+  cli=$(provider_cli "$name")
+  command -v "$cli" &>/dev/null
+}
+
+provider_list() {
+  if command -v python3 &>/dev/null && [ -f "$PROVIDERS_FILE" ]; then
+    local names=""
+    names=$(PROVIDERS_FILE="$PROVIDERS_FILE" python3 -c "
+import json, os
+with open(os.environ['PROVIDERS_FILE']) as f:
+    data = json.load(f)
+print(' '.join(data.get('providers', {}).keys()))
+" 2>/dev/null) || names=""
+    if [ -n "$names" ]; then
+      echo "$names"
+      return
+    fi
+  fi
+  echo "claude codex gemini amp kiro copilot"
+}
+
+get_valid_providers_pattern() {
+  local names
+  names=$(provider_list)
+  if [ -n "$names" ]; then
+    echo "${names// /|}"
+    return
+  fi
+  echo "$DEFAULT_PROVIDERS"
+}
+
+get_valid_task_types_pattern() {
+  local types=""
+  if command -v python3 &>/dev/null && [ -f "$PROVIDERS_FILE" ]; then
+    types=$(PROVIDERS_FILE="$PROVIDERS_FILE" python3 -c "
+import json, os
+with open(os.environ['PROVIDERS_FILE']) as f:
+    data = json.load(f)
+tasks = [k for k in data.get('task_routing', {}).keys() if not k.startswith('_')]
+print('|'.join(tasks))
+" 2>/dev/null) || types=""
+  fi
+
+  if [ -n "$types" ]; then
+    case "|$types|" in
+      *"|general|"*) echo "$types" ;;
+      *) echo "${types}|general" ;;
+    esac
+    return
+  fi
+
+  echo "$DEFAULT_TASK_TYPES"
+}
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -55,9 +152,9 @@ while [[ $# -gt 0 ]]; do
     --output)        OUTPUT_FILE="$2"; shift 2 ;;
     --list-providers)
       echo "Available providers:"
-      for name in claude codex gemini amp kiro copilot; do
-        cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
-        if command -v "$cli" &>/dev/null; then
+      for name in $(provider_list); do
+        cli=$(provider_cli "$name")
+        if provider_is_available "$name"; then
           echo "  ${GREEN}*${RESET} $name ($cli — installed)"
         else
           echo "  ${DIM}- $name ($cli — not installed)${RESET}"
@@ -71,10 +168,12 @@ while [[ $# -gt 0 ]]; do
 import json, os, shutil
 with open(os.environ['PROVIDERS_FILE']) as f:
     data = json.load(f)
+providers_map = data.get('providers', {})
+cli_map = {name: info.get('cli', name) for name, info in providers_map.items()}
 print('Task routing:')
 for task, providers in sorted(data['task_routing'].items()):
     if task.startswith('_'): continue
-    available = [p for p in providers if shutil.which(p)]
+    available = [p for p in providers if shutil.which(cli_map.get(p, p))]
     print(f'  {task}: {\" > \".join(providers)}', end='')
     if available:
         print(f'  (will use: {available[0]})')
@@ -89,12 +188,7 @@ for task, providers in sorted(data['task_routing'].items()):
     --help|-h)
       echo "Usage: dispatch.sh --task \"prompt\" --type task-type [--provider name] [--context files] [--output file]"
       echo ""
-      echo "Task types: planning, architecture-design, complex-reasoning, debugging,"
-      echo "  code-review-quality, code-review-security, code-review-performance,"
-      echo "  backend-implementation, frontend-implementation, api-implementation,"
-      echo "  test-writing, boilerplate-generation, documentation, large-file-analysis,"
-      echo "  dependency-analysis, infrastructure-aws, cdk-cloudformation,"
-      echo "  simple-edit, refactoring, migration"
+      echo "Task types: see universal/providers.json (task_routing) or use --list-routes"
       echo ""
       echo "Options:"
       echo "  --provider NAME    Force a specific provider"
@@ -112,6 +206,10 @@ if [ -z "$TASK" ]; then
   error "Missing --task. Use --help for usage."
   exit 1
 fi
+
+# Load validation patterns from providers.json (fallback to defaults)
+VALID_TASK_TYPES=$(get_valid_task_types_pattern)
+VALID_PROVIDERS=$(get_valid_providers_pattern)
 
 # Validate task type if provided
 if [ -n "$TASK_TYPE" ] && [[ ! "$TASK_TYPE" =~ ^($VALID_TASK_TYPES)$ ]]; then
@@ -132,7 +230,7 @@ if [ -z "$TASK_TYPE" ] || [ -z "$FORCE_PROVIDER" ]; then
   TASK_LOWER=$(echo "$TASK" | tr '[:upper:]' '[:lower:]')
   AMAZON_PATTERNS="aws |aws-|amazon|brazil|cdk |cloudformation|lambda|dynamodb|s3 bucket|api gateway|sqs|sns|iam |isengard|pipelines|hydra|coral|brazil-build|packageinfo|internal|cr review|code review.*amazon|integration.test|fleet|sev2|sev1|ticket|sim |i.t\.|oncall|pager"
   if echo "$TASK_LOWER" | grep -qEi "$AMAZON_PATTERNS"; then
-    if command -v kiro-cli &>/dev/null; then
+    if provider_is_available "kiro"; then
       if [ -z "$FORCE_PROVIDER" ]; then
         FORCE_PROVIDER="kiro"
         info "Amazon/AWS task detected → routing to Kiro (builder-mcp)"
@@ -148,9 +246,9 @@ fi
 resolve_provider() {
   # If forced, use that
   if [ -n "$FORCE_PROVIDER" ]; then
-    local cli="$FORCE_PROVIDER"
-    [ "$FORCE_PROVIDER" = "kiro" ] && cli="kiro-cli"
-    if command -v "$cli" &>/dev/null; then
+    local cli
+    cli=$(provider_cli "$FORCE_PROVIDER")
+    if provider_is_available "$FORCE_PROVIDER"; then
       echo "$FORCE_PROVIDER"
       return
     else
@@ -165,9 +263,8 @@ resolve_provider() {
 
     # Detect available providers
     local available_providers=""
-    for name in claude codex gemini amp kiro copilot; do
-      local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
-      if command -v "$cli" &>/dev/null; then
+    for name in $(provider_list); do
+      if provider_is_available "$name"; then
         [ -n "$available_providers" ] && available_providers="${available_providers},"
         available_providers="${available_providers}${name}"
       fi
@@ -176,7 +273,7 @@ resolve_provider() {
     if [ -n "$available_providers" ]; then
       local best_provider
       best_provider=$(get_best_agent_for_task "$TASK_TYPE" "$available_providers")
-      if [ -n "$best_provider" ] && command -v "$best_provider" &>/dev/null; then
+      if [ -n "$best_provider" ] && provider_is_available "$best_provider"; then
         info "Using performance-based routing"
         echo "$best_provider"
         return
@@ -214,8 +311,7 @@ else:
 
   # Default fallback chain
   for name in claude codex gemini amp kiro copilot; do
-    local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
-    if command -v "$cli" &>/dev/null; then
+    if provider_is_available "$name"; then
       echo "$name"
       return
     fi
@@ -336,8 +432,7 @@ get_fallback_chain() {
   local chain=""
   for name in claude kiro codex gemini amp copilot; do
     [ "$name" = "$primary" ] && continue
-    local cli="$name"; [ "$name" = "kiro" ] && cli="kiro-cli"
-    if command -v "$cli" &>/dev/null; then
+    if provider_is_available "$name"; then
       chain="$chain $name"
     fi
   done

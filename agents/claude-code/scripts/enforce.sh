@@ -26,7 +26,21 @@ if ! command -v python3 &>/dev/null; then
   exit 0
 fi
 
-SCRATCH_DIR="${HOME}/.claude/scratch"
+SCRATCH_DIR_DEFAULT="${HOME}/.claude/scratch"
+SCRATCH_DIR="${ENFORCE_SCRATCH_DIR:-$SCRATCH_DIR_DEFAULT}"
+
+# Fall back when ~/.claude is not writable (e.g., sandboxed environments).
+if ! mkdir -p "$SCRATCH_DIR" 2>/dev/null; then
+  SCRATCH_DIR="${TMPDIR:-/tmp}/claude-enforce-${USER:-user}"
+  mkdir -p "$SCRATCH_DIR" 2>/dev/null || true
+else
+  WRITE_TEST_FILE="$SCRATCH_DIR/.write-test.$$"
+  if ! ( touch "$WRITE_TEST_FILE" 2>/dev/null && rm -f "$WRITE_TEST_FILE" 2>/dev/null ); then
+    SCRATCH_DIR="${TMPDIR:-/tmp}/claude-enforce-${USER:-user}"
+    mkdir -p "$SCRATCH_DIR" 2>/dev/null || true
+  fi
+fi
+
 STATE_FILE="${SCRATCH_DIR}/enforce-state.json"
 CHECKPOINT_FILE="${SCRATCH_DIR}/task-state.md"
 CHANGES_LOG="${SCRATCH_DIR}/changed-files.log"
@@ -44,7 +58,6 @@ PUA_L3_FAILURES=4               # 4th failure → L3 (performance review)
 PUA_L4_FAILURES=5               # 5th+ failure → L4 (graduation warning)
 KIRO_KEYWORDS="aws|amazon|brazil|cdk|lambda|dynamodb|pipeline|hydra|coral|isengard|cr|integration.test|sam|cloudformation|s3|sqs|sns|iam|ec2"
 
-mkdir -p "$SCRATCH_DIR"
 
 # ── State helpers ────────────────────────────────────────────────────────────
 # File paths are passed via ENFORCE_FILE env var (not shell interpolation)
