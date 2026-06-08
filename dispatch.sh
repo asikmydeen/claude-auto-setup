@@ -42,8 +42,8 @@ warn()  { echo "${YELLOW}[dispatch]${RESET} $*" >&2; }
 error() { echo "${RED}[dispatch]${RESET} $*" >&2; }
 
 # Valid task types/providers (fallbacks if providers.json can't be read)
-DEFAULT_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|amazon-internal|brazil-build|aws-debugging|aws-sdk|aws-lambda|aws-dynamodb|aws-s3|aws-api-gateway|aws-sqs-sns|aws-iam|internal-code-search|integration-test|internal-docs|cr-review|pipeline-debug|simple-edit|refactoring|migration|github-pr|github-issues|git-operations|ci-cd|general"
-DEFAULT_PROVIDERS="claude|codex|gemini|amp|kiro|copilot"
+DEFAULT_TASK_TYPES="planning|architecture-design|complex-reasoning|debugging|code-review-quality|code-review-security|code-review-performance|backend-implementation|frontend-implementation|api-implementation|test-writing|boilerplate-generation|documentation|large-file-analysis|dependency-analysis|infrastructure-aws|cdk-cloudformation|amazon-internal|brazil-build|aws-debugging|aws-sdk|aws-lambda|aws-dynamodb|aws-s3|aws-api-gateway|aws-sqs-sns|aws-iam|internal-code-search|integration-test|internal-docs|cr-review|pipeline-debug|simple-edit|refactoring|migration|github-pr|github-issues|git-operations|ci-cd|multi-agent|infrastructure-ops|memory-ops|general"
+DEFAULT_PROVIDERS="claude|codex|gemini|amp|kiro|copilot|oma"
 
 PROVIDER_CLI_MAP=""
 
@@ -67,7 +67,7 @@ print(' '.join(pairs))
   fi
 
   if [ -z "$PROVIDER_CLI_MAP" ]; then
-    PROVIDER_CLI_MAP="claude=claude codex=codex gemini=gemini amp=amp kiro=kiro-cli copilot=copilot"
+    PROVIDER_CLI_MAP="claude=claude codex=codex gemini=gemini amp=amp kiro=kiro-cli copilot=copilot oma=oma"
   fi
 }
 
@@ -106,7 +106,7 @@ print(' '.join(data.get('providers', {}).keys()))
       return
     fi
   fi
-  echo "claude codex gemini amp kiro copilot"
+  echo "claude codex gemini amp kiro copilot oma"
 }
 
 get_valid_providers_pattern() {
@@ -310,7 +310,7 @@ else:
   fi
 
   # Default fallback chain
-  for name in claude codex gemini amp kiro copilot; do
+  for name in claude codex gemini amp kiro copilot oma; do
     if provider_is_available "$name"; then
       echo "$name"
       return
@@ -419,6 +419,14 @@ dispatch_to() {
       info "Invoking: copilot -p (non-interactive)"
       copilot -p "$full_prompt" --allow-tool='shell' --allow-tool='write' 2>/dev/null
       ;;
+    oma)
+      info "Invoking: oma run (open-multi-agent via Bedrock)"
+      if [[ "$TASK_TYPE" == "multi-agent" || "$TASK_TYPE" == "infrastructure-ops" || "$TASK_TYPE" == "memory-ops" ]]; then
+        oma team "$full_prompt" --tools ship,memory 2>/dev/null
+      else
+        oma run "$full_prompt" 2>/dev/null
+      fi
+      ;;
     *)
       error "Unknown provider: $provider"
       return 1
@@ -430,7 +438,7 @@ dispatch_to() {
 get_fallback_chain() {
   local primary="$1"
   local chain=""
-  for name in claude kiro codex gemini amp copilot; do
+  for name in claude kiro codex gemini amp copilot oma; do
     [ "$name" = "$primary" ] && continue
     if provider_is_available "$name"; then
       chain="$chain $name"

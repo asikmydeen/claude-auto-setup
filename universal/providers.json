@@ -51,6 +51,17 @@
       "context_window": "200k",
       "cost": "subscription",
       "speed": "medium"
+    },
+    "oma": {
+      "cli": "oma",
+      "non_interactive": "oma run \"{prompt}\"",
+      "team_mode": "oma team \"{prompt}\"",
+      "mcp_mode": "oma run \"{prompt}\" --tools ship,memory",
+      "strengths": ["multi-agent-orchestration", "mcp-integration", "infrastructure-ops", "memory-ops", "team-collaboration", "parallel-tasks"],
+      "context_window": "200k",
+      "cost": "zero",
+      "speed": "medium",
+      "note": "Uses Bedrock via LiteLLM proxy (port 4000). Requires proxy running."
     }
   },
 
@@ -68,6 +79,9 @@
     "backend-implementation": ["claude", "codex", "amp"],
     "frontend-implementation": ["codex", "claude", "gemini"],
     "api-implementation": ["claude", "codex"],
+    "multi-agent": ["oma", "claude"],
+    "infrastructure-ops": ["oma", "claude"],
+    "memory-ops": ["oma", "claude"],
     "test-writing": ["codex", "claude", "gemini"],
     "boilerplate-generation": ["codex", "gemini", "claude"],
 
